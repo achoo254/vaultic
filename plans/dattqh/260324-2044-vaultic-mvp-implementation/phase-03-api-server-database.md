@@ -1,7 +1,7 @@
 ---
 phase: 3
 priority: critical
-status: pending
+status: in-progress
 estimated_days: 4
 depends_on: [2]
 ---
@@ -200,22 +200,22 @@ CREATE INDEX idx_shares_cleanup ON secure_shares(expires_at)
 - Test share: create → retrieve → verify view count → verify expiry
 
 ## Todo List
-- [ ] SeaORM migrations (users, folders, vault_items, secure_shares)
-- [ ] Generate SeaORM entities
-- [ ] Config from env vars
-- [ ] Axum router + CORS middleware
-- [ ] JWT auth middleware
-- [ ] POST /auth/register
-- [ ] POST /auth/login
-- [ ] POST /auth/refresh
-- [ ] POST /sync/push (accept batch of encrypted items)
-- [ ] GET /sync/pull?since= (return delta + deleted_ids)
-- [ ] LWW conflict resolution logic
-- [ ] POST /share (create)
-- [ ] GET /share/:id (retrieve + decrement)
-- [ ] DELETE /share/:id (owner revoke)
-- [ ] Error handling (AppError)
-- [ ] Integration tests
+- [x] SeaORM migrations (users, folders, vault_items, secure_shares)
+- [x] Generate SeaORM entities
+- [x] Config from env vars
+- [x] Axum router + CORS middleware
+- [x] JWT auth middleware
+- [x] POST /auth/register
+- [x] POST /auth/login
+- [x] POST /auth/refresh
+- [x] POST /sync/push (accept batch of encrypted items)
+- [x] GET /sync/pull?since= (return delta + deleted_ids)
+- [x] LWW conflict resolution logic
+- [x] POST /share (create)
+- [x] GET /share/:id (retrieve + decrement)
+- [x] DELETE /share/:id (owner revoke)
+- [x] Error handling (AppError)
+- [ ] Integration tests (deferred — requires running PostgreSQL)
 - [ ] `cargo test` all pass
 - [ ] Manual test with curl/httpie
 
@@ -228,3 +228,24 @@ CREATE INDEX idx_shares_cleanup ON secure_shares(expires_at)
 - LWW conflict resolution works correctly
 - Share create/retrieve respects TTL and max_views
 - All encrypted_data is opaque to server (never decrypted server-side)
+
+## Completion Status
+
+**Implementation Complete** (2026-03-25)
+
+All core endpoints, handlers, services, migrations, and entities implemented:
+- Auth: register, login, refresh tokens ✓
+- Sync: push (batch accept + LWW), pull (delta + deleted_ids) ✓
+- Share: create, retrieve (view counting), delete ✓
+- Migrations: users, folders, vault_items, secure_shares ✓
+- SeaORM entities: manually written ✓
+- Config: env-based (DATABASE_URL, JWT_SECRET, SERVER_PORT) ✓
+- Router: CORS + JWT middleware ✓
+- Error handling: AppError enum with proper HTTP status codes ✓
+- Cargo build: clean, no warnings ✓
+
+**Deferred Testing:**
+- Integration tests: postponed until Docker PostgreSQL running
+- Manual curl/httpie testing: deferred until integration environment ready
+
+**Next Phase:** Phase 4 (Extension Shell & Auth) can proceed in parallel — requires no code changes from Phase 3.
