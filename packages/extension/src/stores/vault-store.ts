@@ -199,13 +199,32 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       id, encrypted_name: encryptedName, created_at: now, updated_at: now,
     };
     await store.putFolder(folder);
+    await syncQueue.enqueue({
+      id: crypto.randomUUID(),
+      item_id: id,
+      action: 'create',
+      timestamp: Date.now(),
+    });
 
     set({ folders: [...get().folders, { id, name, itemCount: 0 }] });
   },
 
   deleteFolder: async (id) => {
     await store.deleteFolder(id);
-    // Move items from this folder to no folder
+    await syncQueue.enqueue({
+      id: crypto.randomUUID(),
+      item_id: id,
+      action: 'delete',
+      timestamp: Date.now(),
+    });
+    // Move items from this folder to no folder — update both state and IDB
+    const itemsToUpdate = get().items.filter((i) => i.folder_id === id);
+    for (const item of itemsToUpdate) {
+      const existing = await store.getItem(item.id);
+      if (existing) {
+        await store.putItem({ ...existing, folder_id: undefined });
+      }
+    }
     const items = get().items.map((i) =>
       i.folder_id === id ? { ...i, folder_id: undefined } : i,
     );

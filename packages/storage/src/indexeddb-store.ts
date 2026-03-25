@@ -3,37 +3,7 @@
 
 import type { VaultItem, Folder } from '@vaultic/types';
 import type { VaultStore } from './vault-store';
-
-const DB_NAME = 'vaultic';
-const DB_VERSION = 1;
-const ITEMS_STORE = 'vault_items';
-const FOLDERS_STORE = 'folders';
-const META_STORE = 'metadata';
-
-/** Open or create the IndexedDB database. */
-function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(ITEMS_STORE)) {
-        const items = db.createObjectStore(ITEMS_STORE, { keyPath: 'id' });
-        items.createIndex('updated_at', 'updated_at', { unique: false });
-        items.createIndex('folder_id', 'folder_id', { unique: false });
-      }
-      if (!db.objectStoreNames.contains(FOLDERS_STORE)) {
-        db.createObjectStore(FOLDERS_STORE, { keyPath: 'id' });
-      }
-      if (!db.objectStoreNames.contains(META_STORE)) {
-        db.createObjectStore(META_STORE, { keyPath: 'key' });
-      }
-    };
-
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
+import { openDB, ITEMS_STORE, FOLDERS_STORE, META_STORE } from './indexeddb-open';
 
 /** Generic IDB transaction helper. */
 async function withStore<T>(
@@ -48,7 +18,7 @@ async function withStore<T>(
     const request = fn(store);
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
-    tx.oncomplete = () => db.close();
+    tx.oncomplete = () => {};
   });
 }
 
