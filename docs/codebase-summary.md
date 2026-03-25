@@ -422,12 +422,31 @@ export const icons = {
 
 **Rule:** ALL UI must use these tokens. NO hardcoding colors, sizes, or fonts.
 
-**Components (Scaffolded):**
+**Components (13 Total):**
+
+*Layout Primitives:*
+- `Stack` / `HStack` / `VStack` — Flex-based layout containers
+- `Divider` — Visual separator
+
+*Card & Section:*
+- `Card` — Container with styling and padding
+- `SectionHeader` — Title with optional description
+- `Badge` — Label for categorization
+
+*Form Components:*
 - `Button` — Primary, secondary variants
 - `Input` — Text input with validation
-- Future: Modal, Select, Checkbox, etc.
+- `Checkbox` — Toggle input
+- `Select` — Dropdown selection
+- `Textarea` — Multi-line text input
+- `IconButton` — Icon-only button
 
-**Phase 1 Status:** Tokens centralized. Components expand in Phase 4–6.
+*Interactive:*
+- `ToggleGroup` — Radio-like selection group
+- `PillGroup` — Pill/tag selection group
+- `Modal` — Dialog overlay
+
+**Status:** All components fully implemented. Exported from `src/index.ts` with TypeScript prop types.
 
 ---
 

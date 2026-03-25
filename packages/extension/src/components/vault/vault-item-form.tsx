@@ -1,7 +1,6 @@
 // Screen 07: Add/Edit Credential form
 import React, { useState } from 'react';
-import { Button, Input } from '@vaultic/ui';
-import { tokens } from '@vaultic/ui';
+import { Button, Input, VStack, Textarea, tokens } from '@vaultic/ui';
 import { generatePassword } from '@vaultic/crypto';
 import { useVaultStore } from '../../stores/vault-store';
 import type { LoginCredential } from '@vaultic/types';
@@ -83,16 +82,13 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
           </div>
         </div>
 
-        <div style={textareaContainer}>
-          <label style={labelStyle}>Notes</label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Optional notes..."
-            style={textareaStyle}
-            rows={3}
-          />
-        </div>
+        <Textarea
+          label="Notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Optional notes..."
+          rows={3}
+        />
 
         {error && <div style={errorStyle}>{error}</div>}
 
@@ -122,13 +118,5 @@ const generateBtn: React.CSSProperties = {
   borderRadius: tokens.radius.md, padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
   cursor: 'pointer', fontSize: tokens.font.size.sm, fontFamily: tokens.font.family,
   whiteSpace: 'nowrap', height: 40,
-};
-const textareaContainer: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: tokens.spacing.xs };
-const labelStyle: React.CSSProperties = { fontSize: tokens.font.size.sm, fontWeight: tokens.font.weight.medium, color: tokens.colors.text, fontFamily: tokens.font.family };
-const textareaStyle: React.CSSProperties = {
-  fontFamily: tokens.font.family, fontSize: tokens.font.size.base, color: tokens.colors.text,
-  border: `1px solid ${tokens.colors.border}`, borderRadius: tokens.radius.md,
-  padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`, resize: 'vertical',
-  outline: 'none', backgroundColor: tokens.colors.background,
 };
 const errorStyle: React.CSSProperties = { color: tokens.colors.error, fontSize: tokens.font.size.sm, fontFamily: tokens.font.family };

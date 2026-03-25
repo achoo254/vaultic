@@ -1,6 +1,6 @@
 // Screen 10: Security Health — password strength analysis
 import React from 'react';
-import { tokens } from '@vaultic/ui';
+import { tokens, VStack, HStack, Card } from '@vaultic/ui';
 import { useVaultStore } from '../../stores/vault-store';
 
 interface SecurityHealthProps { onBack: () => void; }
@@ -44,12 +44,14 @@ export function SecurityHealth({ onBack }: SecurityHealthProps) {
         </div>
 
         {/* Summary */}
-        <div style={summaryStyle}>
-          <SummaryItem label="Total" value={total} />
-          <SummaryItem label="Strong" value={strong} />
-          <SummaryItem label="Weak" value={weak} />
-          <SummaryItem label="Reused" value={reused} />
-        </div>
+        <Card variant="filled" padding="lg">
+          <HStack justify="space-around">
+            <SummaryItem label="Total" value={total} />
+            <SummaryItem label="Strong" value={strong} />
+            <SummaryItem label="Weak" value={weak} />
+            <SummaryItem label="Reused" value={reused} />
+          </HStack>
+        </Card>
       </div>
     </div>
   );
@@ -87,7 +89,6 @@ const categoriesStyle: React.CSSProperties = { display: 'flex', flexDirection: '
 const catRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: tokens.spacing.md, padding: `${tokens.spacing.sm}px 0` };
 const catLabel: React.CSSProperties = { flex: 1, fontSize: tokens.font.size.base, color: tokens.colors.text, fontFamily: tokens.font.family };
 const catCount: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, fontFamily: tokens.font.family };
-const summaryStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-around', backgroundColor: tokens.colors.surface, borderRadius: tokens.radius.md, padding: tokens.spacing.lg };
 const summaryItem: React.CSSProperties = { textAlign: 'center' };
 const summaryValue: React.CSSProperties = { fontSize: tokens.font.size.xl, fontWeight: tokens.font.weight.bold, color: tokens.colors.text, fontFamily: tokens.font.family };
 const summaryLabel: React.CSSProperties = { fontSize: tokens.font.size.xs, color: tokens.colors.secondary, fontFamily: tokens.font.family };

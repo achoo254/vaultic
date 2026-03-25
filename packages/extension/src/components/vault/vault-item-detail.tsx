@@ -1,6 +1,6 @@
 // Screen 06: Credential Detail — view username, password, notes, folder
 import React, { useState } from 'react';
-import { tokens } from '@vaultic/ui';
+import { tokens, VStack, HStack, Modal, Button } from '@vaultic/ui';
 import { PasswordField } from '../common/password-field';
 import { CopyButton } from '../common/copy-button';
 import { useVaultStore } from '../../stores/vault-store';
@@ -72,32 +72,20 @@ export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemD
       </div>
 
       {/* Delete confirmation */}
-      {showDeleteConfirm && (
-        <DeleteConfirmModal
-          name={credential.name}
-          onCancel={() => setShowDeleteConfirm(false)}
-          onConfirm={onDelete}
-        />
-      )}
+      <Modal open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title="Delete Credential?">
+        <VStack gap="md" align="center">
+          <div style={{ fontSize: 32 }}>🗑️</div>
+          <div style={modalText}>This will permanently delete "{credential.name}". This action cannot be undone.</div>
+          <HStack gap="md" style={{ width: '100%' }}>
+            <Button variant="secondary" size="md" onClick={() => setShowDeleteConfirm(false)} style={{ flex: 1 }}>Cancel</Button>
+            <Button variant="primary" size="md" onClick={onDelete} style={{ flex: 1, backgroundColor: tokens.colors.error }}>Delete</Button>
+          </HStack>
+        </VStack>
+      </Modal>
     </div>
   );
 }
 
-function DeleteConfirmModal({ name, onCancel, onConfirm }: { name: string; onCancel: () => void; onConfirm: () => void }) {
-  return (
-    <div style={overlayStyle}>
-      <div style={modalStyle}>
-        <div style={{ fontSize: 32, textAlign: 'center' }}>🗑️</div>
-        <div style={modalTitle}>Delete Credential?</div>
-        <div style={modalText}>This will permanently delete "{name}". This action cannot be undone.</div>
-        <div style={modalActions}>
-          <button onClick={onCancel} style={cancelBtn}>Cancel</button>
-          <button onClick={onConfirm} style={deleteBtn}>Delete</button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
 const headerStyle: React.CSSProperties = {
@@ -132,26 +120,4 @@ const notesStyle: React.CSSProperties = { fontSize: tokens.font.size.base, color
 const metaStyle: React.CSSProperties = { fontSize: tokens.font.size.xs, color: tokens.colors.secondary, fontFamily: tokens.font.family, marginTop: 'auto', paddingBottom: tokens.spacing.lg };
 const centerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: tokens.colors.secondary };
 
-// Delete modal styles
-const overlayStyle: React.CSSProperties = {
-  position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10,
-};
-const modalStyle: React.CSSProperties = {
-  backgroundColor: tokens.colors.background, borderRadius: tokens.radius.lg,
-  padding: tokens.spacing.xxl, margin: tokens.spacing.xxl, width: '85%',
-  display: 'flex', flexDirection: 'column', gap: tokens.spacing.md,
-};
-const modalTitle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: tokens.colors.text, fontFamily: tokens.font.family, textAlign: 'center' };
 const modalText: React.CSSProperties = { fontSize: tokens.font.size.base, color: tokens.colors.secondary, fontFamily: tokens.font.family, textAlign: 'center' };
-const modalActions: React.CSSProperties = { display: 'flex', gap: tokens.spacing.md };
-const cancelBtn: React.CSSProperties = {
-  flex: 1, padding: `${tokens.spacing.sm}px`, borderRadius: tokens.radius.md,
-  border: `1px solid ${tokens.colors.border}`, backgroundColor: 'transparent',
-  cursor: 'pointer', fontFamily: tokens.font.family, fontSize: tokens.font.size.base,
-};
-const deleteBtn: React.CSSProperties = {
-  flex: 1, padding: `${tokens.spacing.sm}px`, borderRadius: tokens.radius.md,
-  border: 'none', backgroundColor: tokens.colors.error, color: '#fff',
-  cursor: 'pointer', fontFamily: tokens.font.family, fontSize: tokens.font.size.base,
-};

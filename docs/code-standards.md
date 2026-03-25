@@ -74,11 +74,14 @@ vaultic/
 │   │   └── package.json
 │   ├── ui/                      # React components + tokens
 │   │   ├── src/
-│   │   │   ├── index.ts         # Component exports
+│   │   │   ├── index.ts         # Component exports (13 components)
 │   │   │   ├── components/
-│   │   │   │   ├── button.tsx
-│   │   │   │   ├── input.tsx
-│   │   │   │   └── ...
+│   │   │   │   ├── button.tsx, input.tsx
+│   │   │   │   ├── stack.tsx, divider.tsx, card.tsx
+│   │   │   │   ├── checkbox.tsx, select.tsx, textarea.tsx
+│   │   │   │   ├── modal.tsx, toggle-group.tsx, pill-group.tsx
+│   │   │   │   ├── icon-button.tsx, section-header.tsx, badge.tsx
+│   │   │   │   └── (All with TypeScript prop types)
 │   │   │   └── styles/
 │   │   │       └── design-tokens.ts  # SINGLE SOURCE OF TRUTH
 │   │   └── package.json

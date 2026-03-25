@@ -1,6 +1,6 @@
 // Screen 19: Settings — security, cloud sync, data, account
 import React, { useState, useEffect } from 'react';
-import { tokens } from '@vaultic/ui';
+import { tokens, VStack, SectionHeader as SharedSectionHeader } from '@vaultic/ui';
 import { useAuthStore } from '../../stores/auth-store';
 
 interface SettingsPageProps {
@@ -108,7 +108,11 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
 }
 
 function SectionHeader({ title }: { title: string }) {
-  return <div style={sectionHeader}>{title}</div>;
+  return (
+    <SharedSectionHeader style={{ padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px ${tokens.spacing.xs}px` }}>
+      {title}
+    </SharedSectionHeader>
+  );
 }
 
 function SettingRow({ label, value, children }: { label: string; value: string; children: React.ReactNode }) {
@@ -129,11 +133,6 @@ const headerStyle: React.CSSProperties = {
 const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: tokens.colors.text, padding: 4 };
 const titleStyle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: tokens.colors.text, fontFamily: tokens.font.family };
 const scrollStyle: React.CSSProperties = { flex: 1, overflowY: 'auto' };
-const sectionHeader: React.CSSProperties = {
-  fontSize: tokens.font.size.xs, fontWeight: tokens.font.weight.semibold, color: tokens.colors.secondary,
-  fontFamily: tokens.font.family, textTransform: 'uppercase' as const, letterSpacing: 0.5,
-  padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px ${tokens.spacing.xs}px`,
-};
 const rowStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
