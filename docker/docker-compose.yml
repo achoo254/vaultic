@@ -1,3 +1,7 @@
+# Dev environment — reads from .env (local) or .env.staging
+# Run: docker compose -f docker/docker-compose.yml up -d
+# With staging env: docker compose -f docker/docker-compose.yml --env-file .env.staging up -d
+
 services:
   postgres:
     image: postgres:16-alpine

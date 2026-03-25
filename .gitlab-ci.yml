@@ -89,16 +89,18 @@ deploy-staging:
       # Pull latest code
       $SSH_CMD "cd $DEPLOY_PATH && git fetch origin main && git reset --hard origin/main"
 
-      # Write .env from CI variables
-      $SSH_CMD "cat > $DEPLOY_PATH/.env << 'ENVEOF'
+      # Write .env.staging from CI variables
+      $SSH_CMD "cat > $DEPLOY_PATH/.env.staging << ENVEOF
       POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+      DATABASE_URL=postgres://vaultic:$POSTGRES_PASSWORD@postgres:5432/vaultic
       JWT_SECRET=$JWT_SECRET
       RUST_LOG=info
+      SERVER_PORT=8080
       VITE_API_URL=https://vaultic.inetdev.io.vn
       ENVEOF"
 
       # Build and deploy
-      $SSH_CMD "cd $DEPLOY_PATH && docker compose -f docker/docker-compose.staging.yml up -d --build --remove-orphans"
+      $SSH_CMD "cd $DEPLOY_PATH && docker compose -f docker/docker-compose.staging.yml --env-file .env.staging up -d --build --remove-orphans"
 
       # Setup Nginx vhost if not present
       $SSH_CMD "test -f /etc/nginx/conf.d/vaultic.conf || (cp $DEPLOY_PATH/docker/nginx/vaultic.conf /etc/nginx/conf.d/vaultic.conf && nginx -t && systemctl reload nginx)"

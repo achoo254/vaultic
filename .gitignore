@@ -13,9 +13,10 @@ node_modules/
 .turbo/
 dist/
 
-# Environment
+# Environment — secrets never committed
 .env
 .env.local
+.env.staging
 .env.production
 
 # OS

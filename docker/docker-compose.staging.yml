@@ -1,5 +1,5 @@
 # Staging deployment — Cloudflare → Nginx (host) → server:8080
-# Run: docker compose -f docker/docker-compose.staging.yml up -d
+# Run: docker compose -f docker/docker-compose.staging.yml --env-file .env.staging up -d
 
 services:
   postgres:

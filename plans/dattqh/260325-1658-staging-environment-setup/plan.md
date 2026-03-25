@@ -47,6 +47,25 @@ Cloudflare (HTTPS, Flexible) → HTTP → Nginx vhost (existing on VPS)
 | `.env.staging.example` | Created | done |
 | `.gitlab-ci.yml` | Modified | done |
 
+## Environment Files Strategy
+
+```
+.env                  → local dev (gitignored, defaults in .env.example)
+.env.staging          → staging secrets (gitignored, written by CI from Variables)
+.env.staging.example  → template (committed, no secrets)
+.env.production       → future production (gitignored)
+```
+
+**Local build with staging env:**
+```bash
+docker compose -f docker/docker-compose.yml --env-file .env.staging up -d
+```
+
+**Staging deploy (CI handles automatically):**
+```bash
+docker compose -f docker/docker-compose.staging.yml --env-file .env.staging up -d
+```
+
 ## User Manual Steps Required
 
 ### 1. GitLab CI/CD Variables (Settings → CI/CD → Variables)
