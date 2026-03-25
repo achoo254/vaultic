@@ -433,39 +433,59 @@
 │  Key Derivation                              │
 │  ├── Argon2id (argon2 crate)                │
 │  │   ├── Memory: 64 MiB                     │
-│  │   ├── Time cost: 2                       │
-│  │   └── Parallelism: 4                     │
-│  └── HKDF (hkdf crate)                      │
-│      ├── Extract phase (with salt)          │
-│      └── Expand phase (multiple keys)       │
+│  │   ├── Time cost: 3 iterations            │
+│  │   ├── Parallelism: 4                     │
+│  │   └── Hash: 32 bytes (256-bit)           │
+│  └── HKDF-SHA256 (hkdf + sha2 crates)       │
+│      ├── Domain sep: "vaultic-enc"          │
+│      ├── Domain sep: "vaultic-auth"         │
+│      └── Expand: 32-byte output per key     │
 │                                               │
 │  Encryption                                  │
 │  ├── AES-256-GCM (aes-gcm crate)           │
 │  │   ├── 256-bit key                       │
-│  │   ├── 96-bit nonce (random)             │
+│  │   ├── 96-bit nonce (random per msg)     │
 │  │   ├── 128-bit auth tag                  │
-│  │   └── Associated data (header)          │
+│  │   └── Format: nonce || ciphertext || tag│
 │  └── Random number gen (rand crate)        │
-│      └── Cryptographically secure (getrandom) │
+│      └── Cryptographically secure CSPRNG   │
 │                                               │
 │  Password Generation                        │
-│  └── Random alphanumeric + symbols         │
-│      └── Configurable length (12–32)       │
+│  ├── CSPRNG: rand::thread_rng()             │
+│  ├── Configurable: 8–128 chars              │
+│  └── Options: upper, lower, digits, symbols│
+│                                               │
+│  Type Safety                                 │
+│  ├── MasterKey: Zeroize on drop             │
+│  ├── EncryptionKey: Zeroize on drop         │
+│  └── AuthHash: Zeroize on drop              │
 │                                               │
 └──────────────────────────────────────────────┘
 ```
 
 **Responsibility:**
-- Argon2id KDF
-- HKDF key expansion
-- AES-256-GCM encryption
-- Secure password generation
+- Argon2id key derivation (password → master key)
+- HKDF key expansion (master key → per-purpose keys)
+- AES-256-GCM encryption/decryption (individual vault items)
+- Secure password generation (configurable entropy)
+- Type-safe key handling with automatic memory zeroization
 - Used by both server (validation) and client (WebCrypto bridge)
 
+**Exports:**
+- `derive_master_key(password, email) → MasterKey`
+- `derive_encryption_key(master_key) → EncryptionKey`
+- `derive_auth_hash(master_key) → AuthHash`
+- `encrypt(key, plaintext) → Vec<u8>`
+- `decrypt(key, data) → Vec<u8>`
+- `generate_password(options) → String`
+- `generate_share_key() → ShareKey`
+
 **Files:**
+- `crates/vaultic-crypto/src/types.rs` — Key types (MasterKey, EncryptionKey, AuthHash)
+- `crates/vaultic-crypto/src/error.rs` — CryptoError enum
 - `crates/vaultic-crypto/src/kdf.rs` — Argon2id + HKDF
 - `crates/vaultic-crypto/src/cipher.rs` — AES-256-GCM
-- `crates/vaultic-crypto/src/password_gen.rs` — Generation
+- `crates/vaultic-crypto/src/password_gen.rs` — Secure password generation
 
 #### 2.4 Shared Types (`vaultic-types`)
 ```
@@ -694,32 +714,43 @@
 │                                                  │
 │ Master Password (user secret, never sent)      │
 │   ↓                                             │
-│ Argon2id(password, salt)                        │
-│   ├── Work: 2 iterations                        │
-│   ├── Memory: 64 MiB                            │
+│ Argon2id(password, email as salt)               │
+│   ├── Memory: 64 MiB (65536 KiB)                │
+│   ├── Time cost: 3 iterations                   │
 │   ├── Parallelism: 4                            │
-│   └── Brute-force resistant                     │
+│   ├── Output: 256-bit master key                │
+│   └── Brute-force resistant (OWASP compliant)   │
 │   ↓                                             │
-│ Master Key (256-bit, in-memory only)           │
+│ Master Key (256-bit, Zeroize on drop)          │
 │   ├── Never stored                              │
 │   ├── Never sent to server                      │
 │   ├── Regenerated on each login                │
-│   └── Cleared from memory on logout            │
+│   ├── Automatically zeroed from memory          │
+│   └── Protected from memory dumps               │
 │   ↓                                             │
-│ HKDF Expansion (IKM = master key)              │
-│   ├── Extract phase: HMAC-SHA256                │
-│   ├── Expand phase: Context-based               │
-│   └── Derives: {Enc Key, Auth Key, ...}        │
+│ HKDF-SHA256 Expansion (IKM = master key)       │
+│   ├── Enc key: HKDF(mk, info="vaultic-enc")    │
+│   ├── Auth hash: HKDF(mk, info="vaultic-auth") │
+│   ├── Domain separation prevents key reuse      │
+│   └── Each key: 256-bit output                  │
 │   ↓                                             │
 │ AES-256-GCM per item                           │
-│   ├── 256-bit key                               │
-│   ├── 96-bit random nonce                       │
-│   ├── Authenticated encryption                  │
-│   └── Ciphertext integrity verified on decrypt │
+│   ├── Key: 256-bit encryption key               │
+│   ├── Nonce: 96-bit random (per message)        │
+│   ├── Format: nonce || ciphertext || tag        │
+│   ├── Authentication: 128-bit auth tag          │
+│   └── Integrity verified on decrypt             │
+│                                                  │
+│ Authentication to Server:                       │
+│   ├── Client: Sends auth_hash (not password)    │
+│   ├── Server: Cannot derive encryption key      │
+│   ├── Auth hash: 2nd hash of HKDF output        │
+│   └── Original HKDF output never exposed        │
 │                                                  │
 │ Result: Server has ZERO plaintext ✓             │
-│         Only ciphertext blobs stored            │
+│         Only ciphertext + auth hash stored      │
 │         No server-side key = no decryption     │
+│         Memory safety: keys zeroized on drop    │
 │                                                  │
 └─────────────────────────────────────────────────┘
 ```
@@ -799,8 +830,8 @@
 | Phase | Component | Status |
 |-------|-----------|--------|
 | 1 | Monorepo setup | ✅ Complete |
-| 2 | Crypto (Rust) | 🔄 In Progress |
-| 3 | API server + DB | 🔄 In Progress |
+| 2 | Crypto (Rust) | ✅ Complete |
+| 3 | API server + DB | Pending |
 | 4 | Extension shell + Auth | Pending |
 | 5 | Vault CRUD + Sync | Pending |
 | 6 | Autofill + Content script | Pending |
@@ -811,3 +842,4 @@
 
 *Document updated: 2026-03-25*
 *Phase 1 Status: Complete*
+*Phase 2 Status: Complete (Crypto Core)*

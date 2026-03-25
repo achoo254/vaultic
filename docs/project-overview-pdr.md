@@ -29,11 +29,11 @@
 - **Phase 1 Status:** Data model designed in vaultic-types. Implementation in Phase 5.
 
 #### 3. Zero-Knowledge Encryption
-- **FR-3.1:** Master password → Argon2id key derivation
-- **FR-3.2:** HKDF-derived per-purpose encryption keys
-- **FR-3.3:** AES-256-GCM encryption for each vault item
+- **FR-3.1:** Master password → Argon2id key derivation (email as salt, 64MB, t=3, p=4)
+- **FR-3.2:** HKDF-SHA256 per-purpose encryption keys with domain separation
+- **FR-3.3:** AES-256-GCM encryption for each vault item (256-bit key, random nonce)
 - **FR-3.4:** Server storage: ciphertext only, no plaintext access
-- **Phase 1 Status:** Crypto crate scaffolded. Algorithms in Phase 2.
+- **Phase 2 Status:** Fully implemented. All crypto primitives complete.
 
 #### 4. Cloud Sync (Optional, User-Controlled)
 - **FR-4.1:** User toggle for Cloud Sync in Settings
@@ -143,7 +143,7 @@ Master Password
 | Phase | Name | Duration | Status |
 |-------|------|----------|--------|
 | 1 | Project Setup & Monorepo | 1d | ✅ Complete |
-| 2 | Crypto Core (Rust) | 3d | Pending |
+| 2 | Crypto Core (Rust) | 3d | ✅ Complete |
 | 3 | API Server & Database | 4d | Pending |
 | 4 | Extension Shell & Auth | 3d | Pending |
 | 5 | Vault CRUD & Sync | 5d | Pending |
@@ -163,10 +163,19 @@ Master Password
 - ✅ CI/CD skeleton integrated
 - ✅ Design tokens centralized
 
-### Phase 2–3 (In Progress)
-- Crypto tests all pass
+### Phase 2 (Complete)
+- ✅ Argon2id KDF implemented (m=64MB, t=3, p=4)
+- ✅ HKDF-SHA256 key derivation with domain separation
+- ✅ AES-256-GCM encryption/decryption working
+- ✅ Secure password generation with configurable options
+- ✅ Type-safe keys with automatic Zeroize on drop
+- ✅ All crypto tests pass
+- ✅ No warnings from clippy or cargo fmt
+
+### Phase 3 (In Progress)
 - API server builds and starts
 - Database migrations run without error
+- Auth endpoints operational
 
 ### Phase 4–6 (Future)
 - Extension loads in Chrome/Firefox
@@ -257,3 +266,4 @@ All UI must use design tokens from `packages/ui/src/styles/design-tokens.ts`. No
 
 *Document updated: 2026-03-25*
 *Phase 1 Status: Complete*
+*Phase 2 Status: Complete (Crypto Core)*

@@ -22,31 +22,45 @@
 
 ### 1. `crates/vaultic-crypto/` — Cryptographic Primitives
 
-**Purpose:** Core encryption algorithms used by server and referenced by client.
+**Purpose:** Core encryption algorithms (Argon2id, AES-256-GCM, HKDF, password generation).
 
 **Key Files:**
-- `src/lib.rs` — Public API exports
-- `src/cipher.rs` — AES-256-GCM encryption/decryption
-- `src/kdf.rs` — Argon2id key derivation + HKDF
-- `src/password_gen.rs` — Secure password generation
-- `Cargo.toml` — Dependencies: aes-gcm, argon2, hkdf, sha2, rand, base64
+- `src/lib.rs` — Public API exports (8 lines)
+- `src/types.rs` — MasterKey, EncryptionKey, AuthHash newtypes with Zeroize
+- `src/error.rs` — CryptoError enum (Kdf, Encryption, Decryption, InvalidInput)
+- `src/kdf.rs` — Argon2id (m=64MB, t=3, p=4) + HKDF-SHA256 key derivation
+- `src/cipher.rs` — AES-256-GCM encrypt/decrypt with random 96-bit nonce
+- `src/password_gen.rs` — CSPRNG password generator with configurable character sets
 
 **Exports:**
 ```rust
-pub use cipher::{encrypt, decrypt};
-pub use kdf::{derive_key, derive_keys};
-pub use password_gen::generate_password;
+pub use cipher::{decrypt, encrypt};
+pub use error::CryptoError;
+pub use kdf::{derive_auth_hash, derive_encryption_key, derive_master_key};
+pub use password_gen::{generate_password, generate_share_key, PasswordGenOptions, ShareKey};
+pub use types::{AuthHash, EncryptionKey, MasterKey};
 ```
 
-**Phase 1 Status:** Scaffolded only. Implementation in Phase 2.
+**Phase 2 Status:** Fully implemented. All crypto primitives complete.
+
+**Argon2id Parameters (OWASP):**
+- Memory: 64 MiB (ARGON2_M_COST = 65536 KiB)
+- Time cost: 3 iterations (ARGON2_T_COST)
+- Parallelism: 4 (ARGON2_P_COST)
+- Hash output: 32 bytes (256-bit)
+
+**Key Derivation:**
+- Master key: Argon2id(password, email as salt)
+- Encryption key: HKDF-SHA256(master_key, info="vaultic-enc")
+- Auth hash: HKDF-SHA256(master_key, info="vaultic-auth") + SHA-256 (server never sees value that derives enc key)
 
 **Dependencies:**
-- `aes-gcm = "0.10"` — AES-256-GCM encryption
+- `aes-gcm = "0.10"` — AES-256-GCM authenticated encryption
 - `argon2 = "0.5"` — Argon2id KDF
 - `hkdf = "0.12"` — HMAC-based key derivation
 - `sha2 = "0.10"` — SHA-256 hash
-- `rand = "0.8"` — Random number generation
-- `base64 = "0.22"` — Base64 encoding
+- `rand = "0.8"` — Cryptographically secure random number generation
+- `zeroize = "1.7"` — Automatic memory zeroization on drop
 - Workspace deps: `serde`, `thiserror`
 
 ---
@@ -694,17 +708,23 @@ ARGON2_PARALLELISM=4
 
 ---
 
-## Next Steps (Phase 2)
+## Next Steps (Phase 3)
 
-### Crypto Core (Rust)
-1. Implement `crates/vaultic-crypto/src/kdf.rs`
-   - Argon2id with tuned parameters
-   - HKDF key expansion
-2. Implement `crates/vaultic-crypto/src/cipher.rs`
-   - AES-256-GCM encryption
-   - Nonce handling
-3. Write comprehensive Rust crypto tests
-4. Implement `packages/crypto/` (TS bridge)
+### API Server & Database
+1. Implement `crates/vaultic-server/src/routes/`
+   - Auth endpoints: /auth/register, /auth/login, /auth/refresh, /auth/logout
+   - Sync endpoints: /sync/pull, /sync/push, /sync/status
+   - Share endpoints: /share/create, /share/:link_id, /share/:link_id DELETE
+2. Implement database models via SeaORM
+   - Migrate users table with password_hash
+   - Migrate sync_deltas table
+   - Migrate share_links and sessions tables
+3. Implement middleware
+   - JWT auth validation
+   - CORS restriction (extension origin)
+   - Rate limiting on /auth/* endpoints
+4. Write comprehensive integration tests
+5. Verify database migrations run clean
 
 ---
 
@@ -782,3 +802,4 @@ docker compose -f docker/docker-compose.yml up
 *Codebase summary generated: 2026-03-25*
 *Total codebase size: ~143K tokens, 123 files*
 *Phase 1 Status: ✅ Complete*
+*Phase 2 Status: ✅ Complete (Crypto Core)*
