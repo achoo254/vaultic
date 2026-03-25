@@ -16,8 +16,7 @@ async fn main() {
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::info!("Vaultic server listening on {addr}");
 
-    let app = axum::Router::new()
-        .route("/health", axum::routing::get(|| async { "ok" }));
+    let app = axum::Router::new().route("/health", axum::routing::get(|| async { "ok" }));
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
