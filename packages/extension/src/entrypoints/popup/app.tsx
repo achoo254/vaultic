@@ -10,6 +10,11 @@ import { VaultItemDetail } from '../../components/vault/vault-item-detail';
 import { VaultItemForm } from '../../components/vault/vault-item-form';
 import { PasswordGeneratorView } from '../../components/vault/password-generator-view';
 import { SharePage } from '../../components/share/share-page';
+import { SettingsPage } from '../../components/settings/settings-page';
+import { ExportVault } from '../../components/settings/export-vault';
+import { ImportPasswords } from '../../components/settings/import-passwords';
+import { SecurityHealth } from '../../components/settings/security-health';
+import { ToastContainer } from '../../components/common/toast';
 import { BottomNav, type NavTab } from '../../components/common/bottom-nav';
 import { useVaultStore } from '../../stores/vault-store';
 
@@ -24,7 +29,10 @@ type View =
   | { type: 'vault-edit'; id: string }
   | { type: 'generator' }
   | { type: 'share' }
-  | { type: 'settings' };
+  | { type: 'settings' }
+  | { type: 'export' }
+  | { type: 'import' }
+  | { type: 'health' };
 
 export function App() {
   const { isLocked, isLoggedIn, email, hydrate } = useAuthStore();
@@ -109,10 +117,20 @@ export function App() {
         )}
         {view.type === 'generator' && <PasswordGeneratorView />}
         {view.type === 'share' && <SharePage />}
-        {view.type === 'settings' && <CenterMessage text="Settings — Phase 8" />}
+        {view.type === 'settings' && (
+          <SettingsPage
+            onBack={() => setView({ type: 'vault-list' })}
+            onExport={() => setView({ type: 'export' })}
+            onImport={() => setView({ type: 'import' })}
+          />
+        )}
+        {view.type === 'export' && <ExportVault onBack={() => setView({ type: 'settings' })} />}
+        {view.type === 'import' && <ImportPasswords onBack={() => setView({ type: 'settings' })} />}
+        {view.type === 'health' && <SecurityHealth onBack={() => setView({ type: 'vault-list' })} />}
       </div>
 
       {showBottomNav && <BottomNav active={activeTab} onChange={handleTabChange} />}
+      <ToastContainer />
     </div>
   );
 }
