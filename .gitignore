@@ -1,0 +1,23 @@
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Rust
+target/
+Cargo.lock
+
+# Node.js
+node_modules/
+.output/
+dist/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
