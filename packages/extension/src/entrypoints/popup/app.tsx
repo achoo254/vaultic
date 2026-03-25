@@ -9,6 +9,7 @@ import { VaultList } from '../../components/vault/vault-list';
 import { VaultItemDetail } from '../../components/vault/vault-item-detail';
 import { VaultItemForm } from '../../components/vault/vault-item-form';
 import { PasswordGeneratorView } from '../../components/vault/password-generator-view';
+import { SharePage } from '../../components/share/share-page';
 import { BottomNav, type NavTab } from '../../components/common/bottom-nav';
 import { useVaultStore } from '../../stores/vault-store';
 
@@ -107,7 +108,7 @@ export function App() {
           />
         )}
         {view.type === 'generator' && <PasswordGeneratorView />}
-        {view.type === 'share' && <CenterMessage text="Secure Share — Phase 7" />}
+        {view.type === 'share' && <SharePage />}
         {view.type === 'settings' && <CenterMessage text="Settings — Phase 8" />}
       </div>
 

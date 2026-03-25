@@ -1,5 +1,7 @@
 //! Route definitions for the Vaultic API server.
 
+use axum::http::{header, StatusCode};
+use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::Router;
 
@@ -27,5 +29,18 @@ pub fn create_router(state: AppState) -> Router {
         .nest("/api/auth", auth_routes)
         .nest("/api/sync", sync_routes)
         .nest("/api/share", share_routes)
+        // Recipient share page — serves static HTML, decryption happens client-side
+        .route("/s/{id}", get(serve_share_page))
         .with_state(state)
+}
+
+/// Serve the static share page HTML. The share ID is in the URL path,
+/// the decryption key is in the URL fragment (never sent to server).
+async fn serve_share_page() -> impl IntoResponse {
+    const SHARE_HTML: &str = include_str!("../static/share-page.html");
+    (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
+        SHARE_HTML,
+    )
 }
