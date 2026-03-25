@@ -2,20 +2,22 @@
 phase: 3
 priority: critical
 status: pending
-estimated_days: 5
+estimated_days: 4
 depends_on: [2]
 ---
 
 # Phase 3: API Server & Database
 
 ## Overview
-Build Axum REST API with SeaORM + PostgreSQL. Auth (register/login), vault CRUD, sync, secure share endpoints.
+Build Axum REST API with SeaORM + PostgreSQL. **Offline-first architecture**: server only handles auth, sync relay, and secure share. No vault CRUD endpoints — all CRUD happens client-side in IndexedDB.
 
 ## Key Insights
+- **Server role: auth + sync relay + share broker ONLY**
 - Server is zero-knowledge: only stores encrypted blobs
 - Auth: client sends auth_hash (derived from master password), server stores hash(auth_hash)
 - JWT for session management (short-lived access + refresh token)
-- All vault data is encrypted client-side before reaching server
+- Vault CRUD is 100% client-side (IndexedDB) — server only receives sync pushes
+- Sync: client pushes local changes, pulls remote changes (delta sync, LWW)
 - Use `rustls` for TLS (no openssl dependency)
 
 ## Architecture
@@ -32,8 +34,7 @@ vaultic-server/
 │   ├── handlers/
 │   │   ├── mod.rs
 │   │   ├── auth.rs             # POST /auth/register, /auth/login, /auth/refresh
-│   │   ├── vault.rs            # CRUD /vault/items, /vault/folders
-│   │   ├── sync.rs             # GET /sync?since=<timestamp>
+│   │   ├── sync.rs             # POST /sync/push, GET /sync/pull?since=<timestamp>
 │   │   └── share.rs            # POST /share, GET /share/:id
 │   ├── models/                 # SeaORM entities
 │   │   ├── mod.rs
@@ -44,7 +45,7 @@ vaultic-server/
 │   ├── services/
 │   │   ├── mod.rs
 │   │   ├── auth_service.rs     # Register, login, token logic
-│   │   ├── vault_service.rs    # CRUD + sync logic
+│   │   ├── sync_service.rs     # Sync relay: accept push, serve pull
 │   │   └── share_service.rs    # Secure share logic
 │   └── error.rs                # AppError → Axum response
 ├── migration/                  # SeaORM migrations
@@ -85,19 +86,22 @@ CREATE TABLE folders (
 );
 ```
 
-### vault_items
+### vault_items (server-side sync copy)
 ```sql
 CREATE TABLE vault_items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,              -- Client-generated UUID
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     folder_id UUID REFERENCES folders(id),
     item_type SMALLINT NOT NULL DEFAULT 1,
     encrypted_data TEXT NOT NULL,
+    device_id VARCHAR(36) NOT NULL,    -- Source device for sync dedup
+    version INT NOT NULL DEFAULT 1,    -- For LWW conflict detection
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     deleted_at TIMESTAMPTZ
 );
 CREATE INDEX idx_vault_items_user_updated ON vault_items(user_id, updated_at);
+CREATE INDEX idx_vault_items_device ON vault_items(user_id, device_id);
 ```
 
 ### secure_shares
@@ -118,7 +122,7 @@ CREATE INDEX idx_shares_cleanup ON secure_shares(expires_at)
     WHERE expires_at IS NOT NULL OR max_views IS NOT NULL;
 ```
 
-## API Endpoints
+## API Endpoints (Offline-First — User-Controlled Sync)
 
 ### Auth
 | Method | Path | Body | Response | Auth |
@@ -127,26 +131,19 @@ CREATE INDEX idx_shares_cleanup ON secure_shares(expires_at)
 | POST | `/api/auth/login` | `{email, auth_hash}` | `{access_token, refresh_token}` | No |
 | POST | `/api/auth/refresh` | `{refresh_token}` | `{access_token}` | No |
 
-### Vault Items
+### Sync (opt-in — only works when user enables Cloud Sync in Settings)
 | Method | Path | Body | Response | Auth |
 |--------|------|------|----------|------|
-| GET | `/api/vault/items` | - | `[{id, folder_id, item_type, encrypted_data, updated_at}]` | JWT |
-| POST | `/api/vault/items` | `{folder_id?, item_type, encrypted_data}` | `{id}` | JWT |
-| PUT | `/api/vault/items/:id` | `{folder_id?, encrypted_data}` | `200` | JWT |
-| DELETE | `/api/vault/items/:id` | - | `200` (soft delete) | JWT |
+| POST | `/api/sync/push` | `{items: [...], folders: [...], device_id}` | `{accepted: [...], conflicts: [...]}` | JWT |
+| GET | `/api/sync/pull` | `?since=<ISO8601>&device_id=<id>` | `{items: [...], folders: [...], deleted_ids: [...], server_time}` | JWT |
+| DELETE | `/api/sync/purge` | - | `{deleted_count}` | JWT |
 
-### Folders
-| Method | Path | Body | Response | Auth |
-|--------|------|------|----------|------|
-| GET | `/api/vault/folders` | - | `[{id, encrypted_name, parent_id}]` | JWT |
-| POST | `/api/vault/folders` | `{encrypted_name, parent_id?}` | `{id}` | JWT |
-| PUT | `/api/vault/folders/:id` | `{encrypted_name}` | `200` | JWT |
-| DELETE | `/api/vault/folders/:id` | - | `200` (soft delete) | JWT |
-
-### Sync
-| Method | Path | Query | Response | Auth |
-|--------|------|-------|----------|------|
-| GET | `/api/sync` | `?since=<ISO8601>` | `{items: [...], folders: [...], deleted_ids: [...]}` | JWT |
+**Sync is user-controlled:**
+- Default: OFF. Server has NO vault data.
+- User enables Cloud Sync → first push = full vault upload (encrypted blobs).
+- After that: delta sync (push/pull) when user has sync ON.
+- User disables Cloud Sync → option to delete server data (`DELETE /api/sync/purge`) or keep frozen.
+- Conflict resolution: Last-Write-Wins (LWW) by `updated_at` timestamp.
 
 ### Secure Share
 | Method | Path | Body | Response | Auth |
@@ -173,15 +170,20 @@ CREATE INDEX idx_shares_cleanup ON secure_shares(expires_at)
 - Refresh: validate refresh token, issue new access token
 - JWT middleware: extract user_id from Bearer token
 
-### 4. Vault CRUD handlers (3h)
-- Standard CRUD with user_id scoping (user can only access own items)
-- Soft delete (set deleted_at) for sync support
+### 4. Sync relay handlers (4h)
+**POST /api/sync/push**: Client pushes local changes
+- Accept batch of encrypted items + folders from client
+- Upsert into server DB (server stores ciphertext as-is, no validation of contents)
+- Track `device_id` to avoid echoing changes back to sender
+- Return accepted IDs + any conflicts (same item updated by another device)
+- Conflict resolution: LWW by `updated_at` — latest timestamp wins
 
-### 5. Sync endpoint (2h)
-- Return items/folders with updated_at > since param
-- Include deleted_ids for client to remove locally
+**GET /api/sync/pull**: Client pulls remote changes
+- Return items/folders with `updated_at > since` AND `device_id != requester`
+- Include `deleted_ids` for client to remove locally
+- Return `server_time` for next sync cursor
 
-### 6. Secure Share handlers (3h)
+### 5. Secure Share handlers (3h)
 - Create: generate 12-char URL-safe ID, store encrypted_data + TTL
 - Retrieve: check views < max_views AND now < expires_at, increment views
 - Auto-cleanup: scheduled task or lazy deletion on access
@@ -206,9 +208,9 @@ CREATE INDEX idx_shares_cleanup ON secure_shares(expires_at)
 - [ ] POST /auth/register
 - [ ] POST /auth/login
 - [ ] POST /auth/refresh
-- [ ] GET/POST/PUT/DELETE /vault/items
-- [ ] GET/POST/PUT/DELETE /vault/folders
-- [ ] GET /sync?since=
+- [ ] POST /sync/push (accept batch of encrypted items)
+- [ ] GET /sync/pull?since= (return delta + deleted_ids)
+- [ ] LWW conflict resolution logic
 - [ ] POST /share (create)
 - [ ] GET /share/:id (retrieve + decrement)
 - [ ] DELETE /share/:id (owner revoke)
@@ -219,8 +221,10 @@ CREATE INDEX idx_shares_cleanup ON secure_shares(expires_at)
 
 ## Success Criteria
 - Server starts and connects to PostgreSQL
-- Auth flow works: register → login → JWT → access vault
-- Vault CRUD scoped to authenticated user
-- Sync returns delta changes since timestamp
+- Auth flow works: register → login → JWT
+- **No vault CRUD endpoints** — server only accepts sync push/pull
+- Sync push stores encrypted blobs as-is
+- Sync pull returns delta changes since timestamp, excludes sender's device
+- LWW conflict resolution works correctly
 - Share create/retrieve respects TTL and max_views
 - All encrypted_data is opaque to server (never decrypted server-side)

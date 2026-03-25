@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vaultic — Design System & Screen Map</title>
+<style>
+  :root { --primary:#2563EB; --text:#18181B; --secondary:#71717A; --border:#E4E4E7; --bg:#FAFAFA; --surface:#FFFFFF; --green:#22C55E; --red:#EF4444; --yellow:#F59E0B; --purple:#8B5CF6; --pink:#EC4899; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+  .header{background:var(--text);color:white;padding:40px 0;text-align:center;position:sticky;top:0;z-index:100}
+  .header h1{font-size:28px;font-weight:700;letter-spacing:-0.5px}
+  .header p{color:#A1A1AA;font-size:14px;margin-top:4px}
+  .nav{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 0;position:sticky;top:90px;z-index:99;overflow-x:auto;white-space:nowrap}
+  .nav-inner{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;gap:8px}
+  .nav a{display:inline-block;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;color:var(--secondary);text-decoration:none;border:1px solid var(--border);transition:all 0.2s;flex-shrink:0}
+  .nav a:hover{background:var(--primary);color:white;border-color:var(--primary)}
+  .container{max-width:1400px;margin:0 auto;padding:0 24px}
+  .section{padding:48px 0 24px}
+  .section-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .section-header h2{font-size:22px;font-weight:700}
+  .badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;color:white}
+  .badge-blue{background:var(--primary)} .badge-green{background:var(--green)} .badge-pink{background:var(--pink)}
+  .badge-yellow{background:var(--yellow)} .badge-red{background:var(--red)} .badge-purple{background:var(--purple)} .badge-gray{background:#A1A1AA}
+  .section-desc{color:var(--secondary);font-size:14px;margin-bottom:24px;max-width:700px}
+  .flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:14px 18px;background:#F0F9FF;border-radius:10px;border:1px solid #BFDBFE}
+  .flow-step{font-size:13px;font-weight:500;color:var(--primary)} .flow-arrow{color:#93C5FD;font-size:16px}
+  .flow-note{font-size:11px;color:var(--secondary);font-style:italic}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:box-shadow 0.2s}
+  .card:hover{box-shadow:0 8px 24px rgba(0,0,0,0.08)}
+  .card img{width:100%;display:block;border-bottom:1px solid var(--border)}
+  .card-body{padding:16px} .card-title{font-size:15px;font-weight:600;margin-bottom:4px}
+  .card-id{font-size:11px;color:var(--secondary);font-family:monospace}
+  .card-desc{font-size:13px;color:var(--secondary);margin-top:8px}
+  .card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .tag{font-size:10px;padding:2px 8px;border-radius:4px;background:#F4F4F5;color:var(--secondary);font-weight:500}
+  .tag-offline{background:#DCFCE7;color:#166534} .tag-online{background:#DBEAFE;color:#1E40AF} .tag-modal{background:#FEF3C7;color:#92400E}
+  .card-wide{grid-column:1/-1;max-width:500px}
+  .tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-top:16px}
+  .token-card{padding:16px;border-radius:8px;border:1px solid var(--border);background:var(--surface)}
+  .token-card h4{font-size:12px;color:var(--secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+  .color-row{display:flex;align-items:center;gap:8px;margin:4px 0}
+  .color-swatch{width:20px;height:20px;border-radius:4px;border:1px solid var(--border)}
+  .color-label{font-size:12px;color:var(--text)} .color-value{font-size:11px;color:var(--secondary);font-family:monospace}
+  .tk{font-size:12px;color:var(--secondary)} .tk+.tk{margin-top:4px} .tk strong{color:var(--text)}
+  .footer{text-align:center;padding:40px;color:var(--secondary);font-size:13px;border-top:1px solid var(--border);margin-top:48px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Vaultic Design System</h1>
+  <p>Offline-First Password Manager &mdash; 27 screens + Navigation Map &mdash; Organized by Phase</p>
+</div>
+
+<div class="nav"><div class="nav-inner">
+  <a href="#phase1">1: Setup</a>
+  <a href="#phase2">2: Crypto</a>
+  <a href="#phase3">3: Server</a>
+  <a href="#phase4">4: Auth</a>
+  <a href="#phase5">5: Vault</a>
+  <a href="#phase6">6: Autofill</a>
+  <a href="#phase7">7: Share</a>
+  <a href="#phase8">8: Polish</a>
+  <a href="#tokens">Tokens</a>
+  <a href="#techstack">Tech Stack</a>
+  <a href="#navmap">Nav Map</a>
+</div></div>
+
+<div class="container">
+
+<!-- ═══════ PHASE 1 ═══════ -->
+<div class="section" id="phase1">
+  <div class="section-header"><h2>Phase 1 — Project Setup & Monorepo</h2><span class="badge badge-blue">Critical</span><span class="badge badge-gray">No screens</span></div>
+  <p class="section-desc">Cargo workspace (4 crates) + Turborepo (7 pnpm packages). Docker PostgreSQL. GitLab CI skeleton. Design tokens extraction.</p>
+  <div class="tokens">
+    <div class="token-card"><h4>Rust (4 crates)</h4><p class="tk">vaultic-crypto, vaultic-server, vaultic-types, vaultic-migration</p></div>
+    <div class="token-card"><h4>TypeScript (7 packages)</h4><p class="tk">@vaultic/types, crypto, storage, sync, api, ui, extension</p></div>
+    <div class="token-card"><h4>Infrastructure</h4><p class="tk">Docker Compose (PostgreSQL 16), .gitlab-ci.yml, .env.example</p></div>
+  </div>
+</div>
+
+<!-- ═══════ PHASE 2 ═══════ -->
+<div class="section" id="phase2">
+  <div class="section-header"><h2>Phase 2 — Crypto Core (Rust)</h2><span class="badge badge-blue">Critical</span><span class="badge badge-gray">No screens</span></div>
+  <p class="section-desc">vaultic-crypto crate: Argon2id KDF, AES-256-GCM encrypt/decrypt, HKDF key derivation, password generator. Test vectors for WebCrypto interop.</p>
+  <div class="tokens">
+    <div class="token-card"><h4>Functions</h4><p class="tk">derive_master_key, derive_encryption_key, derive_auth_hash, encrypt, decrypt, generate_password</p></div>
+    <div class="token-card"><h4>Security</h4><p class="tk">No panics (Result&lt;T&gt;), no unsafe, zeroize keys, constant-time compare</p></div>
+    <div class="token-card"><h4>Output</h4><p class="tk">test-vectors.json for Phase 4 WebCrypto interop testing</p></div>
+  </div>
+</div>
+
+<!-- ═══════ PHASE 3 ═══════ -->
+<div class="section" id="phase3">
+  <div class="section-header"><h2>Phase 3 — API Server & Database</h2><span class="badge badge-blue">Critical</span><span class="badge badge-gray">No screens</span></div>
+  <p class="section-desc">Axum REST API: auth (register/login/JWT), sync relay (opt-in push/pull), share broker, purge endpoint. Server stores only encrypted blobs.</p>
+  <div class="tokens">
+    <div class="token-card"><h4>Auth Endpoints</h4><p class="tk">POST /auth/register, /auth/login, /auth/refresh</p></div>
+    <div class="token-card"><h4>Sync Endpoints (opt-in)</h4><p class="tk">POST /sync/push, GET /sync/pull, DELETE /sync/purge</p></div>
+    <div class="token-card"><h4>Share Endpoints</h4><p class="tk">POST /share, GET /share/:id, DELETE /share/:id</p></div>
+    <div class="token-card"><h4>DB Tables</h4><p class="tk">users, vault_items (sync copy), folders, secure_shares</p></div>
+  </div>
+</div>
+
+<!-- ═══════ PHASE 4 ═══════ -->
+<div class="section" id="phase4">
+  <div class="section-header"><h2>Phase 4 — Extension Shell & Auth</h2><span class="badge badge-blue">Critical</span></div>
+  <p class="section-desc">Registration requires network (once). After that, vault works 100% offline. Lock screen unlocks locally. Screens: 01, 02, 03.</p>
+  <div class="flow">
+    <span class="flow-step">01. Register</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">auto-login</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">04. Empty Vault</span>
+    <span class="flow-note">(online required)</span>
+  </div>
+  <div class="flow">
+    <span class="flow-step">02. Login</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">05. Vault List</span>
+    <span class="flow-note">(online once, then offline OK)</span>
+  </div>
+  <div class="flow">
+    <span class="flow-step">03. Lock Screen</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">unlock</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">05. Vault List</span>
+    <span class="flow-note">(offline OK)</span>
+  </div>
+  <div class="grid">
+    <div class="card"><img src="w1OHX.png" alt="01. Register"><div class="card-body">
+      <div class="card-title">01. Register</div><div class="card-id">ID: w1OHX &bull; 380&times;520</div>
+      <div class="card-desc">Create account with email + master password. Mandatory for share + optional sync.</div>
+      <div class="card-tags"><span class="tag tag-online">online required</span></div>
+    </div></div>
+    <div class="card"><img src="bp5Dt.png" alt="02. Login"><div class="card-body">
+      <div class="card-title">02. Login</div><div class="card-id">ID: bp5Dt &bull; 380&times;520</div>
+      <div class="card-desc">Email + master password. First login on device requires network.</div>
+      <div class="card-tags"><span class="tag tag-online">online once</span></div>
+    </div></div>
+    <div class="card"><img src="mUoY4.png" alt="03. Lock Screen"><div class="card-body">
+      <div class="card-title">03. Lock Screen</div><div class="card-id">ID: mUoY4 &bull; 380&times;520</div>
+      <div class="card-desc">Re-enter master password after auto-lock (15min). Derives key locally.</div>
+      <div class="card-tags"><span class="tag tag-offline">offline OK</span></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ═══════ PHASE 5 ═══════ -->
+<div class="section" id="phase5">
+  <div class="section-header"><h2>Phase 5 — Vault CRUD & Sync</h2><span class="badge badge-green">High</span></div>
+  <p class="section-desc">All CRUD in IndexedDB locally. Cloud Sync opt-in. Screens: 04, 05, 06, 07, 08, 09, 22.</p>
+  <div class="flow">
+    <span class="flow-step">04. Empty</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">CTA</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">07. Add/Edit</span>
+  </div>
+  <div class="flow">
+    <span class="flow-step">05. Vault List</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">tap item</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">06. Detail</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">Edit / Share / Delete</span>
+  </div>
+  <div class="grid">
+    <div class="card"><img src="0ZO5w.png" alt="04. Empty Vault"><div class="card-body">
+      <div class="card-title">04. Empty Vault</div><div class="card-id">ID: 0ZO5w &bull; 380&times;520</div>
+      <div class="card-desc">First-time empty state. CTA to add first credential.</div>
+      <div class="card-tags"><span class="tag tag-offline">offline OK</span></div>
+    </div></div>
+    <div class="card"><img src="sTCuw.png" alt="05. Vault List"><div class="card-body">
+      <div class="card-title">05. Vault List</div><div class="card-id">ID: sTCuw &bull; 380&times;520</div>
+      <div class="card-desc">Main popup. Suggested, Recent, All Items. No cloud icon by default (local only).</div>
+      <div class="card-tags"><span class="tag tag-offline">offline OK</span><span class="tag">bottom nav</span></div>
+    </div></div>
+    <div class="card"><img src="chTLm.png" alt="06. Credential Detail"><div class="card-body">
+      <div class="card-title">06. Credential Detail</div><div class="card-id">ID: chTLm &bull; 380&times;520</div>
+      <div class="card-desc">View: username, password (masked), notes, folder. Actions: edit, share, delete.</div>
+      <div class="card-tags"><span class="tag tag-offline">offline OK</span></div>
+    </div></div>
+    <div class="card"><img src="xJDNh.png" alt="07. Add / Edit Credential"><div class="card-body">
+      <div class="card-title">07. Add / Edit Credential</div><div class="card-id">ID: xJDNh &bull; 380&times;520</div>
+      <div class="card-desc">Form: name, URL, username, password + generate, notes, folder dropdown.</div>
+      <div class="card-tags"><span class="tag tag-offline">offline OK</span></div>
+    </div></div>
+    <div class="card"><img src="YFCQx.png" alt="08. Delete Confirmation"><div class="card-body">
+      <div class="card-title">08. Delete Confirmation</div><div class="card-id">ID: YFCQx &bull; 320&times;240</div>
+      <div class="card-desc">Modal: trash icon, warning, Cancel + Delete (red).</div>
+      <div class="card-tags"><span class="tag tag-modal">modal</span><span class="tag tag-offline">offline OK</span></div>
+    </div></div>
+    <div class="card"><img src="DehdY.png" alt="09. Password Generator"><div class="card-body">
+      <div class="card-title">09. Password Generator</div><div class="card-id">ID: DehdY &bull; 380&times;520</div>
+      <div class="card-desc">Strength bar, length slider (8-64), char toggles. Bottom nav tab.</div>
+      <div class="card-tags"><span class="tag tag-offline">offline OK</span><span class="tag">bottom nav</span></div>
+    </div></div>
+    <div class="card"><img src="u89lM.png" alt="22. Folder Management"><div class="card-body">
+      <div class="card-title">22. Folder Management</div><div class="card-id">ID: u89lM &bull; 380&times;520</div>
+      <div class="card-desc">Create, rename, delete folders. Item counts. Encrypted names.</div>
+      <div class="card-tags"><span class="tag tag-offline">offline OK</span></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ═══════ PHASE 6 ═══════ -->
+<div class="section" id="phase6">
+  <div class="section-header"><h2>Phase 6 — Autofill & Content Script</h2><span class="badge badge-yellow">High</span></div>
+  <p class="section-desc">Content script on web pages. Detects login forms, shows dropdown, captures credentials. Shadow DOM. Screens: 11, 12.</p>
+  <div class="flow">
+    <span class="flow-step">Login form detected</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">11. Autofill Dropdown</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">fill fields</span>
+  </div>
+  <div class="flow">
+    <span class="flow-step">New credential saved</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">12. Save Banner</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">Save / Never / Dismiss</span>
+  </div>
+  <div class="grid">
+    <div class="card"><img src="VUWlk.png" alt="11. Autofill Dropdown"><div class="card-body">
+      <div class="card-title">11. Autofill Dropdown</div><div class="card-id">ID: VUWlk &bull; 320&times;220</div>
+      <div class="card-desc">Compact overlay. Matching credentials + "Add new" + "Generate".</div>
+      <div class="card-tags"><span class="tag tag-offline">offline OK</span><span class="tag">content script</span></div>
+    </div></div>
+    <div class="card"><img src="KI9Zu.png" alt="12. Save Password Banner"><div class="card-body">
+      <div class="card-title">12. Save Password Banner</div><div class="card-id">ID: KI9Zu &bull; 420&times;56</div>
+      <div class="card-desc">Top banner: "Save password for [site]?" Save/Never/Dismiss.</div>
+      <div class="card-tags"><span class="tag tag-offline">offline OK</span><span class="tag">content script</span></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ═══════ PHASE 7 ═══════ -->
+<div class="section" id="phase7">
+  <div class="section-header"><h2>Phase 7 — Secure Share</h2><span class="badge badge-pink">Medium</span></div>
+  <p class="section-desc">Share via temporary links. Zero-knowledge: key in URL fragment. Independent of Cloud Sync. Screens: 13, 14, 15, 16, 17, 17b, 18.</p>
+  <div class="flow">
+    <span class="flow-step">13/14. Share (toggle)</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">Generate link</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">15. Link Created</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">Done</span>
+  </div>
+  <div class="flow">
+    <span class="flow-step">Recipient opens URL</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">16. View Prompt</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">17/17b. Revealed</span>
+    <span class="flow-note">| expired &rarr; 18</span>
+  </div>
+  <div class="grid">
+    <div class="card"><img src="r2JaW.png" alt="13. Share - From Vault"><div class="card-body">
+      <div class="card-title">13. Share - From Vault</div><div class="card-id">ID: r2JaW &bull; 380&times;520</div>
+      <div class="card-desc">Toggle "From Vault": select credential, checkboxes, TTL + max views.</div>
+      <div class="card-tags"><span class="tag tag-online">online required</span><span class="tag">bottom nav</span></div>
+    </div></div>
+    <div class="card"><img src="VToEc.png" alt="14. Share - Quick Share"><div class="card-body">
+      <div class="card-title">14. Share - Quick Share</div><div class="card-id">ID: VToEc &bull; 380&times;563</div>
+      <div class="card-desc">Toggle "Quick Share": paste raw text, optional "save to vault".</div>
+      <div class="card-tags"><span class="tag tag-online">online required</span></div>
+    </div></div>
+    <div class="card"><img src="fHCE3.png" alt="15. Link Created"><div class="card-body">
+      <div class="card-title">15. Share - Link Created</div><div class="card-id">ID: fHCE3 &bull; 380&times;552</div>
+      <div class="card-desc">Success: copy link, expiry info, Done button.</div>
+      <div class="card-tags"><span class="tag tag-online">online</span></div>
+    </div></div>
+    <div class="card"><img src="0aqbN.png" alt="16. View Prompt"><div class="card-body">
+      <div class="card-title">16. Recipient - View Prompt</div><div class="card-id">ID: 0aqbN &bull; 480&times;400</div>
+      <div class="card-desc">Vaultic branding, view limit warning, "View Credential" button.</div>
+      <div class="card-tags"><span class="tag tag-online">web page</span></div>
+    </div></div>
+    <div class="card"><img src="eNLnb.png" alt="17. Secret Revealed"><div class="card-body">
+      <div class="card-title">17. Secret Revealed (Raw)</div><div class="card-id">ID: eNLnb &bull; 480&times;420</div>
+      <div class="card-desc">Raw text block + copy. Warning: disappears on close.</div>
+      <div class="card-tags"><span class="tag tag-online">web page</span></div>
+    </div></div>
+    <div class="card"><img src="SoAx4.png" alt="17b. Credential Revealed"><div class="card-body">
+      <div class="card-title">17b. Credential Revealed</div><div class="card-id">ID: SoAx4 &bull; 480&times;460</div>
+      <div class="card-desc">Structured: username + password fields with copy.</div>
+      <div class="card-tags"><span class="tag tag-online">web page</span></div>
+    </div></div>
+    <div class="card"><img src="hrWyo.png" alt="18. Link Expired"><div class="card-body">
+      <div class="card-title">18. Link Expired</div><div class="card-id">ID: hrWyo &bull; 480&times;320</div>
+      <div class="card-desc">Error: link expired or max views reached.</div>
+      <div class="card-tags"><span class="tag tag-online">web page</span></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ═══════ PHASE 8 ═══════ -->
+<div class="section" id="phase8">
+  <div class="section-header"><h2>Phase 8 — Polish, CI/CD & Ship</h2><span class="badge badge-gray">High</span></div>
+  <p class="section-desc">Settings, Cloud Sync toggle (opt-in, default OFF), loading/error states, export/import, security health. Screens: 10, 19, 19a, 19b, 20, 21, 23, 24.</p>
+  <div class="flow">
+    <span class="flow-step">19. Settings</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">Toggle ON</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">19a. Enable Warning</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">Confirm &rarr; full push</span>
+  </div>
+  <div class="flow">
+    <span class="flow-step">19. Settings</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">Toggle OFF</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">19b. Disable Confirm</span><span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">Delete / Keep frozen</span>
+  </div>
+  <div class="grid">
+    <div class="card"><img src="iUeZ0.png" alt="10. Security Health"><div class="card-body">
+      <div class="card-title">10. Security Health</div><div class="card-id">ID: iUeZ0 &bull; 380&times;520</div>
+      <div class="card-desc">Score circle (0-100%), categories: weak/reused/old. Bottom nav tab.</div>
+      <div class="card-tags"><span class="tag tag-offline">offline OK</span><span class="tag">bottom nav</span></div>
+    </div></div>
+    <div class="card"><img src="P5xSj.png" alt="19. Settings"><div class="card-body">
+      <div class="card-title">19. Settings</div><div class="card-id">ID: P5xSj &bull; 380&times;520</div>
+      <div class="card-desc">Security, Cloud Sync toggle (OFF default), Data (export/import), Account (logout).</div>
+      <div class="card-tags"><span class="tag tag-offline">offline OK</span></div>
+    </div></div>
+    <div class="card"><img src="BTJSr.png" alt="19a. Enable Sync Warning"><div class="card-body">
+      <div class="card-title">19a. Enable Sync Warning</div><div class="card-id">ID: BTJSr &bull; 320&times;auto</div>
+      <div class="card-desc">Confirm: encrypted vault will be stored on server. Zero-knowledge badge. Cancel / Enable.</div>
+      <div class="card-tags"><span class="tag tag-modal">modal</span><span class="tag tag-online">online</span></div>
+    </div></div>
+    <div class="card"><img src="CBEGA.png" alt="19b. Disable Sync Confirm"><div class="card-body">
+      <div class="card-title">19b. Disable Sync Confirm</div><div class="card-id">ID: CBEGA &bull; 320&times;auto</div>
+      <div class="card-desc">Option C: "Delete from server" (default) or "Keep frozen". User decides.</div>
+      <div class="card-tags"><span class="tag tag-modal">modal</span><span class="tag tag-online">online</span></div>
+    </div></div>
+    <div class="card"><img src="snvye.png" alt="20. Loading States"><div class="card-body">
+      <div class="card-title">20. Loading States</div><div class="card-id">ID: snvye &bull; 380&times;520</div>
+      <div class="card-desc">Skeleton, sync progress, button loading, offline indicator (wifi-off banner).</div>
+      <div class="card-tags"><span class="tag tag-offline">patterns</span></div>
+    </div></div>
+    <div class="card"><img src="Bil5X.png" alt="21. Error States"><div class="card-body">
+      <div class="card-title">21. Error States</div><div class="card-id">ID: Bil5X &bull; 380&times;520</div>
+      <div class="card-desc">Network error, wrong password, inline validation, toast.</div>
+      <div class="card-tags"><span class="tag tag-offline">patterns</span></div>
+    </div></div>
+    <div class="card"><img src="yLhiz.png" alt="23. Export Vault"><div class="card-body">
+      <div class="card-title">23. Export Vault</div><div class="card-id">ID: yLhiz &bull; 380&times;600</div>
+      <div class="card-desc">Encrypted (.vaultic) or CSV. Password field for encrypted export.</div>
+      <div class="card-tags"><span class="tag tag-offline">offline OK</span></div>
+    </div></div>
+    <div class="card"><img src="g4Ehs.png" alt="24. Import Passwords"><div class="card-body">
+      <div class="card-title">24. Import Passwords</div><div class="card-id">ID: g4Ehs &bull; 380&times;721</div>
+      <div class="card-desc">Source picker: Chrome, 1Password, Bitwarden, CSV. File upload.</div>
+      <div class="card-tags"><span class="tag tag-offline">offline OK</span></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ═══════ DESIGN TOKENS ═══════ -->
+<div class="section" id="tokens">
+  <div class="section-header"><h2>Design Tokens</h2></div>
+  <p class="section-desc">Source: <code>packages/ui/src/styles/design-tokens.ts</code> &mdash; ALL UI must use these.</p>
+  <div class="tokens">
+    <div class="token-card"><h4>Colors</h4>
+      <div class="color-row"><div class="color-swatch" style="background:#2563EB"></div><span class="color-label">Primary</span><span class="color-value">#2563EB</span></div>
+      <div class="color-row"><div class="color-swatch" style="background:#18181B"></div><span class="color-label">Text</span><span class="color-value">#18181B</span></div>
+      <div class="color-row"><div class="color-swatch" style="background:#71717A"></div><span class="color-label">Secondary</span><span class="color-value">#71717A</span></div>
+      <div class="color-row"><div class="color-swatch" style="background:#E4E4E7"></div><span class="color-label">Border</span><span class="color-value">#E4E4E7</span></div>
+      <div class="color-row"><div class="color-swatch" style="background:#EF4444"></div><span class="color-label">Error</span><span class="color-value">#EF4444</span></div>
+      <div class="color-row"><div class="color-swatch" style="background:#22C55E"></div><span class="color-label">Success</span><span class="color-value">#22C55E</span></div>
+    </div>
+    <div class="token-card"><h4>Typography</h4><p class="tk">Font: Inter 400-700</p><p class="tk">Sizes: 11/13/14/16/18/24</p><p class="tk">Line height: 1.2/1.5/1.75</p></div>
+    <div class="token-card"><h4>Spacing</h4><p class="tk">4/8/12/16/20/24/32</p></div>
+    <div class="token-card"><h4>Radius</h4><p class="tk">sm:6 / md:8 / lg:12 / full:9999</p></div>
+    <div class="token-card"><h4>Extension</h4><p class="tk">380 &times; 520px (fixed)</p></div>
+    <div class="token-card"><h4>Icons</h4><p class="tk">Lucide (outlined), strokeWidth: 1.5</p><p class="tk">Sizes: 16/20/24</p></div>
+  </div>
+</div>
+
+<!-- ═══════ TECH STACK ═══════ -->
+<div class="section" id="techstack">
+  <div class="section-header"><h2>Tech Stack</h2></div>
+  <p class="section-desc">Monorepo: Cargo workspace (4 Rust crates) + Turborepo (7 pnpm packages).</p>
+  <div class="tokens">
+    <div class="token-card"><h4>Rust Crates</h4>
+      <p class="tk"><strong>vaultic-crypto</strong> &mdash; Argon2id, AES-256-GCM, HKDF</p>
+      <p class="tk"><strong>vaultic-server</strong> &mdash; Axum API (auth+sync+share)</p>
+      <p class="tk"><strong>vaultic-types</strong> &mdash; Shared types (serde)</p>
+      <p class="tk"><strong>vaultic-migration</strong> &mdash; SeaORM migrations</p>
+    </div>
+    <div class="token-card"><h4>TS Packages (@vaultic/*)</h4>
+      <p class="tk"><strong>types</strong> &mdash; Shared TS types</p>
+      <p class="tk"><strong>crypto</strong> &mdash; WebCrypto bridge</p>
+      <p class="tk"><strong>storage</strong> &mdash; VaultStore + IndexedDB</p>
+      <p class="tk"><strong>sync</strong> &mdash; Sync engine + LWW</p>
+      <p class="tk"><strong>api</strong> &mdash; Server API client (ofetch)</p>
+      <p class="tk"><strong>ui</strong> &mdash; React + shadcn/ui + Tailwind</p>
+      <p class="tk"><strong>extension</strong> &mdash; WXT (Chrome+Firefox)</p>
+    </div>
+    <div class="token-card"><h4>Server</h4>
+      <p class="tk"><strong>Framework:</strong> Axum (Rust)</p>
+      <p class="tk"><strong>ORM:</strong> SeaORM + PostgreSQL 16</p>
+      <p class="tk"><strong>TLS:</strong> rustls (not openssl)</p>
+      <p class="tk"><strong>Auth:</strong> JWT (access+refresh)</p>
+    </div>
+    <div class="token-card"><h4>Extension</h4>
+      <p class="tk"><strong>Framework:</strong> WXT + React</p>
+      <p class="tk"><strong>State:</strong> Zustand</p>
+      <p class="tk"><strong>Storage:</strong> IndexedDB (idb)</p>
+      <p class="tk"><strong>Crypto:</strong> WebCrypto + argon2-browser</p>
+    </div>
+    <div class="token-card"><h4>Infrastructure</h4>
+      <p class="tk"><strong>CI/CD:</strong> GitLab CI (gitlabs.inet.vn)</p>
+      <p class="tk"><strong>Registry:</strong> gitlabs.inet.vn:5050</p>
+      <p class="tk"><strong>Deploy:</strong> Docker on CentOS 7</p>
+      <p class="tk"><strong>License:</strong> AGPL-3.0</p>
+    </div>
+    <div class="token-card"><h4>Architecture</h4>
+      <p class="tk"><strong>Offline-first:</strong> all CRUD local</p>
+      <p class="tk"><strong>Cloud Sync:</strong> opt-in (user toggle)</p>
+      <p class="tk"><strong>Zero-knowledge:</strong> server sees ciphertext only</p>
+      <p class="tk"><strong>Share:</strong> independent of sync</p>
+      <p class="tk"><strong>Sync off:</strong> delete or keep frozen</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ NAV MAP ═══════ -->
+<div class="section" id="navmap">
+  <div class="section-header"><h2>Navigation Map</h2></div>
+  <p class="section-desc">Complete screen-to-screen flow. 10 sections covering all 27 screens.</p>
+  <div class="grid">
+    <div class="card card-wide"><img src="iEKGZ.png" alt="Navigation Map"><div class="card-body">
+      <div class="card-title">Navigation Map (Offline-First)</div><div class="card-id">ID: iEKGZ</div>
+      <div class="card-desc">Auth, Vault List, Credential Detail, Bottom Nav, Share, Recipient, Autofill, Modals, Settings (Cloud Sync), Utility.</div>
+    </div></div>
+  </div>
+</div>
+
+</div>
+<div class="footer">Vaultic Design System &mdash; 27 screens &bull; Offline-First &bull; User-Controlled Sync &bull; Swiss Clean Minimal</div>
+</body>
+</html>

@@ -23,13 +23,22 @@ Error handling, edge cases, CI/CD pipeline, Docker production build, Chrome Web 
   - Wrong password: red border input + "Incorrect master password" error text
   - Inline validation: red border + alert icon + error message below field
   - Toast notification: dark bg bar, check icon + success/error message
-- Network offline → show cached vault, queue changes for sync
-- JWT expired → auto-refresh, re-auth if refresh fails
-- Server down → graceful degradation with local cache
+- **Offline mode (normal operation)**: Vault fully functional from IndexedDB, sync indicator shows "Offline — changes will sync when connected"
+- **Online → sync in progress**: Show subtle sync icon + "Syncing..." in header
+- **Sync conflict**: Toast "Updated from another device" (LWW auto-resolved)
+- JWT expired → auto-refresh when online, vault still works offline
+- Server down → same as offline, no degradation since vault is local
 
-### 2. Settings screen (3h) — **Screen 19**
+### 2. Settings screen (4h) — **Screen 19**
 - Header: back arrow + "Settings"
 - **Security section**: Auto-lock timeout (15 min default), Clear clipboard after (30s default)
+- **Cloud Sync section** (NEW):
+  - Toggle: Enable Cloud Sync (default OFF)
+  - Status text: "Local only" / "Synced 2 min ago" / "Syncing..."
+  - "Sync Now" button (visible when ON)
+  - Warning when toggling ON: "Your encrypted vault will be stored on the server. Only you can decrypt it."
+  - When toggling OFF → dialog: "Delete cloud data?" with [Delete from server] (default) / [Keep on server]
+  - First enable → full vault push (show progress)
 - **Data section**: Export vault → Screen 23, Import passwords → Screen 24
 - **Account section**: email display, Log out (red text)
 
@@ -61,66 +70,49 @@ Error handling, edge cases, CI/CD pipeline, Docker production build, Chrome Web 
 - Keyboard navigation in popup
 - Extension icon badge (locked/unlocked/error states)
 
-### 7. CI/CD Pipeline — GitHub Actions (3h)
+### 7. CI/CD Pipeline — GitLab CI on gitlabs.inet.vn (3h)
 
 ```yaml
-# .github/workflows/ci.yml
-name: CI
-on: [push, pull_request]
-jobs:
-  rust:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test --workspace
-      - run: cargo clippy --workspace -- -D warnings
+# .gitlab-ci.yml
+stages:
+  - test
+  - build
+  - release
 
-  extension:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter extension build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: extension-chrome
-          path: packages/extension/.output/chrome-mv3/
-```
+rust-test:
+  stage: test
+  image: rust:1.77-bookworm
+  script:
+    - cargo test --workspace
+    - cargo clippy --workspace -- -D warnings
 
-```yaml
-# .github/workflows/release.yml
-name: Release
-on:
-  push:
-    tags: ['v*']
-jobs:
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/Dockerfile
-          push: true
-          tags: ghcr.io/vaultic/server:${{ github.ref_name }}
+extension-build:
+  stage: build
+  image: node:20-alpine
+  before_script:
+    - corepack enable && corepack prepare pnpm@latest --activate
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm --filter extension build
+  artifacts:
+    paths:
+      - packages/extension/.output/chrome-mv3/
 
-  extension:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - run: pnpm install && pnpm --filter extension build
-      # Chrome Web Store upload via chrome-webstore-upload-cli
+docker-release:
+  stage: release
+  image: docker:latest
+  services:
+    - docker:dind
+  only:
+    - tags
+  script:
+    - docker build -f docker/Dockerfile -t gitlabs.inet.vn:5050/dattqh/vaultic/server:$CI_COMMIT_TAG .
+    - docker push gitlabs.inet.vn:5050/dattqh/vaultic/server:$CI_COMMIT_TAG
 ```
 
 ### 8. Docker production config (2h)
 - Finalize `docker-compose.prod.yml` with:
-  - vaultic-server (from GHCR image)
+  - vaultic-server (from GitLab Container Registry image)
   - PostgreSQL 16
   - nginx (reverse proxy + TLS via Let's Encrypt)
 - Environment variables: DATABASE_URL, JWT_SECRET, CORS_ORIGIN
@@ -150,8 +142,57 @@ jobs:
 ### 11. Landing page (2h)
 - Simple static page explaining Vaultic
 - Download/install links
-- Open-source badge + GitHub link
+- Open-source badge + GitLab link
 - "Powered by" for share pages directs here
+
+## Design Verification Checklists
+
+### Screen 10: Security Health
+**Reference:** system-design.pen > Screen 10
+- [ ] Score circle (0-100%) with color coding
+- [ ] Issue categories: Weak (red), Reused (yellow), Old (blue)
+- [ ] Summary bar: Total/Strong/Medium/Weak
+- [ ] Bottom nav with Health tab active
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 19: Settings
+**Reference:** system-design.pen > Screen 19
+- [ ] Header: back arrow + "Settings"
+- [ ] Security section: Auto-lock timeout, Clear clipboard
+- [ ] Data section: Export vault, Import passwords
+- [ ] Account section: email, Log out (red)
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 20: Loading States
+**Reference:** system-design.pen > Screen 20
+- [ ] Vault list skeleton (circle + 2 line placeholders)
+- [ ] Sync progress: icon + text + progress bar
+- [ ] Button loading: spinner + "Saving..."
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 21: Error States
+**Reference:** system-design.pen > Screen 21
+- [ ] Network error: red card, wifi-off icon, Retry button
+- [ ] Wrong password: red border input + error text
+- [ ] Inline validation: red border + alert icon
+- [ ] Toast notification: dark bg + icon + message
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 23: Export Vault
+**Reference:** system-design.pen > Screen 23
+- [ ] Download icon + description
+- [ ] Format picker: Encrypted (.vaultic) / CSV
+- [ ] Password field for encrypted format
+- [ ] Export button + CSV warning banner
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 24: Import Passwords
+**Reference:** system-design.pen > Screen 24
+- [ ] Upload icon + description
+- [ ] Source picker: Chrome, 1Password, Bitwarden, CSV
+- [ ] File upload area
+- [ ] Import button
+- [ ] Screenshot comparison: ≥90% PASS
 
 ## Todo List
 - [ ] Loading States patterns: skeleton, sync progress, button loading (Screen 20)
@@ -163,8 +204,8 @@ jobs:
 - [ ] Dark mode support
 - [ ] Extension icon badge states
 - [ ] Keyboard navigation in popup
-- [ ] GitHub Actions CI (Rust + Extension)
-- [ ] GitHub Actions Release (Docker + Extension)
+- [ ] GitLab CI CI (Rust + Extension)
+- [ ] GitLab CI Release (Docker + Extension)
 - [ ] Docker Compose production config
 - [ ] Security review checklist (all items)
 - [ ] Chrome Web Store listing + submission

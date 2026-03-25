@@ -136,6 +136,58 @@ After clicking "View Credential":
 ### 9. Context menu (1h)
 Right-click selected text → "Share securely with Vaultic" → opens Quick Share pre-filled
 
+## Design Verification Checklists
+
+### Screen 13: Share - From Vault
+**Reference:** system-design.pen > Screen 13
+- [ ] Segmented toggle: "From Vault" (active) / "Quick Share"
+- [ ] Source credential card (icon + site + email)
+- [ ] Checkboxes: Username, Password
+- [ ] TTL pill buttons: 1h, 24h, 7d, No limit
+- [ ] Max views pill buttons: 1, 3, 5, 10, No limit
+- [ ] "Generate Secure Link" button
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 14: Share - Quick Share
+**Reference:** system-design.pen > Screen 14
+- [ ] Segmented toggle: "Quick Share" (active)
+- [ ] Text area: "Paste any secret here..."
+- [ ] "Also save to vault" checkbox
+- [ ] Same TTL + max views selectors
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 15: Share - Link Created
+**Reference:** system-design.pen > Screen 15
+- [ ] Success icon (green circle-check)
+- [ ] "Secure Link Created!" heading
+- [ ] Link display box + copy icon
+- [ ] "Copy Link" primary button
+- [ ] Expiry info card
+- [ ] "Done" secondary button
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 16: Recipient - View Prompt
+**Reference:** system-design.pen > Screen 16
+- [ ] Vaultic branding (shield-check icon)
+- [ ] Warning text about view limits
+- [ ] "View Credential" button
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 17/17b: Recipient - Revealed
+**Reference:** system-design.pen > Screen 17, 17b
+- [ ] Raw text block OR structured credential view
+- [ ] Copy to clipboard button
+- [ ] Warning: "This will disappear when you close this page"
+- [ ] "Powered by Vaultic" footer
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 18: Recipient - Link Expired
+**Reference:** system-design.pen > Screen 18
+- [ ] Error icon
+- [ ] "Link Expired" or "Max views reached" message
+- [ ] Vaultic branding
+- [ ] Screenshot comparison: ≥90% PASS
+
 ## Todo List
 - [ ] SharePage with segmented toggle (From Vault / Quick Share)
 - [ ] ShareFromVault: credential card + checkboxes

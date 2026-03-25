@@ -9,63 +9,67 @@ depends_on: [3]
 # Phase 4: Extension Shell & Auth
 
 ## Overview
-Build WXT extension with React: login/register screens, master password unlock, session management. Implement WebCrypto bridge matching Rust crypto output.
+Build WXT extension with React: login/register screens, master password unlock, session management. Implement WebCrypto bridge matching Rust crypto output. **Offline-first**: register requires network, but after first login all vault ops work offline.
 
 ## Key Insights
+- **Registration requires network** (mandatory — Option A decision)
+- **After first login, vault works 100% offline** — master password unlocks local IndexedDB
 - WebCrypto API mirrors Rust crypto (same AES-256-GCM, same nonce format)
 - Encryption key stored in `chrome.storage.session` (cleared on browser close)
 - Master password NEVER stored anywhere
 - Auto-lock after 15min idle via background service worker alarm
+- JWT tokens stored for sync when online — not required for local vault access
 
 ## Architecture
 
+Extension is a **thin UI layer** — imports business logic from shared packages.
+
 ```
-packages/extension/
+packages/extension/                    # UI layer only
 ├── wxt.config.ts
 ├── src/
 │   ├── entrypoints/
 │   │   ├── popup/
-│   │   │   ├── App.tsx          # Popup root (router)
-│   │   │   ├── main.tsx         # React mount
+│   │   │   ├── App.tsx               # Popup root (router)
+│   │   │   ├── main.tsx
 │   │   │   └── index.html
-│   │   ├── background.ts       # Service worker
-│   │   └── options/
-│   │       ├── App.tsx
-│   │       ├── main.tsx
-│   │       └── index.html
-│   ├── components/              # Extension-specific components
-│   │   ├── LoginForm.tsx
-│   │   ├── RegisterForm.tsx
-│   │   ├── MasterPasswordPrompt.tsx
-│   │   └── LockScreen.tsx
-│   ├── lib/
-│   │   ├── crypto.ts            # WebCrypto bridge (AES-256-GCM, Argon2)
-│   │   ├── api-client.ts        # Server API calls
-│   │   ├── session.ts           # Session/lock management
-│   │   └── storage.ts           # chrome.storage helpers
+│   │   └── background.ts            # Service worker
+│   ├── components/
+│   │   └── auth/                     # Extension-specific auth UI
+│   │       ├── LoginForm.tsx
+│   │       ├── RegisterForm.tsx
+│   │       ├── MasterPasswordPrompt.tsx
+│   │       └── LockScreen.tsx
 │   ├── stores/
-│   │   └── auth-store.ts        # Zustand: auth state
+│   │   └── auth-store.ts            # Zustand: auth state
+│   ├── hooks/
+│   │   └── use-auth.ts              # Auth hook wrapping store + crypto
 │   └── assets/
-│       └── styles.css           # Tailwind entry
-└── tests/
-    └── crypto.test.ts           # Interop tests with Rust vectors
+│       └── styles.css
+│
+│── Imports from shared packages:
+│   @vaultic/crypto   → deriveMasterKey, deriveEncryptionKey, deriveAuthHash
+│   @vaultic/api      → authApi.register, authApi.login, authApi.refresh
+│   @vaultic/storage  → IndexedDBVaultStore (session persistence)
+│   @vaultic/types    → User, AuthState types
+│   @vaultic/ui       → Button, Input, Dialog components
 ```
 
 ## Implementation Steps
 
-### 1. WebCrypto bridge — crypto.ts (4h)
+### 1. Implement packages/crypto (4h)
+
+All crypto code lives in `packages/crypto/` — shared by all platforms.
 
 ```typescript
-// Must match Rust vaultic-crypto output exactly
+// packages/crypto/src/kdf.ts — Must match Rust vaultic-crypto output exactly
+import argon2 from 'argon2-browser';
 
 export async function deriveMasterKey(password: string, email: string): Promise<ArrayBuffer> {
-  // Argon2id via argon2-browser WASM (WebCrypto doesn't support Argon2)
-  // Import argon2-browser package
   const result = await argon2.hash({
     pass: password, salt: email,
     type: argon2.ArgonType.Argon2id,
-    mem: 65536, time: 3, parallelism: 4,
-    hashLen: 32
+    mem: 65536, time: 3, parallelism: 4, hashLen: 32
   });
   return result.hash;
 }
@@ -78,10 +82,10 @@ export async function deriveEncryptionKey(masterKey: ArrayBuffer): Promise<Crypt
   );
 }
 
+// packages/crypto/src/cipher.ts
 export async function encrypt(key: CryptoKey, plaintext: Uint8Array): Promise<Uint8Array> {
   const nonce = crypto.getRandomValues(new Uint8Array(12));
   const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce }, key, plaintext);
-  // Prepend nonce (same format as Rust)
   const result = new Uint8Array(12 + ciphertext.byteLength);
   result.set(nonce, 0);
   result.set(new Uint8Array(ciphertext), 12);
@@ -96,24 +100,28 @@ export async function decrypt(key: CryptoKey, data: Uint8Array): Promise<Uint8Ar
 }
 ```
 
-Note: Argon2id not in WebCrypto. Use `argon2-browser` (WASM) or `hash-wasm` package.
+Note: Argon2id not in WebCrypto. Use `argon2-browser` (WASM) in `packages/crypto`.
 
 ### 2. Verify interop with Rust test vectors (2h)
 Load `test-vectors.json` from Phase 2.
 Run same inputs through WebCrypto bridge.
 Assert identical outputs.
 
-### 3. API client — api-client.ts (2h)
+### 3. Implement packages/api auth endpoints (2h)
 ```typescript
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+// packages/api/src/auth-api.ts
+import type { ApiClient } from './client';
 
-export const api = {
-  register: (email: string, authHash: string, params: object) =>
-    ofetch(`${API_BASE}/auth/register`, { method: 'POST', body: { email, auth_hash: authHash, argon2_params: params } }),
-  login: (email: string, authHash: string) =>
-    ofetch(`${API_BASE}/auth/login`, { method: 'POST', body: { email, auth_hash: authHash } }),
-  // ... vault, sync, share endpoints
-};
+export function createAuthApi(client: ApiClient) {
+  return {
+    register: (email: string, authHash: string, params: object) =>
+      client('/auth/register', { method: 'POST', body: { email, auth_hash: authHash, argon2_params: params } }),
+    login: (email: string, authHash: string) =>
+      client('/auth/login', { method: 'POST', body: { email, auth_hash: authHash } }),
+    refresh: (refreshToken: string) =>
+      client('/auth/refresh', { method: 'POST', body: { refresh_token: refreshToken } }),
+  };
+}
 ```
 
 ### 4. Auth store — Zustand (1h)
@@ -173,13 +181,52 @@ export async function getEncryptionKey(): Promise<CryptoKey | null> {
 export async function storeTokens(access: string, refresh: string) { ... }
 ```
 
-### 8. Popup routing (1h)
+### 8. Popup routing — offline-aware (1h)
 ```
 Popup opens →
-  ├── No JWT? → Show LoginForm / RegisterForm
-  ├── Has JWT but locked? → Show MasterPasswordPrompt
-  └── Unlocked? → Show VaultList (Phase 5)
+  ├── No local account? → Show RegisterForm (requires network)
+  ├── Has local account but locked? → Show MasterPasswordPrompt (offline OK)
+  ├── Unlocked? → Show VaultList (offline OK, sync if online)
+  └── First login on this device? → Show LoginForm (requires network once)
 ```
+
+Key difference from server-first: Master password unlock derives encryption key locally → opens IndexedDB → full vault access WITHOUT network. JWT only needed for sync/share.
+
+## Design Verification Checklists
+
+### Screen 01: Register
+**Reference:** system-design.pen > Screen 01
+- [ ] Extension frame: 380x520px
+- [ ] Vaultic logo/icon centered at top
+- [ ] "Create Account" heading: Inter 700, 24px, #18181B
+- [ ] Email input: full width, border #E4E4E7, radius 8px
+- [ ] Master password input: full width, eye toggle icon
+- [ ] Confirm password input: full width, eye toggle icon
+- [ ] Password strength indicator bar
+- [ ] "Create Account" button: full width, bg #2563EB, white text, radius 8px
+- [ ] "Already have an account? Log in" link: #2563EB
+- [ ] Spacing between elements matches design
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 02: Login
+**Reference:** system-design.pen > Screen 02
+- [ ] Vaultic logo/icon centered at top
+- [ ] "Welcome Back" heading
+- [ ] Email input with label
+- [ ] Master password input with eye toggle
+- [ ] "Unlock" button: full width, primary color
+- [ ] "Create account" link
+- [ ] Error state: red border + error text (Screen 21 pattern)
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 03: Lock Screen
+**Reference:** system-design.pen > Screen 03
+- [ ] Lock icon centered
+- [ ] User email displayed
+- [ ] Master password input with eye toggle
+- [ ] "Unlock" button: full width, primary color
+- [ ] "Log out" link: secondary text color
+- [ ] Screenshot comparison: ≥90% PASS
 
 ## Todo List
 - [ ] WebCrypto bridge: deriveMasterKey (argon2-browser)

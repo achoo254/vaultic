@@ -2,23 +2,23 @@
 phase: 1
 priority: critical
 status: pending
-estimated_days: 3
+estimated_days: 4
 ---
 
-# Phase 1: Project Setup & Monorepo
+# Phase 1: Project Setup & Monorepo (Production-Ready)
 
 ## Overview
-Initialize monorepo with Cargo workspace (Rust) + Turborepo (JS/TS). Setup dev environment with Docker PostgreSQL.
+Initialize production-ready monorepo with Cargo workspace (Rust) + Turborepo (pnpm). Modular TS packages: types, crypto, storage, sync, api, ui, extension. Docker PostgreSQL for dev. GitLab CI skeleton.
 
 ## Context Links
 - [Brainstorm Architecture](../reports/brainstorm-260324-2007-vaultic-password-manager-architecture.md)
 - [Research: Monorepo Structure](../reports/researcher-260324-2025-vaultic-architecture-research.md#3)
 
 ## Requirements
-- Cargo workspace with 3 crates: `vaultic-crypto`, `vaultic-server`, `vaultic-types`
-- Turborepo with 3 packages: `ui`, `extension`, `shared`
+- Cargo workspace with 4 crates: `vaultic-crypto`, `vaultic-server`, `vaultic-types`, `vaultic-migration`
+- Turborepo with 7 packages: `types`, `crypto`, `storage`, `sync`, `api`, `ui`, `extension`
 - Docker Compose for PostgreSQL 16 (dev)
-- CI skeleton (GitHub Actions)
+- GitLab CI skeleton (gitlabs.inet.vn)
 - All Rust crates use `rustls` (not `openssl-sys`)
 
 ## Related Code Files
@@ -30,10 +30,12 @@ vaultic/
 ├── package.json                  # Turborepo root + pnpm workspace
 ├── pnpm-workspace.yaml
 ├── turbo.json
+├── .gitlab-ci.yml
 ├── .gitignore
 ├── .env.example
 ├── LICENSE                       # AGPL-3.0
 ├── README.md
+│
 ├── crates/
 │   ├── vaultic-crypto/
 │   │   ├── Cargo.toml
@@ -41,24 +43,83 @@ vaultic/
 │   ├── vaultic-server/
 │   │   ├── Cargo.toml
 │   │   └── src/main.rs
-│   └── vaultic-types/
+│   ├── vaultic-types/
+│   │   ├── Cargo.toml
+│   │   └── src/lib.rs
+│   └── vaultic-migration/
 │       ├── Cargo.toml
 │       └── src/lib.rs
+│
 ├── packages/
-│   ├── ui/
+│   ├── types/                    # Shared TS types
 │   │   ├── package.json
-│   │   ├── tsconfig.json
-│   │   └── src/index.ts
-│   ├── extension/
-│   │   ├── package.json
-│   │   ├── wxt.config.ts
 │   │   ├── tsconfig.json
 │   │   └── src/
-│   │       └── popup/index.tsx
-│   └── shared/
+│   │       ├── index.ts
+│   │       ├── user.ts
+│   │       ├── vault.ts
+│   │       ├── sync.ts
+│   │       ├── share.ts
+│   │       └── crypto.ts
+│   ├── crypto/                   # WebCrypto bridge
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── src/
+│   │       ├── index.ts
+│   │       ├── kdf.ts
+│   │       ├── cipher.ts
+│   │       ├── password-gen.ts
+│   │       └── utils.ts
+│   ├── storage/                  # Storage abstraction + IndexedDB impl
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── src/
+│   │       ├── index.ts
+│   │       ├── vault-store.ts
+│   │       ├── sync-queue.ts
+│   │       ├── indexeddb-store.ts
+│   │       └── memory-store.ts
+│   ├── sync/                     # Sync engine
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── src/
+│   │       ├── index.ts
+│   │       ├── sync-engine.ts
+│   │       ├── conflict-resolver.ts
+│   │       └── device.ts
+│   ├── api/                      # Server API client
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── src/
+│   │       ├── index.ts
+│   │       ├── client.ts
+│   │       ├── auth-api.ts
+│   │       ├── sync-api.ts
+│   │       └── share-api.ts
+│   ├── ui/                       # Shared React components
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── src/
+│   │       ├── index.ts
+│   │       ├── components/
+│   │       └── styles/
+│   └── extension/                # WXT browser extension
 │       ├── package.json
+│       ├── wxt.config.ts
 │       ├── tsconfig.json
-│       └── src/index.ts
+│       └── src/
+│           ├── entrypoints/
+│           │   ├── popup/
+│           │   │   ├── App.tsx
+│           │   │   ├── main.tsx
+│           │   │   └── index.html
+│           │   └── background.ts
+│           ├── components/
+│           ├── stores/
+│           ├── hooks/
+│           └── assets/
+│               └── styles.css
+│
 └── docker/
     ├── Dockerfile
     ├── docker-compose.dev.yml
@@ -67,12 +128,7 @@ vaultic/
 
 ## Implementation Steps
 
-### 1. Initialize Git + Cargo workspace (30min)
-```bash
-cd "D:/CONG VIEC/vaultic"
-git init
-```
-
+### 1. Initialize Cargo workspace (30min)
 Create root `Cargo.toml`:
 ```toml
 [workspace]
@@ -92,11 +148,12 @@ Create each crate's `Cargo.toml`:
 - `vaultic-crypto`: `aes-gcm`, `argon2`, `hkdf`, `sha2`, `rand`, `base64`
 - `vaultic-server`: `axum`, `sea-orm`, `tokio`, `tower-http`, `jsonwebtoken`, `reqwest` (rustls)
 - `vaultic-types`: `serde`, `uuid`, `chrono`
+- `vaultic-migration`: `sea-orm-migration`
 
 ### 2. Initialize Turborepo + pnpm workspace (30min)
 ```bash
 pnpm init
-pnpm add -D turbo
+pnpm add -D turbo typescript
 ```
 
 `pnpm-workspace.yaml`:
@@ -118,22 +175,155 @@ packages:
 }
 ```
 
-### 3. Setup WXT extension package (1h)
+### 3. Setup packages/types (30min)
+Shared TS types — mirrors `vaultic-types` Rust crate.
+```typescript
+// packages/types/src/vault.ts
+export enum ItemType { Login = 1, SecureNote = 2, Card = 3, Identity = 4 }
+
+export interface VaultItem {
+  id: string;
+  folder_id?: string;
+  item_type: ItemType;
+  encrypted_data: string;  // base64(nonce + ciphertext)
+  device_id: string;
+  version: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+}
+
+export interface Folder { id: string; encrypted_name: string; parent_id?: string; }
+```
+
+### 4. Setup packages/crypto (30min)
+WebCrypto bridge — skeleton with exports.
+```typescript
+// packages/crypto/src/index.ts
+export { deriveMasterKey, deriveEncryptionKey, deriveAuthHash } from './kdf';
+export { encrypt, decrypt } from './cipher';
+export { generatePassword } from './password-gen';
+```
+Deps: `argon2-browser` (for Argon2id in browser). Implementation in Phase 2/4.
+
+### 5. Setup packages/storage (1h)
+VaultStore interface + IndexedDB implementation.
+```typescript
+// packages/storage/src/vault-store.ts
+export interface VaultStore {
+  getItem(id: string): Promise<EncryptedItem | null>;
+  putItem(item: EncryptedItem): Promise<void>;
+  deleteItem(id: string): Promise<void>;
+  getAllItems(): Promise<EncryptedItem[]>;
+  getChangedSince(timestamp: number): Promise<EncryptedItem[]>;
+}
+
+// packages/storage/src/sync-queue.ts
+export interface SyncQueue {
+  enqueue(entry: SyncQueueEntry): Promise<void>;
+  dequeueAll(): Promise<SyncQueueEntry[]>;
+  clear(ids: string[]): Promise<void>;
+}
+```
+
+IndexedDB implementation with `idb`:
+```bash
+cd packages/storage && pnpm add idb
+```
+
+Memory implementation for testing.
+
+### 6. Setup packages/sync (30min)
+Sync engine skeleton.
+```typescript
+// packages/sync/src/sync-engine.ts
+export class SyncEngine {
+  constructor(
+    private store: VaultStore,
+    private queue: SyncQueue,
+    private api: SyncApi,
+    private resolver: ConflictResolver,
+  ) {}
+  async sync(): Promise<SyncResult> { /* Phase 5 */ }
+}
+
+// packages/sync/src/conflict-resolver.ts
+export interface ConflictResolver {
+  resolve(local: SyncItem, remote: SyncItem): SyncItem;
+}
+export class LWWResolver implements ConflictResolver {
+  resolve(local: SyncItem, remote: SyncItem): SyncItem {
+    return remote.updated_at > local.updated_at ? remote : local;
+  }
+}
+```
+
+### 7. Setup packages/api (30min)
+Server API client skeleton.
+```typescript
+// packages/api/src/client.ts
+import { ofetch } from 'ofetch';
+export function createApiClient(baseUrl: string, getToken: () => string | null) {
+  return ofetch.create({
+    baseURL: baseUrl,
+    onRequest({ options }) {
+      const token = getToken();
+      if (token) options.headers = { ...options.headers, Authorization: `Bearer ${token}` };
+    },
+  });
+}
+```
+Deps: `ofetch`
+
+### 8. Setup packages/ui + Design Tokens (1h)
+Shared React components with shadcn/ui.
+```bash
+cd packages/ui && pnpm add react react-dom
+pnpm add -D tailwindcss @tailwindcss/vite
+pnpm add @radix-ui/react-dialog @radix-ui/react-dropdown-menu lucide-react
+```
+Export: Button, Input, Dialog, Card, DropdownMenu.
+
+**Extract design tokens from `system-design.pen`** via Pencil MCP tools:
+```typescript
+// packages/ui/src/styles/design-tokens.ts
+// Source of truth — extracted from system-design.pen
+export const tokens = {
+  colors: {
+    primary: '#2563EB',
+    primaryHover: '#1D4ED8',
+    text: '#18181B',
+    secondary: '#71717A',
+    border: '#E4E4E7',
+    background: '#FFFFFF',
+    surface: '#F4F4F5',
+    error: '#EF4444',
+    success: '#22C55E',
+    warning: '#F59E0B',
+  },
+  font: {
+    family: "'Inter', sans-serif",
+    size: { xs: 11, sm: 13, base: 14, lg: 16, xl: 18, xxl: 24 },
+    weight: { regular: 400, medium: 500, semibold: 600, bold: 700 },
+    lineHeight: { tight: 1.2, normal: 1.5, relaxed: 1.75 },
+  },
+  spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32 },
+  radius: { sm: 6, md: 8, lg: 12, full: 9999 },
+  extension: { width: 380, height: 520 },
+  icon: { size: { sm: 16, md: 20, lg: 24 }, strokeWidth: 1.5 },
+} as const;
+```
+**ALL UI components MUST use these tokens. Never hardcode values.**
+
+### 9. Setup packages/extension (1h)
 ```bash
 cd packages/extension
 pnpm create wxt@latest . --template react
 ```
 
-Install shared deps:
-```bash
-pnpm add -D tailwindcss @tailwindcss/vite
-pnpm add zustand @radix-ui/react-dialog
-```
-
 `wxt.config.ts`:
 ```typescript
 import { defineConfig } from 'wxt';
-
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
@@ -144,17 +334,13 @@ export default defineConfig({
 });
 ```
 
-### 4. Setup shared UI package (30min)
-Initialize `packages/ui` with React + shadcn/ui components.
-Configure Tailwind CSS shared config.
-Export reusable components: Button, Input, Dialog, Card.
+Add internal package deps:
+```bash
+pnpm add @vaultic/types @vaultic/crypto @vaultic/storage @vaultic/sync @vaultic/api @vaultic/ui
+pnpm add zustand
+```
 
-### 5. Setup shared TS package (30min)
-Initialize `packages/shared` with TypeScript.
-Define shared types: `VaultItem`, `User`, `Folder`, `SecureShare`.
-Create API client skeleton with `ofetch`.
-
-### 6. Docker setup (1h)
+### 10. Docker setup (1h)
 `docker/docker-compose.dev.yml`:
 ```yaml
 services:
@@ -185,32 +371,38 @@ EXPOSE 8080
 CMD ["vaultic-server"]
 ```
 
-### 7. Git setup + CI skeleton (30min)
+### 11. Git setup + CI skeleton (30min)
 `.gitignore`: target/, node_modules/, .env, dist/, .output/
 
-GitHub Actions skeleton: `.github/workflows/ci.yml`
+`.gitlab-ci.yml` (gitlabs.inet.vn self-hosted):
 - Rust: `cargo test`, `cargo clippy`
 - Extension: `pnpm lint`, `pnpm build`
-- Docker build on merge to main
+- Docker build on tag push
 
 ## Todo List
-- [ ] Git init + Cargo workspace
-- [ ] Create 3 Rust crates with Cargo.toml
+- [ ] Cargo workspace + 4 crates (crypto, server, types, migration)
 - [ ] Turborepo + pnpm workspace
-- [ ] WXT extension package (React + TS)
-- [ ] Shared UI package (shadcn/ui)
-- [ ] Shared TS types package
-- [ ] Docker Compose dev
+- [ ] packages/types — TS types (vault, user, sync, share, crypto)
+- [ ] packages/crypto — WebCrypto bridge skeleton
+- [ ] packages/storage — VaultStore + SyncQueue interfaces + IndexedDB impl
+- [ ] packages/sync — SyncEngine + ConflictResolver (LWW) skeleton
+- [ ] packages/api — API client skeleton (ofetch)
+- [ ] packages/ui — shadcn/ui shared components
+- [ ] packages/extension — WXT + React setup
+- [ ] Docker Compose dev (PostgreSQL)
 - [ ] Dockerfile multi-stage
-- [ ] .gitignore + .env.example
-- [ ] GitHub Actions CI skeleton
-- [ ] Verify: `cargo build` succeeds
-- [ ] Verify: `pnpm dev` starts extension dev server
+- [ ] .gitignore + .env.example + LICENSE
+- [ ] .gitlab-ci.yml skeleton
+- [ ] Verify: `cargo build --workspace` succeeds
+- [ ] Verify: `pnpm build` all packages succeed
+- [ ] Verify: `pnpm dev --filter extension` starts WXT dev server
 - [ ] Verify: `docker compose up` starts PostgreSQL
 
 ## Success Criteria
-- `cargo build --workspace` compiles all Rust crates
+- `cargo build --workspace` compiles all 4 Rust crates
+- `pnpm build` builds all 7 TS packages without error
 - `pnpm dev --filter extension` starts WXT dev server
+- Extension can import from all @vaultic/* packages
 - `docker compose -f docker/docker-compose.dev.yml up` starts PostgreSQL
-- All crates can import workspace dependencies
 - Extension popup shows "Vaultic" placeholder page
+- All interfaces (VaultStore, SyncQueue, ConflictResolver, ApiClient) defined and exported

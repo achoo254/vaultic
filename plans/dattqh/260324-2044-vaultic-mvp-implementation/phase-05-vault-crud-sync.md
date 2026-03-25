@@ -9,31 +9,39 @@ depends_on: [4]
 # Phase 5: Vault CRUD & Sync
 
 ## Overview
-Vault management in extension popup: create/edit/delete credentials, folder organization, search, sync with server. All data encrypted client-side.
+**Offline-first** vault management: ALL CRUD operations happen locally in IndexedDB. Sync engine pushes/pulls encrypted blobs to server when online. Extension works 100% offline after first login.
 
 ## Architecture
 
+Extension is a **thin UI layer**. Business logic lives in shared packages.
+
 ```
-packages/extension/src/
+packages/extension/src/                    # UI only
 ├── components/
 │   ├── vault/
-│   │   ├── VaultList.tsx        # Main vault view with sections
-│   │   ├── VaultItem.tsx        # Single item card (name, URL, actions)
-│   │   ├── VaultItemForm.tsx    # Add/edit credential form
-│   │   ├── VaultItemDetail.tsx  # View credential details
-│   │   ├── FolderList.tsx       # Folder sidebar/section
-│   │   └── SearchBar.tsx        # Fuzzy search input
+│   │   ├── VaultList.tsx                  # Main vault view with sections
+│   │   ├── VaultItem.tsx                  # Single item card
+│   │   ├── VaultItemForm.tsx              # Add/edit credential form
+│   │   ├── VaultItemDetail.tsx            # View credential details
+│   │   ├── FolderList.tsx                 # Folder sidebar/section
+│   │   └── SearchBar.tsx                  # Fuzzy search input
 │   └── common/
-│       ├── PasswordField.tsx    # Show/hide password + copy
-│       └── CopyButton.tsx       # Copy to clipboard + auto-clear
+│       ├── PasswordField.tsx              # Show/hide password + copy
+│       └── CopyButton.tsx                 # Copy to clipboard + auto-clear
 ├── stores/
-│   ├── vault-store.ts           # Zustand: vault items + folders
-│   └── sync-store.ts            # Zustand: sync state + last_sync
-├── lib/
-│   ├── vault-crypto.ts          # Encrypt/decrypt vault items
-│   └── sync-engine.ts           # Sync logic (pull delta, merge)
-└── types/
-    └── vault.ts                 # VaultItem, Folder, ItemType
+│   ├── vault-store.ts                     # Zustand: UI state, delegates to packages
+│   └── sync-store.ts                      # Zustand: sync state + online status
+├── hooks/
+│   ├── use-vault.ts                       # Wraps vault-store + crypto + storage
+│   └── use-sync.ts                        # Wraps sync-store + sync engine
+│
+│── Imports from shared packages:
+│   @vaultic/types    → VaultItem, Folder, ItemType
+│   @vaultic/crypto   → encrypt, decrypt (vault items)
+│   @vaultic/storage  → IndexedDBVaultStore, SyncQueue
+│   @vaultic/sync     → SyncEngine, LWWResolver
+│   @vaultic/api      → syncApi.push, syncApi.pull
+│   @vaultic/ui       → shared components
 ```
 
 ## Data Types
@@ -68,8 +76,12 @@ interface Folder {
 
 ## Implementation Steps
 
-### 1. Vault crypto helpers — vault-crypto.ts (2h)
+### 1. Vault crypto helpers — uses @vaultic/crypto (2h)
 ```typescript
+// packages/extension/src/hooks/use-vault.ts
+import { encrypt, decrypt } from '@vaultic/crypto';
+import type { VaultItemPlaintext } from '@vaultic/types';
+
 export async function encryptVaultItem(key: CryptoKey, item: VaultItemPlaintext): Promise<string> {
   const json = JSON.stringify(item);
   const encrypted = await encrypt(key, new TextEncoder().encode(json));
@@ -91,38 +103,77 @@ interface VaultState {
   folders: Folder[];
   searchQuery: string;
   selectedFolder: string | null;
-  // Actions
-  loadVault: () => Promise<void>;
-  addItem: (item: VaultItemPlaintext, folderId?: string) => Promise<void>;
-  updateItem: (id: string, item: VaultItemPlaintext) => Promise<void>;
-  deleteItem: (id: string) => Promise<void>;
-  search: (query: string) => void;
+  // Actions — ALL operate on local IndexedDB first
+  loadVault: () => Promise<void>;        // Read from IndexedDB
+  addItem: (item: VaultItemPlaintext, folderId?: string) => Promise<void>;   // IndexedDB + sync_queue
+  updateItem: (id: string, item: VaultItemPlaintext) => Promise<void>;       // IndexedDB + sync_queue
+  deleteItem: (id: string) => Promise<void>;  // IndexedDB soft delete + sync_queue
+  search: (query: string) => void;       // Search decrypted cache (local only)
 }
 ```
 
-### 3. Sync engine — sync-engine.ts (4h)
+**Key change**: Every CRUD action writes to IndexedDB immediately (instant UX), then adds entry to `sync_queue`. Sync engine processes queue when online.
+
+### 3. Implement packages/sync — SyncEngine (4h)
 ```typescript
-export async function syncVault() {
-  const lastSync = await getLastSyncTimestamp();
-  const delta = await api.sync(lastSync);
+// packages/sync/src/sync-engine.ts
+import type { VaultStore, SyncQueue } from '@vaultic/storage';
+import type { SyncApi } from '@vaultic/api';
+import type { ConflictResolver } from './conflict-resolver';
 
-  // Merge server changes into local
-  for (const item of delta.items) {
-    await localDb.upsert('vault_items', item);
-  }
-  for (const id of delta.deleted_ids) {
-    await localDb.delete('vault_items', id);
-  }
+export class SyncEngine {
+  constructor(
+    private store: VaultStore,
+    private queue: SyncQueue,
+    private api: SyncApi,
+    private resolver: ConflictResolver,
+    private getDeviceId: () => Promise<string>,
+  ) {}
 
-  await setLastSyncTimestamp(new Date().toISOString());
+  async sync(): Promise<SyncResult> {
+    if (!navigator.onLine) return { status: 'offline' };
+
+    // 1. Push local changes
+    const pending = await this.queue.dequeueAll();
+    if (pending.length > 0) {
+      const result = await this.api.push({
+        items: pending.filter(c => c.type === 'item'),
+        folders: pending.filter(c => c.type === 'folder'),
+        device_id: await this.getDeviceId(),
+      });
+      await this.queue.clear(result.accepted);
+    }
+
+    // 2. Pull remote changes
+    const lastSync = await this.store.getMetadata('last_sync');
+    const delta = await this.api.pull(lastSync, await this.getDeviceId());
+
+    for (const item of delta.items) {
+      const local = await this.store.getItem(item.id);
+      const resolved = local ? this.resolver.resolve(local, item) : item;
+      await this.store.putItem(resolved);
+    }
+    for (const id of delta.deleted_ids) {
+      await this.store.deleteItem(id);
+    }
+
+    await this.store.setMetadata('last_sync', delta.server_time);
+    return { status: 'synced', pushed: pending.length, pulled: delta.items.length };
+  }
 }
 ```
 
-Sync triggers:
-- On unlock (pull latest)
-- After each local CRUD operation (push + pull)
-- Periodic background sync (every 5min via alarm)
-- On extension popup open
+**Sync is USER-CONTROLLED (opt-in):**
+- Default: Cloud Sync OFF → no sync, all data local only
+- User enables in Settings → sync starts
+- Sync triggers (only when Cloud Sync = ON):
+  - On toggle ON (first time: full push)
+  - After local CRUD → add to sync_queue → push if online
+  - Periodic background sync (every 5min via alarm)
+  - On extension popup open
+  - Manual "Sync Now" button in Settings
+- User disables Cloud Sync → stop syncing, option to purge server data
+- Share works independently (one-time upload, no sync required)
 
 ### 4. VaultList component (3h)
 Sections:
@@ -202,6 +253,70 @@ export async function copyToClipboard(text: string, clearAfterMs = 30000) {
 }
 ```
 
+## Design Verification Checklists
+
+### Screen 04: Empty Vault
+**Reference:** system-design.pen > Screen 04
+- [ ] Center icon + "Your vault is empty" text
+- [ ] "Add your first credential" CTA button
+- [ ] Bottom nav: 4 icons visible
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 05: Vault List
+**Reference:** system-design.pen > Screen 05
+- [ ] Search bar at top with magnifier icon
+- [ ] "Suggested" section: items matching current URL
+- [ ] "Recent" section: last 5 items
+- [ ] Each item card: favicon/icon + name + email/username + copy/eye/link icons
+- [ ] Bottom nav: Vault (active, blue), Generator, Share, Settings
+- [ ] Scroll behavior for long lists
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 06: Credential Detail
+**Reference:** system-design.pen > Screen 06
+- [ ] Header: back arrow + site name + edit/share/delete icons
+- [ ] Site icon badge (colored) + name + URL
+- [ ] USERNAME row: label + value + copy icon
+- [ ] PASSWORD row: label + masked dots + eye toggle + copy icon
+- [ ] NOTES section
+- [ ] Folder + last modified display
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 07: Add/Edit Credential
+**Reference:** system-design.pen > Screen 07
+- [ ] Header: back arrow + "Add Credential" / "Edit"
+- [ ] Fields: name, URL, username, password (with generate button), notes
+- [ ] Folder dropdown selector
+- [ ] Save button: full width, primary
+- [ ] Inline password generator icon
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 08: Delete Confirmation
+**Reference:** system-design.pen > Screen 08
+- [ ] Modal overlay with dimmed background
+- [ ] Trash icon + "Delete Credential?" title
+- [ ] Warning text
+- [ ] Cancel (secondary) + Delete (red) buttons
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 09: Password Generator
+**Reference:** system-design.pen > Screen 09
+- [ ] Generated password display + copy + regenerate
+- [ ] Strength indicator bar with color
+- [ ] Length slider (8-64)
+- [ ] Toggle switches: uppercase, lowercase, numbers, symbols
+- [ ] "Use this password" button
+- [ ] Screenshot comparison: ≥90% PASS
+
+### Screen 22: Folder Management
+**Reference:** system-design.pen > Screen 22
+- [ ] Header: back + "Folders" + add icon
+- [ ] "All Items" with total count
+- [ ] User folders with item counts
+- [ ] Selected folder highlighted blue
+- [ ] Context menu (⋮): rename, delete
+- [ ] Screenshot comparison: ≥90% PASS
+
 ## Todo List
 - [ ] VaultItemPlaintext / VaultItemEncrypted types
 - [ ] vault-crypto.ts: encrypt/decrypt vault items
@@ -221,10 +336,13 @@ export async function copyToClipboard(text: string, clearAfterMs = 30000) {
 - [ ] Context-aware suggestions (match current tab URL)
 
 ## Success Criteria
-- Create/edit/delete vault items works end-to-end (client encrypt → server → sync back)
-- Search finds items by name/URL instantly
+- **CRUD works 100% offline**: create/edit/delete vault items in IndexedDB without network
+- Changes queued in sync_queue → pushed to server when online
+- Sync pulls remote changes from other devices correctly
+- LWW conflict resolution works (latest updated_at wins)
+- Search finds items by name/URL instantly (from decrypted cache)
 - "Suggested" section correctly matches current tab URL
-- Folder organization works (create, move items)
-- Sync pulls new items from server on unlock
+- Folder organization works (create, move items) — all local
 - Clipboard auto-clears after 30s
-- All data in chrome.storage.local is encrypted
+- All data in IndexedDB is encrypted (ciphertext blobs only)
+- Reconnect after offline → auto-sync pending changes
