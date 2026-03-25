@@ -1,7 +1,7 @@
 ---
 phase: 5
 priority: high
-status: pending
+status: in-progress
 estimated_days: 5
 depends_on: [4]
 ---
@@ -318,22 +318,22 @@ export async function copyToClipboard(text: string, clearAfterMs = 30000) {
 - [ ] Screenshot comparison: ≥90% PASS
 
 ## Todo List
-- [ ] VaultItemPlaintext / VaultItemEncrypted types
-- [ ] vault-crypto.ts: encrypt/decrypt vault items
-- [ ] vault-store.ts: Zustand store with CRUD actions
-- [ ] sync-engine.ts: delta sync logic
+- [x] VaultItemPlaintext / VaultItemEncrypted types
+- [x] vault-crypto.ts: encrypt/decrypt vault items
+- [x] vault-store.ts: Zustand store with CRUD actions
+- [x] sync-engine.ts: delta sync logic
 - [ ] Background sync alarm (every 5min)
-- [ ] EmptyVault component (Screen 04)
-- [ ] VaultList with Suggested/Recent/All sections (Screen 05)
-- [ ] SearchBar with fuzzy search
-- [ ] VaultItemDetail (Screen 06)
-- [ ] VaultItemForm add/edit (Screen 07)
-- [ ] DeleteConfirmation modal (Screen 08)
-- [ ] PasswordGenerator component (Screen 09)
+- [x] EmptyVault component (Screen 04)
+- [x] VaultList with Suggested/Recent/All sections (Screen 05)
+- [x] SearchBar with fuzzy search
+- [x] VaultItemDetail (Screen 06)
+- [x] VaultItemForm add/edit (Screen 07)
+- [x] DeleteConfirmation modal (Screen 08)
+- [x] PasswordGenerator component (Screen 09)
 - [ ] FolderManagement full screen (Screen 22)
-- [ ] PasswordField (show/hide + copy)
-- [ ] Clipboard auto-clear after 30s
-- [ ] Context-aware suggestions (match current tab URL)
+- [x] PasswordField (show/hide + copy)
+- [x] Clipboard auto-clear after 30s
+- [x] Context-aware suggestions (match current tab URL)
 
 ## Success Criteria
 - **CRUD works 100% offline**: create/edit/delete vault items in IndexedDB without network

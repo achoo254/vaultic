@@ -1,101 +1,127 @@
-// Extension popup — root component with offline-aware routing
-//
-// Routing logic:
-//   No local account? → RegisterForm (requires network)
-//   Has account but locked? → LockScreen (offline OK)
-//   Unlocked? → VaultPlaceholder (offline OK, sync if online)
-//   First login on this device? → LoginForm (requires network once)
-
+// Extension popup — root component with offline-aware routing + bottom nav
 import React, { useEffect, useState } from 'react';
 import { tokens } from '@vaultic/ui';
 import { useAuthStore } from '../../stores/auth-store';
 import { LoginForm } from '../../components/auth/login-form';
 import { RegisterForm } from '../../components/auth/register-form';
 import { LockScreen } from '../../components/auth/lock-screen';
+import { VaultList } from '../../components/vault/vault-list';
+import { VaultItemDetail } from '../../components/vault/vault-item-detail';
+import { VaultItemForm } from '../../components/vault/vault-item-form';
+import { PasswordGeneratorView } from '../../components/vault/password-generator-view';
+import { BottomNav, type NavTab } from '../../components/common/bottom-nav';
+import { useVaultStore } from '../../stores/vault-store';
 
-type AuthView = 'loading' | 'register' | 'login' | 'locked' | 'vault';
+type View =
+  | { type: 'loading' }
+  | { type: 'register' }
+  | { type: 'login' }
+  | { type: 'locked' }
+  | { type: 'vault-list' }
+  | { type: 'vault-detail'; id: string }
+  | { type: 'vault-add' }
+  | { type: 'vault-edit'; id: string }
+  | { type: 'generator' }
+  | { type: 'share' }
+  | { type: 'settings' };
 
 export function App() {
   const { isLocked, isLoggedIn, email, hydrate } = useAuthStore();
-  const [view, setView] = useState<AuthView>('loading');
+  const deleteItem = useVaultStore((s) => s.deleteItem);
+  const [view, setView] = useState<View>({ type: 'loading' });
+  const [activeTab, setActiveTab] = useState<NavTab>('vault');
 
+  // Hydrate auth state on mount
   useEffect(() => {
     hydrate().then(() => {
-      // Ping background to track activity
       chrome.runtime?.sendMessage?.({ type: 'activity-ping' }).catch(() => {});
     });
   }, [hydrate]);
 
-  // Determine view based on auth state
+  // Route based on auth state
   useEffect(() => {
-    if (view === 'loading' && email !== undefined) {
-      if (!email && !isLoggedIn) {
-        setView('register');
-      } else if (email && isLocked) {
-        setView('locked');
-      } else if (email && !isLocked) {
-        setView('vault');
-      } else {
-        setView('login');
-      }
-    }
-  }, [email, isLocked, isLoggedIn, view]);
+    if (view.type !== 'loading') return;
+    if (!email && !isLoggedIn) setView({ type: 'register' });
+    else if (email && isLocked) setView({ type: 'locked' });
+    else if (email && !isLocked) setView({ type: 'vault-list' });
+    else setView({ type: 'login' });
+  }, [email, isLocked, isLoggedIn, view.type]);
 
-  // Update view when auth state changes (after login/register/unlock)
+  // React to auth state changes (after login/unlock/lock)
   useEffect(() => {
-    if (view === 'loading') return;
-    if (!email && !isLoggedIn) {
-      setView('register');
-    } else if (email && isLocked) {
-      setView('locked');
-    } else if (email && !isLocked) {
-      setView('vault');
+    if (view.type === 'loading') return;
+    if (!email && !isLoggedIn) setView({ type: 'register' });
+    else if (email && isLocked) setView({ type: 'locked' });
+    else if (email && !isLocked && (view.type === 'locked' || view.type === 'login' || view.type === 'register')) {
+      setView({ type: 'vault-list' });
     }
   }, [email, isLocked, isLoggedIn]);
 
+  // Tab navigation
+  const handleTabChange = (tab: NavTab) => {
+    setActiveTab(tab);
+    if (tab === 'vault') setView({ type: 'vault-list' });
+    else if (tab === 'generator') setView({ type: 'generator' });
+    else if (tab === 'share') setView({ type: 'share' });
+    else if (tab === 'settings') setView({ type: 'settings' });
+  };
+
+  const showBottomNav = !['loading', 'register', 'login', 'locked'].includes(view.type);
+
   return (
     <div style={containerStyle}>
-      {view === 'loading' && <LoadingView />}
-      {view === 'register' && (
-        <RegisterForm onSwitchToLogin={() => setView('login')} />
-      )}
-      {view === 'login' && (
-        <LoginForm onSwitchToRegister={() => setView('register')} />
-      )}
-      {view === 'locked' && <LockScreen />}
-      {view === 'vault' && <VaultPlaceholder />}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {view.type === 'loading' && <CenterMessage text="Loading..." />}
+        {view.type === 'register' && <RegisterForm onSwitchToLogin={() => setView({ type: 'login' })} />}
+        {view.type === 'login' && <LoginForm onSwitchToRegister={() => setView({ type: 'register' })} />}
+        {view.type === 'locked' && <LockScreen />}
+
+        {view.type === 'vault-list' && (
+          <VaultList
+            onItemClick={(id) => setView({ type: 'vault-detail', id })}
+            onAddItem={() => setView({ type: 'vault-add' })}
+          />
+        )}
+        {view.type === 'vault-detail' && (
+          <VaultItemDetail
+            itemId={view.id}
+            onBack={() => setView({ type: 'vault-list' })}
+            onEdit={() => setView({ type: 'vault-edit', id: view.id })}
+            onDelete={async () => {
+              await deleteItem(view.id);
+              setView({ type: 'vault-list' });
+            }}
+          />
+        )}
+        {view.type === 'vault-add' && (
+          <VaultItemForm
+            onBack={() => setView({ type: 'vault-list' })}
+            onSaved={() => setView({ type: 'vault-list' })}
+          />
+        )}
+        {view.type === 'vault-edit' && (
+          <VaultItemForm
+            editId={view.id}
+            onBack={() => setView({ type: 'vault-detail', id: view.id })}
+            onSaved={() => setView({ type: 'vault-detail', id: view.id })}
+          />
+        )}
+        {view.type === 'generator' && <PasswordGeneratorView />}
+        {view.type === 'share' && <CenterMessage text="Secure Share — Phase 7" />}
+        {view.type === 'settings' && <CenterMessage text="Settings — Phase 8" />}
+      </div>
+
+      {showBottomNav && <BottomNav active={activeTab} onChange={handleTabChange} />}
     </div>
   );
 }
 
-function LoadingView() {
+function CenterMessage({ text }: { text: string }) {
   return (
-    <div style={centeredStyle}>
-      <div style={{ fontSize: tokens.font.size.xxl, fontWeight: tokens.font.weight.bold, color: tokens.colors.primary, fontFamily: tokens.font.family }}>
-        Vaultic
-      </div>
-    </div>
-  );
-}
-
-/** Placeholder until Phase 5 vault UI is implemented. */
-function VaultPlaceholder() {
-  const { email, lock, logout } = useAuthStore();
-  return (
-    <div style={{ ...centeredStyle, gap: tokens.spacing.lg }}>
-      <div style={{ fontSize: tokens.font.size.xxl, fontWeight: tokens.font.weight.bold, color: tokens.colors.primary, fontFamily: tokens.font.family }}>
-        Vaultic
-      </div>
-      <div style={{ fontSize: tokens.font.size.base, color: tokens.colors.secondary, fontFamily: tokens.font.family }}>
-        Logged in as {email}
-      </div>
-      <div style={{ fontSize: tokens.font.size.sm, color: tokens.colors.secondary, fontFamily: tokens.font.family }}>
-        Vault UI coming in Phase 5
-      </div>
-      <div style={{ display: 'flex', gap: tokens.spacing.md }}>
-        <button onClick={() => lock()} style={actionBtn}>Lock</button>
-        <button onClick={() => logout()} style={actionBtn}>Logout</button>
-      </div>
+    <div style={centerStyle}>
+      <span style={{ color: tokens.colors.secondary, fontFamily: tokens.font.family, fontSize: tokens.font.size.base }}>
+        {text}
+      </span>
     </div>
   );
 }
@@ -105,25 +131,14 @@ const containerStyle: React.CSSProperties = {
   height: tokens.extension.height,
   fontFamily: tokens.font.family,
   backgroundColor: tokens.colors.background,
+  display: 'flex',
+  flexDirection: 'column',
   overflow: 'hidden',
 };
 
-const centeredStyle: React.CSSProperties = {
+const centerStyle: React.CSSProperties = {
   display: 'flex',
-  flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
   height: '100%',
-  gap: tokens.spacing.md,
-};
-
-const actionBtn: React.CSSProperties = {
-  background: 'none',
-  border: `1px solid ${tokens.colors.border}`,
-  borderRadius: tokens.radius.md,
-  padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px`,
-  cursor: 'pointer',
-  fontFamily: tokens.font.family,
-  fontSize: tokens.font.size.sm,
-  color: tokens.colors.text,
 };

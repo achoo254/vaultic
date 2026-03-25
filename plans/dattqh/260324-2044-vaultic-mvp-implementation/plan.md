@@ -85,7 +85,7 @@ Build **offline-first**, extension-first password manager with Rust backend, Rea
 | 2 | Crypto Core (Rust) | Critical | complete | 4d | `phase-02-crypto-core.md` |
 | 3 | API Server & Database (auth+sync+share only) | Critical | in-progress | 4d | `phase-03-api-server-database.md` |
 | 4 | Extension Shell & Auth | Critical | in-progress | 5d | `phase-04-extension-shell-auth.md` |
-| 5 | Vault CRUD & Sync | High | pending | 5d | `phase-05-vault-crud-sync.md` |
+| 5 | Vault CRUD & Sync | High | in-progress | 5d | `phase-05-vault-crud-sync.md` |
 | 6 | Autofill & Content Script | High | pending | 5d | `phase-06-autofill-content-script.md` |
 | 7 | Secure Share | Medium | pending | 4d | `phase-07-secure-share.md` |
 | 8 | Polish, CI/CD & Ship | High | pending | 4d | `phase-08-polish-cicd-ship.md` |
