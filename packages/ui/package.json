@@ -1,0 +1,23 @@
+{
+  "name": "@vaultic/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "react": "^19",
+    "react-dom": "^19",
+    "lucide-react": "^0.468",
+    "clsx": "^2"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5.7"
+  }
+}

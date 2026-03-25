@@ -1,0 +1,20 @@
+{
+  "name": "@vaultic/sync",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@vaultic/types": "workspace:*",
+    "@vaultic/storage": "workspace:*",
+    "@vaultic/api": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7"
+  }
+}

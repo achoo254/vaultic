@@ -1,6 +1,7 @@
 ---
-status: pending
+status: in-progress
 created: 2026-03-24
+updated: 2026-03-25
 project: vaultic
 type: implementation
 estimated_weeks: 8
@@ -80,7 +81,7 @@ Build **offline-first**, extension-first password manager with Rust backend, Rea
 
 | # | Phase | Priority | Status | Est. | File |
 |---|-------|----------|--------|------|------|
-| 1 | Project Setup & Monorepo | Critical | pending | 3d | `phase-01-project-setup.md` |
+| 1 | Project Setup & Monorepo | Critical | complete | 3d | `phase-01-project-setup.md` |
 | 2 | Crypto Core (Rust) | Critical | pending | 4d | `phase-02-crypto-core.md` |
 | 3 | API Server & Database (auth+sync+share only) | Critical | pending | 4d | `phase-03-api-server-database.md` |
 | 4 | Extension Shell & Auth | Critical | pending | 5d | `phase-04-extension-shell-auth.md` |

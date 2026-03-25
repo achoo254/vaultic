@@ -1,0 +1,29 @@
+{
+  "name": "@vaultic/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vaultic/api": "workspace:*",
+    "@vaultic/crypto": "workspace:*",
+    "@vaultic/storage": "workspace:*",
+    "@vaultic/sync": "workspace:*",
+    "@vaultic/types": "workspace:*",
+    "@vaultic/ui": "workspace:*",
+    "react": "^19",
+    "react-dom": "^19",
+    "zustand": "^5"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@wxt-dev/module-react": "^1.1.1",
+    "typescript": "^5.7",
+    "wxt": "^0.19"
+  }
+}

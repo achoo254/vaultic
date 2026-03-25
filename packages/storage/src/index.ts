@@ -1,0 +1,5 @@
+// Storage abstraction + IndexedDB implementation
+export type { VaultStore } from './vault-store';
+export type { SyncQueue } from './sync-queue';
+export { IndexedDBStore } from './indexeddb-store';
+export { MemoryStore } from './memory-store';

@@ -1,7 +1,7 @@
 ---
 phase: 1
 priority: critical
-status: pending
+status: complete
 estimated_days: 4
 ---
 
@@ -380,23 +380,23 @@ CMD ["vaultic-server"]
 - Docker build on tag push
 
 ## Todo List
-- [ ] Cargo workspace + 4 crates (crypto, server, types, migration)
-- [ ] Turborepo + pnpm workspace
-- [ ] packages/types — TS types (vault, user, sync, share, crypto)
-- [ ] packages/crypto — WebCrypto bridge skeleton
-- [ ] packages/storage — VaultStore + SyncQueue interfaces + IndexedDB impl
-- [ ] packages/sync — SyncEngine + ConflictResolver (LWW) skeleton
-- [ ] packages/api — API client skeleton (ofetch)
-- [ ] packages/ui — shadcn/ui shared components
-- [ ] packages/extension — WXT + React setup
-- [ ] Docker Compose dev (PostgreSQL)
-- [ ] Dockerfile multi-stage
-- [ ] .gitignore + .env.example + LICENSE
-- [ ] .gitlab-ci.yml skeleton
-- [ ] Verify: `cargo build --workspace` succeeds
-- [ ] Verify: `pnpm build` all packages succeed
-- [ ] Verify: `pnpm dev --filter extension` starts WXT dev server
-- [ ] Verify: `docker compose up` starts PostgreSQL
+- [x] Cargo workspace + 4 crates (crypto, server, types, migration)
+- [x] Turborepo + pnpm workspace
+- [x] packages/types — TS types (vault, user, sync, share, crypto)
+- [x] packages/crypto — WebCrypto bridge skeleton
+- [x] packages/storage — VaultStore + SyncQueue interfaces + IndexedDB impl
+- [x] packages/sync — SyncEngine + ConflictResolver (LWW) skeleton
+- [x] packages/api — API client skeleton (ofetch)
+- [x] packages/ui — shadcn/ui shared components
+- [x] packages/extension — WXT + React setup
+- [x] Docker Compose dev (PostgreSQL)
+- [x] Dockerfile multi-stage
+- [x] .gitignore + .env.example + LICENSE
+- [x] .gitlab-ci.yml skeleton
+- [x] Verify: `cargo build --workspace` succeeds
+- [x] Verify: `pnpm build` all packages succeed
+- [x] Verify: `pnpm dev --filter extension` starts WXT dev server
+- [x] Verify: `docker compose up` starts PostgreSQL
 
 ## Success Criteria
 - `cargo build --workspace` compiles all 4 Rust crates

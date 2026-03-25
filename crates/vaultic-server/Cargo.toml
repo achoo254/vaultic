@@ -1,0 +1,22 @@
+[package]
+name = "vaultic-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+vaultic-types = { path = "../vaultic-types" }
+vaultic-crypto = { path = "../vaultic-crypto" }
+vaultic-migration = { path = "../vaultic-migration" }
+axum = "0.8"
+sea-orm = { version = "1", features = ["sqlx-postgres", "runtime-tokio-rustls"] }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+jsonwebtoken = "9"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dotenvy = "0.15"
