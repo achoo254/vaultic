@@ -25,7 +25,7 @@ export default defineContentScript({
       }
     });
 
-    // Listen for save banner requests from background
+    // Listen for messages from background
     browser.runtime.onMessage.addListener((msg) => {
       if (msg.type === 'SHOW_SAVE_BANNER') {
         showSaveBanner(
@@ -34,6 +34,9 @@ export default defineContentScript({
           () => browser.runtime.sendMessage({ type: 'SAVE_CREDENTIAL', data: msg.credential }),
           () => {}, // Dismiss — do nothing
         );
+      }
+      if (msg.type === 'CLEAR_CLIPBOARD') {
+        navigator.clipboard.writeText('').catch(() => {});
       }
     });
   },

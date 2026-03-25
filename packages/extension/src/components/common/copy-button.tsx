@@ -1,4 +1,4 @@
-// Copy to clipboard with auto-clear after 30s
+// Copy to clipboard with auto-clear via background alarm (survives popup close)
 import React, { useState } from 'react';
 import { tokens } from '@vaultic/ui';
 
@@ -15,8 +15,8 @@ export function CopyButton({ text, label = '📋' }: CopyButtonProps) {
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    // Auto-clear clipboard after 30s
-    setTimeout(() => navigator.clipboard.writeText(''), 30000);
+    // Schedule clipboard clear in background (survives popup close)
+    chrome.runtime?.sendMessage?.({ type: 'schedule-clipboard-clear' }).catch(() => {});
   };
 
   return (

@@ -42,9 +42,7 @@ export function App() {
 
   // Hydrate auth state on mount
   useEffect(() => {
-    hydrate().then(() => {
-      chrome.runtime?.sendMessage?.({ type: 'activity-ping' }).catch(() => {});
-    });
+    hydrate();
   }, [hydrate]);
 
   // Route based on auth state

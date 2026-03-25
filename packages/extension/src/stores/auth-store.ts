@@ -150,3 +150,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
   },
 }));
+
+// Listen for background auto-lock (enc_key removal) — registered once, outside store
+chrome.storage.session.onChanged.addListener((changes) => {
+  if ('enc_key' in changes && !changes.enc_key.newValue) {
+    useAuthStore.setState({ isLocked: true });
+  }
+});

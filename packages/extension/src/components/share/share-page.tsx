@@ -7,8 +7,8 @@ import { ShareLinkResult } from './share-link-result';
 import { encryptForShare } from '../../lib/share-crypto';
 import { useVaultStore } from '../../stores/vault-store';
 import type { DecryptedVaultItem } from '../../stores/vault-store';
+import { fetchWithAuth } from '../../lib/fetch-with-auth';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 const SHARE_BASE_URL = import.meta.env.VITE_SHARE_URL || 'http://localhost:8080/s';
 
 export function SharePage() {
@@ -48,18 +48,14 @@ export function SharePage() {
 
       const { encryptedData, keyFragment } = await encryptForShare(plaintext);
 
-      // POST to server
-      const res = await fetch(`${API_BASE_URL}/api/share`, {
+      const res = await fetchWithAuth('/api/share', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           encrypted_data: encryptedData,
           ttl_hours: ttlHours,
           max_views: maxViews,
         }),
       });
-
-      if (!res.ok) throw new Error('Failed to create share');
       const data = await res.json();
 
       const shareUrl = `${SHARE_BASE_URL}/${data.share_id}#${keyFragment}`;

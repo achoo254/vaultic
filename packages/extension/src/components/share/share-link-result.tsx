@@ -17,6 +17,8 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, onDone }: ShareL
     await navigator.clipboard.writeText(shareUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    // Schedule clipboard clear in background (survives popup close)
+    chrome.runtime?.sendMessage?.({ type: 'schedule-clipboard-clear' }).catch(() => {});
   };
 
   const expiryText = ttlHours

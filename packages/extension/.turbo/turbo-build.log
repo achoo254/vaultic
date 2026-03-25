@@ -6,11 +6,12 @@
 [90mWXT[39m [90m[1m0.19.29[22m[39m
 [36mℹ[39m Building [36mchrome-mv3[39m for [36mproduction[39m with [32mVite 6.4.1[39m
 - Preparing...
-[32m✔[39m Built extension in 866 ms
-[90m  ├─[39m [2m.output\chrome-mv3\[22m[34mmanifest.json[39m              [2m342 B[22m    
-[90m  ├─[39m [2m.output\chrome-mv3\[22m[32mpopup.html[39m                 [2m391 B[22m    
-[90m  ├─[39m [2m.output\chrome-mv3\[22m[36mbackground.js[39m              [2m10.25 kB[22m 
-[90m  ├─[39m [2m.output\chrome-mv3\[22m[36mchunks\popup-DlmAQkyv.js[39m   [2m197.55 kB[22m
-[90m  └─[39m [2m.output\chrome-mv3\[22m[35massets\popup-ClBdVedz.css[39m  [2m295 B[22m    
-[36mΣ Total size:[39m 208.83 kB                                             
-[32m✔[39m Finished in 906 ms
+[32m✔[39m Built extension in 1.018 s
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[34mmanifest.json[39m               [2m450 B[22m    
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[32mpopup.html[39m                  [2m391 B[22m    
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[36mbackground.js[39m               [2m15.36 kB[22m 
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[36mchunks\popup-Dkr-YKay.js[39m    [2m397.35 kB[22m
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[36mcontent-scripts\content.js[39m  [2m22.21 kB[22m 
+[90m  └─[39m [2m.output\chrome-mv3\[22m[35massets\popup-ClBdVedz.css[39m   [2m295 B[22m    
+[36mΣ Total size:[39m 436.05 kB                                              
+[32m✔[39m Finished in 1.090 s

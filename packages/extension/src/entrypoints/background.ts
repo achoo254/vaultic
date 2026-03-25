@@ -3,14 +3,23 @@
 import { IndexedDBStore } from '@vaultic/storage';
 import { decrypt } from '@vaultic/crypto';
 
-const AUTO_LOCK_MINUTES = 15;
-const LAST_ACTIVITY_KEY = 'last_activity_at';
+const DEFAULT_AUTO_LOCK_MINUTES = 15;
 
 export default defineBackground(() => {
-  // Auto-lock check every minute
-  browser.alarms.create('auto-lock-check', { periodInMinutes: 1 });
+  // Auto-lock via chrome.idle API — tracks system-wide idle, not just popup
+  initAutoLock();
+
+  // Re-apply idle interval when user changes setting
+  chrome.storage.local.onChanged.addListener((changes) => {
+    if (changes.auto_lock_min) {
+      const minutes = changes.auto_lock_min.newValue || DEFAULT_AUTO_LOCK_MINUTES;
+      chrome.idle.setDetectionInterval(minutes * 60);
+    }
+  });
+
+  // Clipboard clear alarm handler
   browser.alarms.onAlarm.addListener(async (alarm) => {
-    if (alarm.name === 'auto-lock-check') await checkIdleAndLock();
+    if (alarm.name === 'clear-clipboard') await clearClipboardViaTab();
   });
 
   // Message router for popup and content scripts
@@ -25,14 +34,13 @@ export default defineBackground(() => {
 /** Route messages from popup and content scripts. */
 async function handleMessage(msg: { type: string; [key: string]: unknown }) {
   switch (msg.type) {
-    case 'activity-ping': {
-      await chrome.storage.session.set({ [LAST_ACTIVITY_KEY]: Date.now() });
-      return { ok: true };
-    }
-
     case 'lock': {
       await chrome.storage.session.remove('enc_key');
       return { ok: true };
+    }
+
+    case 'schedule-clipboard-clear': {
+      return scheduleClipboardClear();
     }
 
     case 'GET_MATCHES': {
@@ -167,13 +175,44 @@ function extractDomain(url: string): string {
   }
 }
 
-/** Auto-lock vault after idle timeout. */
-async function checkIdleAndLock() {
-  const result = await chrome.storage.session.get([LAST_ACTIVITY_KEY, 'enc_key']);
-  if (!result.enc_key) return;
-  const lastActivity = result[LAST_ACTIVITY_KEY] || 0;
-  if (Date.now() - lastActivity > AUTO_LOCK_MINUTES * 60 * 1000) {
-    await chrome.storage.session.remove('enc_key');
-    console.log('Auto-locked vault after idle timeout');
+/** Initialize auto-lock using chrome.idle API — tracks system-wide idle state. */
+async function initAutoLock() {
+  const settings = await chrome.storage.local.get('auto_lock_min');
+  const minutes = settings.auto_lock_min || DEFAULT_AUTO_LOCK_MINUTES;
+  chrome.idle.setDetectionInterval(minutes * 60);
+
+  chrome.idle.onStateChanged.addListener(async (state) => {
+    if (state === 'locked' || state === 'idle') {
+      const result = await chrome.storage.session.get('enc_key');
+      if (result.enc_key) {
+        await chrome.storage.session.remove('enc_key');
+        console.log(`Auto-locked vault (system ${state})`);
+      }
+    }
+  });
+}
+
+/** Schedule clipboard clear via alarm — survives popup close. */
+async function scheduleClipboardClear() {
+  const settings = await chrome.storage.local.get('clipboard_clear_sec');
+  const seconds = settings.clipboard_clear_sec ?? 30;
+  if (seconds === 0) return { ok: true }; // "Never" — skip
+
+  // Alarms need minimum 0.5 min in production, use delayInMinutes
+  await browser.alarms.create('clear-clipboard', {
+    delayInMinutes: Math.max(seconds / 60, 0.5),
+  });
+  return { ok: true };
+}
+
+/** Clear clipboard by sending message to active tab's content script. */
+async function clearClipboardViaTab() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      chrome.tabs.sendMessage(tab.id, { type: 'CLEAR_CLIPBOARD' }).catch(() => {});
+    }
+  } catch {
+    // No active tab — clipboard already protected by session end
   }
 }
