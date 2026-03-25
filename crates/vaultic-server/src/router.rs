@@ -22,6 +22,7 @@ pub fn create_router(state: AppState) -> Router {
     let share_routes = Router::new()
         .route("/", post(handlers::share::create))
         .route("/{id}", get(handlers::share::retrieve))
+        .route("/{id}/meta", get(handlers::share::meta))
         .route("/{id}", delete(handlers::share::delete));
 
     Router::new()

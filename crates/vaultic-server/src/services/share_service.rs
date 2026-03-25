@@ -97,6 +97,35 @@ pub async fn retrieve(
     Ok(share.encrypted_data)
 }
 
+/// Get share metadata without counting a view.
+pub async fn get_meta(
+    db: &DatabaseConnection,
+    share_id: &str,
+) -> Result<(Option<i32>, i32, Option<chrono::DateTime<Utc>>), AppError> {
+    let share = secure_share::Entity::find_by_id(share_id)
+        .one(db)
+        .await?
+        .ok_or_else(|| AppError::NotFound("share not found".into()))?;
+
+    // Check expiry
+    if let Some(expires_at) = share.expires_at {
+        let expires: chrono::DateTime<Utc> = expires_at.into();
+        if Utc::now() > expires {
+            return Err(AppError::Gone("share link has expired".into()));
+        }
+    }
+
+    // Check max views reached
+    if let Some(max) = share.max_views {
+        if share.current_views >= max {
+            return Err(AppError::Gone("share link max views reached".into()));
+        }
+    }
+
+    let expires_at = share.expires_at.map(|e| e.into());
+    Ok((share.max_views, share.current_views, expires_at))
+}
+
 /// Delete a share (owner only).
 pub async fn delete(
     db: &DatabaseConnection,

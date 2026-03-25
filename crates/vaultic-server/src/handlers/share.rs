@@ -7,7 +7,7 @@ use crate::error::AppError;
 use crate::middleware::auth::AuthUser;
 use crate::services::share_service;
 use crate::AppState;
-use vaultic_types::{CreateShareRequest, CreateShareResponse, ShareContentResponse};
+use vaultic_types::{CreateShareRequest, CreateShareResponse, ShareContentResponse, ShareMetaResponse};
 
 /// POST /api/share
 pub async fn create(
@@ -40,6 +40,21 @@ pub async fn retrieve(
     let encrypted_data = share_service::retrieve(&state.db, &share_id).await?;
 
     Ok(Json(ShareContentResponse { encrypted_data }))
+}
+
+/// GET /api/share/:id/meta — public, returns metadata without counting a view
+pub async fn meta(
+    State(state): State<AppState>,
+    Path(share_id): Path<String>,
+) -> Result<Json<ShareMetaResponse>, AppError> {
+    let (max_views, current_views, expires_at) =
+        share_service::get_meta(&state.db, &share_id).await?;
+
+    Ok(Json(ShareMetaResponse {
+        max_views,
+        current_views,
+        expires_at,
+    }))
 }
 
 /// DELETE /api/share/:id — owner only

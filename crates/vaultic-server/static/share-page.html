@@ -79,13 +79,13 @@
       }
 
       try {
-        // Fetch encrypted data from server (key never sent — it's in the fragment)
-        const res = await fetch(`/api/share/${shareId}`);
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          if (res.status === 410) {
+        // Fetch metadata first — does NOT count a view
+        const metaRes = await fetch(`/api/share/${shareId}/meta`);
+        if (!metaRes.ok) {
+          const err = await metaRes.json().catch(() => ({}));
+          if (metaRes.status === 410) {
             showError('Link Expired', err.error || 'This link has expired or reached max views.');
-          } else if (res.status === 404) {
+          } else if (metaRes.status === 404) {
             showError('Not Found', 'This share link does not exist.');
           } else {
             showError('Error', err.error || 'Failed to load share.');
@@ -93,19 +93,40 @@
           return;
         }
 
-        const data = await res.json();
-        showPrompt(data);
+        const meta = await metaRes.json();
+        showPrompt(meta);
       } catch {
         showError('Network Error', 'Could not connect to server.');
       }
     }
 
-    function showPrompt(data) {
+    function showPrompt(meta) {
       document.getElementById('view-loading').classList.add('hidden');
       document.getElementById('view-prompt').classList.remove('hidden');
 
+      // Dynamic warning based on actual share config
+      const warningEl = document.getElementById('warning-text');
+      if (meta.max_views === null || meta.max_views === undefined) {
+        warningEl.textContent = 'This link has no view limit';
+      } else {
+        const remaining = meta.max_views - meta.current_views;
+        if (remaining <= 1) {
+          warningEl.textContent = 'This link can only be viewed 1 more time';
+        } else {
+          warningEl.textContent = `This link can be viewed ${remaining} more times`;
+        }
+      }
+
       document.getElementById('btn-view').addEventListener('click', async () => {
         try {
+          // Fetch content — THIS counts the view
+          const res = await fetch(`/api/share/${shareId}`);
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            showError('Error', err.error || 'Failed to load share.');
+            return;
+          }
+          const data = await res.json();
           const plaintext = await decryptShare(data.encrypted_data, keyFragment);
           showRevealed(plaintext);
         } catch {

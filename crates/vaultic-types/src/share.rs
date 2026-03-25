@@ -24,3 +24,11 @@ pub struct CreateShareResponse {
 pub struct ShareContentResponse {
     pub encrypted_data: String,
 }
+
+/// Metadata response for share link — returned WITHOUT counting a view.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ShareMetaResponse {
+    pub max_views: Option<i32>,
+    pub current_views: i32,
+    pub expires_at: Option<chrono::DateTime<chrono::Utc>>,
+}
