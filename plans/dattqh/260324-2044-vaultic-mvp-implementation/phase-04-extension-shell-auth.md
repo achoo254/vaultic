@@ -1,7 +1,7 @@
 ---
 phase: 4
 priority: critical
-status: pending
+status: in-progress
 estimated_days: 5
 depends_on: [3]
 ---
@@ -229,22 +229,23 @@ Key difference from server-first: Master password unlock derives encryption key 
 - [ ] Screenshot comparison: ≥90% PASS
 
 ## Todo List
-- [ ] WebCrypto bridge: deriveMasterKey (argon2-browser)
-- [ ] WebCrypto bridge: deriveEncryptionKey (HKDF)
-- [ ] WebCrypto bridge: deriveAuthHash
-- [ ] WebCrypto bridge: encrypt/decrypt (AES-256-GCM)
-- [ ] Interop test with Rust test vectors
-- [ ] API client (ofetch)
-- [ ] Zustand auth store
-- [ ] LoginForm component
-- [ ] RegisterForm component
-- [ ] MasterPasswordPrompt component
-- [ ] LockScreen component
-- [ ] Background service worker (auto-lock alarm)
-- [ ] Session management (chrome.storage.session)
-- [ ] Popup routing (login → locked → vault)
-- [ ] Error handling (network errors, wrong password)
-- [ ] Extension builds for Chrome + Firefox
+- [x] WebCrypto bridge: deriveMasterKey (hash-wasm argon2id)
+- [x] WebCrypto bridge: deriveEncryptionKey (HKDF)
+- [x] WebCrypto bridge: deriveAuthHash
+- [x] WebCrypto bridge: encrypt/decrypt (AES-256-GCM)
+- [ ] Interop test with Rust test vectors (needs browser environment)
+- [x] API client (ofetch)
+- [x] Zustand auth store
+- [x] LoginForm component
+- [x] RegisterForm component
+- [x] LockScreen component
+- [x] Background service worker (auto-lock alarm)
+- [x] Session management (chrome.storage.session)
+- [x] Popup routing (login → locked → vault)
+- [x] Error handling (network errors, wrong password)
+- [x] Extension builds for Chrome (pnpm build passes, 349.3 KB output)
+- [ ] Firefox build verification
+- [ ] Design verification screenshots
 
 ## Success Criteria
 - WebCrypto output matches Rust test vectors byte-for-byte

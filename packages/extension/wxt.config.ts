@@ -1,4 +1,6 @@
 import { defineConfig } from 'wxt';
+import wasm from 'vite-plugin-wasm';
+import topLevelAwait from 'vite-plugin-top-level-await';
 
 export default defineConfig({
   srcDir: 'src',
@@ -9,4 +11,7 @@ export default defineConfig({
     permissions: ['storage', 'activeTab', 'scripting', 'alarms'],
     host_permissions: ['<all_urls>'],
   },
+  vite: () => ({
+    plugins: [wasm(), topLevelAwait()],
+  }),
 });

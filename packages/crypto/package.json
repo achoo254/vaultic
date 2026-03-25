@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@vaultic/types": "workspace:*",
-    "argon2-browser": "^1.18.0"
+    "hash-wasm": "^4.12.0"
   },
   "devDependencies": {
     "typescript": "^5.7"

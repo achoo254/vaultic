@@ -24,6 +24,8 @@
     "@types/react-dom": "^19",
     "@wxt-dev/module-react": "^1.1.1",
     "typescript": "^5.7",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.6.0",
     "wxt": "^0.19"
   }
 }
