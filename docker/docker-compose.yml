@@ -1,37 +1,19 @@
-# Dev environment — reads from .env (local) or .env.staging
+# Dev/Prod — MongoDB is on a separate server (not in compose)
 # Run: docker compose -f docker/docker-compose.yml up -d
-# With staging env: docker compose -f docker/docker-compose.yml --env-file .env.staging up -d
+# Requires: MONGODB_URI and JWT_SECRET in .env or environment
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_DB: vaultic
-      POSTGRES_USER: vaultic
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vaultic"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  server:
+  backend:
     build:
       context: ..
       dockerfile: docker/Dockerfile
     ports:
       - "8080:8080"
     environment:
-      DATABASE_URL: postgres://vaultic:${POSTGRES_PASSWORD:-dev}@postgres:5432/vaultic
-      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-prod}
-      RUST_LOG: info
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-volumes:
-  pgdata:
+      NODE_ENV: ${NODE_ENV:-production}
+      MONGODB_URI: ${MONGODB_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      SERVER_PORT: 8080
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    restart: unless-stopped

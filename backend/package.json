@@ -1,0 +1,31 @@
+{
+  "name": "@vaultic/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "start:pm2": "pm2 start ecosystem.config.cjs --env production"
+  },
+  "dependencies": {
+    "@vaultic/types": "workspace:*",
+    "express": "^4",
+    "express-async-errors": "^3",
+    "mongoose": "^8",
+    "zod": "^3",
+    "jsonwebtoken": "^9",
+    "dotenv": "^16",
+    "pino": "^9",
+    "pino-http": "^10",
+    "cors": "^2"
+  },
+  "devDependencies": {
+    "@types/express": "^5",
+    "@types/jsonwebtoken": "^9",
+    "@types/cors": "^2",
+    "tsx": "^4",
+    "typescript": "^5.7"
+  }
+}

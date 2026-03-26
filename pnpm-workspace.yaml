@@ -1,2 +1,5 @@
 packages:
-  - "packages/*"
+  - "backend"
+  - "client/apps/*"
+  - "client/packages/*"
+  - "shared/*"
