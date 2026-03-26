@@ -18,4 +18,8 @@ export class SyncApi {
   async pull(data: SyncPullRequest): Promise<SyncPullResponse> {
     return this.client('/api/sync/pull', { method: 'POST', body: data });
   }
+
+  async purge(): Promise<void> {
+    await this.client('/api/sync/purge', { method: 'DELETE' });
+  }
 }

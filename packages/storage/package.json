@@ -7,13 +7,15 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "test": "vitest run"
   },
   "dependencies": {
     "@vaultic/types": "workspace:*",
     "idb": "^8"
   },
   "devDependencies": {
+    "fake-indexeddb": "^6.2.5",
     "typescript": "^5.7"
   }
 }

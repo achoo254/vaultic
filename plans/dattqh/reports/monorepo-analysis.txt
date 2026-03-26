@@ -1,0 +1,198 @@
+VAULTIC MONOREPO ANALYSIS - 2026-03-26
+
+================================================================================
+1. PACKAGE STRUCTURE
+================================================================================
+
+TypeScript Packages (packages/):
+- api: 15 files | Entry: src/index.ts | Server API client wrapper
+- crypto: 12 files | Entry: src/index.ts | WebCrypto bridge
+- storage: 21 files | Entry: src/index.ts | IndexedDB vault plus sync queue
+- sync: 12 files | Entry: src/index.ts | Delta sync engine with conflict resolution
+- types: 18 files | Entry: src/index.ts | Shared type definitions
+- ui: 48 files | Entry: src/index.ts | Shared React components
+- extension: 46 files | Multiple entrypoints | Browser extension
+TOTAL: 172 files
+
+Rust Crates (crates/):
+- vaultic-crypto: 6 files | Cryptographic primitives
+- vaultic-types: 5 files | Shared Rust types
+- vaultic-migration: 5 files | SeaORM database migrations
+- vaultic-server: 19 files | Axum API server
+TOTAL: 35 files
+
+================================================================================
+2. CODE QUALITY SIGNALS
+================================================================================
+
+TODO/FIXME Comments Found: 2
+Location: packages/extension/src/components/settings/settings-page.tsx
+
+Line 39: // TODO: trigger full vault push
+Line 49: // TODO: call DELETE api/sync/purge
+
+IMPACT: Sync disable feature incomplete. Users expect server purge but not implemented.
+
+Large Files (over 200 lines):
+
+TypeScript:
+- vault-store.ts: 255 lines (Zustand store with async CRUD plus decryption)
+- background.ts: 218 lines (Message router plus auto-lock handler)
+- register-form.tsx: 215 lines (Auth form with validation)
+- settings-page.tsx: 161 lines (Settings UI)
+- login-form.tsx: 154 lines (Auth form)
+
+Rust:
+- sync_service.rs: 204 lines (push/pull/purge/conflict in monolithic function)
+- share_service.rs: 147 lines (Share creation plus metadata)
+- auth_service.rs: 137 lines (Register/login with JWT)
+
+Type Safety:
+- TypeScript: strict mode enabled in tsconfig.base.json
+- Only 2 "any" usages across entire codebase
+- Rust: properly typed, no unsafe blocks in main logic
+
+================================================================================
+3. DEPENDENCIES ANALYSIS
+================================================================================
+
+CRITICAL FINDING: Duplicate Crypto Dependencies
+
+vaultic-crypto/Cargo.toml has:
+  sha2 = "0.10"
+  hex = "0.4"
+  rand = "0.8"
+
+vaultic-server/Cargo.toml DUPLICATES these:
+  sha2 = "0.10"
+  hex = "0.4"
+  rand = "0.8"
+
+ROOT CAUSE: vaultic-server directly uses crypto instead of wrapping exports
+IMPACT: Possible version mismatch, larger binary, unused imports
+FIX: Export JWT signing from vaultic-crypto, remove duplicates from vaultic-server
+
+TypeScript Dependencies: All reasonable
+- react at ^19, zustand at ^5, lucide-react at ^0.468
+- hash-wasm at ^4.12.0, idb at ^8, ofetch at ^1
+- No outdated or redundant packages
+- Properly uses workspace:* for internal refs
+
+================================================================================
+4. BUILD CONFIGURATION
+================================================================================
+
+turbo.json Issues:
+- Missing task dependencies: lint and test should depend on build
+- Should add proper dependency chain between tasks
+
+tsconfig.base.json: GOOD
+- Modern: target ES2022, module ESNext, strict: true
+- declaration: true, sourceMap: true for libraries
+- All packages extend properly
+
+Cargo.toml: MISSING RELEASE OPTIMIZATIONS
+- No [profile.release] section defined
+- Should add: opt-level=3, lto=true, codegen-units=1, strip=true
+- Can improve binary performance by 20-30 percent
+
+================================================================================
+5. TEST COVERAGE
+================================================================================
+
+TypeScript Packages: CRITICAL GAP
+- ZERO test files across all 7 packages
+- No test configuration in package.json files
+
+Rust Crates: PARTIAL COVERAGE
+✓ vaultic-crypto: 4 integration tests
+  - cipher_tests.rs (80 lines)
+  - kdf_tests.rs (72 lines)
+  - password_gen_tests.rs (102 lines)
+  - interop_tests.rs (80 lines)
+✗ vaultic-server: ZERO tests (sync, auth, share handlers untested)
+✗ vaultic-types: ZERO tests
+✗ vaultic-migration: ZERO tests
+
+Missing Critical Tests:
+- vaultic-crypto TS: AES-256-GCM encryption/decryption
+- vaultic-storage TS: IndexedDB persistence and sync queue
+- vaultic-sync TS: Last-write-wins conflict resolution
+- vaultic-server: JWT middleware, sync relay, share broker
+
+================================================================================
+6. BUILD OUTPUT and ARTIFACTS
+================================================================================
+
+Generated Files Status:
+- .output/ and dist/ properly excluded from git
+- node_modules ignored with pnpm lockfile
+- Issue: .wxt/tsconfig.json should be gitignored
+
+Bundle Analysis:
+- No bundle visualization configured
+- Recommendation: Add rollup-plugin-visualizer for extension
+
+================================================================================
+7. ARCHITECTURE OBSERVATIONS
+================================================================================
+
+Strengths:
+✓ Clean layer separation (types to crypto to storage to sync to extension)
+✓ Zero-knowledge by design (client-side encryption always)
+✓ Offline-first with IndexedDB as primary storage
+✓ Workspace dependencies properly configured
+
+Weaknesses:
+⚠ Extension package dominates: 46 files, 26 percent of TS codebase
+⚠ vault-store.ts mixes decryption logic with state management
+⚠ background.ts combines message routing with handler logic
+⚠ No React error boundaries in extension components
+⚠ Sync conflict resolution untested in real scenarios
+
+================================================================================
+8. ACTIONABLE RECOMMENDATIONS
+================================================================================
+
+PRIORITY 0 (CRITICAL):
+1. Implement test suite for all TS packages
+2. Remove duplicate Rust dependencies (sha2, hex, rand from vaultic-server)
+3. Complete TODO items in settings-page.tsx (sync purge feature)
+
+PRIORITY 1 (HIGH):
+4. Add Rust tests for vaultic-server services
+5. Extract sync_service.rs into submodules
+6. Add Cargo.toml release profile optimization
+7. Update turbo.json with task dependencies
+
+PRIORITY 2 (MEDIUM):
+8. Refactor large TS files for maintainability
+9. Add React error boundaries in extension
+10. Configure bundle analyzer for extension package
+
+PRIORITY 3 (LOW):
+11. Add E2E tests for sync conflict resolution
+12. Document API contract between extension and server
+13. Gitignore .wxt directory
+
+================================================================================
+FILE PATHS FOR REVIEW
+================================================================================
+
+TypeScript to Review:
+- packages/extension/src/stores/vault-store.ts (255 lines)
+- packages/extension/src/entrypoints/background.ts (218 lines)
+- packages/extension/src/components/auth/register-form.tsx (215 lines)
+- packages/extension/src/components/settings/settings-page.tsx
+
+Rust to Review:
+- crates/vaultic-server/src/services/sync_service.rs (204 lines)
+- crates/vaultic-server/Cargo.toml
+- Cargo.toml (root workspace)
+
+Configuration Files:
+- turbo.json
+- tsconfig.base.json
+- .gitlab-ci.yml
+
+================================================================================

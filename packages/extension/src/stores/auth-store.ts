@@ -46,15 +46,20 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     email = email.toLowerCase().trim();
     const { encryption_key, auth_hash } = await deriveKeys(password, email);
 
-    const res = await fetch(`${apiBaseUrl}/api/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        auth_hash: auth_hash,
-        argon2_params: { m: 65536, t: 3, p: 4 },
-      }),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${apiBaseUrl}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          auth_hash: auth_hash,
+          argon2_params: { m: 65536, t: 3, p: 4 },
+        }),
+      });
+    } catch {
+      throw new Error('Cannot connect to server. Please check that the Vaultic server is running.');
+    }
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: 'Registration failed' }));
@@ -62,11 +67,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
 
     // Auto-login using already-derived keys (avoid double Argon2id)
-    const loginRes = await fetch(`${apiBaseUrl}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, auth_hash }),
-    });
+    let loginRes: Response;
+    try {
+      loginRes = await fetch(`${apiBaseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, auth_hash }),
+      });
+    } catch {
+      throw new Error('Registration succeeded but cannot connect for auto-login');
+    }
 
     if (!loginRes.ok) {
       throw new Error('Registration succeeded but auto-login failed');
@@ -85,11 +95,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     email = email.toLowerCase().trim();
     const { encryption_key, auth_hash } = await deriveKeys(password, email);
 
-    const res = await fetch(`${apiBaseUrl}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, auth_hash }),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${apiBaseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, auth_hash }),
+      });
+    } catch {
+      throw new Error('Cannot connect to server. Please check that the Vaultic server is running.');
+    }
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: 'Invalid credentials' }));

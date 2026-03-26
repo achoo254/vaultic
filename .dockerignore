@@ -1,0 +1,11 @@
+target/
+node_modules/
+.output/
+.wxt/
+.turbo/
+packages/
+docs/
+plans/
+*.md
+.git/
+.env*

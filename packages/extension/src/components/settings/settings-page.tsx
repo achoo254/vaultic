@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { tokens, VStack, SectionHeader as SharedSectionHeader } from '@vaultic/ui';
 import { useAuthStore } from '../../stores/auth-store';
+import { fetchWithAuth } from '../../lib/fetch-with-auth';
+import { IndexedDBStore } from '@vaultic/storage';
 
 interface SettingsPageProps {
   onBack: () => void;
@@ -36,8 +38,17 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
         setSyncEnabled(true);
         setSyncStatus('Syncing...');
         saveSetting('sync_enabled', true);
-        // TODO: trigger full vault push
-        setTimeout(() => setSyncStatus('Synced'), 2000);
+        try {
+          const store = new IndexedDBStore();
+          const items = await store.getAllItems();
+          await fetchWithAuth('/api/sync/push', {
+            method: 'POST',
+            body: JSON.stringify({ device_id: '', items }),
+          });
+          setSyncStatus('Synced');
+        } catch {
+          setSyncStatus('Sync failed');
+        }
       }
     } else {
       // Disabling sync
@@ -46,7 +57,11 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
       setSyncStatus('Local only');
       saveSetting('sync_enabled', false);
       if (deleteData) {
-        // TODO: call DELETE /api/sync/purge
+        try {
+          await fetchWithAuth('/api/sync/purge', { method: 'DELETE' });
+        } catch {
+          // Best-effort purge — vault already local-only
+        }
       }
     }
   };

@@ -8,7 +8,8 @@ export const FOLDERS_STORE = 'folders';
 export const META_STORE = 'metadata';
 export const QUEUE_STORE = 'sync_queue';
 
-let dbPromise: Promise<IDBDatabase> | null = null;
+// Exported for test resets — not part of public API
+export let dbPromise: Promise<IDBDatabase> | null = null;
 
 /** Open or get cached IDBDatabase connection with full schema. */
 export function openDB(): Promise<IDBDatabase> {
@@ -43,4 +44,9 @@ export function openDB(): Promise<IDBDatabase> {
   });
 
   return dbPromise;
+}
+
+/** Reset cached connection — for testing only. */
+export function resetDBCache(): void {
+  dbPromise = null;
 }

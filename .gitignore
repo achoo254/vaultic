@@ -11,6 +11,7 @@ target/
 node_modules/
 .output/
 .turbo/
+.wxt/
 dist/
 
 # Environment — secrets never committed

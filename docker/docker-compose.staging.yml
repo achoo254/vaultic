@@ -1,44 +1,39 @@
-# Staging deployment — Cloudflare → Nginx (host) → server:8080
-# Run: docker compose -f docker/docker-compose.staging.yml --env-file .env.staging up -d
-
 services:
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: vaultic
-      POSTGRES_USER: vaultic
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vaultic"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - vaultic-net
+    postgres:
+      image: postgres:16-alpine
+      restart: unless-stopped
+      environment:
+        POSTGRES_DB: vaultic
+        POSTGRES_USER: vaultic
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      volumes:
+        - pgdata:/var/lib/postgresql/data
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U vaultic"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+      networks:
+        - vaultic-net
 
-  server:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8080:8080"
-    environment:
-      DATABASE_URL: postgres://vaultic:${POSTGRES_PASSWORD}@postgres:5432/vaultic
-      JWT_SECRET: ${JWT_SECRET}
-      RUST_LOG: ${RUST_LOG:-info}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - vaultic-net
+    server:
+      image: vaultic-server:latest
+      restart: unless-stopped
+      ports:
+        - "127.0.0.1:8080:8080"
+      environment:
+        DATABASE_URL: postgres://vaultic:${POSTGRES_PASSWORD}@postgres:5432/vaultic
+        JWT_SECRET: ${JWT_SECRET}
+        RUST_LOG: ${RUST_LOG:-info}
+      depends_on:
+        postgres:
+          condition: service_healthy
+      networks:
+        - vaultic-net
 
-volumes:
-  pgdata:
+  volumes:
+    pgdata:
 
-networks:
-  vaultic-net:
-    driver: bridge
+  networks:
+    vaultic-net:
+      driver: bridge

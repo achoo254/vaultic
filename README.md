@@ -1,92 +1,231 @@
-# vaultic
+# 🔐 Vaultic
 
+**Trình quản lý mật khẩu mã nguồn mở, mã hóa đầu-cuối, ưu tiên offline.**
 
+Vaultic là giải pháp thay thế đơn giản và miễn phí cho 1Password/Bitwarden — toàn bộ dữ liệu được mã hóa ngay trên thiết bị, server không bao giờ nhìn thấy mật khẩu của bạn.
 
-## Getting started
+---
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Tại sao chọn Vaultic?
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+| 🔒 Zero-Knowledge | 📴 Offline-First | 🔓 Mã nguồn mở |
+|:---:|:---:|:---:|
+| Mã hóa AES-256 trên thiết bị. Server chỉ lưu dữ liệu đã mã hóa — không thể giải mã. | Hoạt động 100% offline sau đăng nhập. Đồng bộ cloud là **tùy chọn**. | AGPL-3.0. Tự host, tự kiểm tra, tự kiểm soát. |
 
-## Add your files
+---
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## ✨ Tính năng chính
+
+### 🗄️ Kho mật khẩu
+Lưu trữ và quản lý tất cả thông tin đăng nhập, ghi chú bảo mật, thẻ ngân hàng — được mã hóa và tìm kiếm nhanh.
+
+<!-- TODO: Thêm screenshot vault list -->
+<!-- ![Vault List](docs/images/vault-list.png) -->
+
+### ⚡ Tự động điền
+Extension phát hiện form đăng nhập và tự động gợi ý điền mật khẩu phù hợp theo tên miền.
+
+<!-- TODO: Thêm screenshot autofill -->
+<!-- ![Autofill](docs/images/autofill.png) -->
+
+### 🔗 Chia sẻ an toàn
+Tạo link chia sẻ mã hóa 1 lần — khóa giải mã nằm trong URL fragment, server không bao giờ nhận được.
+
+<!-- TODO: Thêm screenshot share -->
+<!-- ![Share](docs/images/share.png) -->
+
+### 🔄 Đồng bộ tùy chọn
+Bật/tắt đồng bộ cloud trong Cài đặt. Khi tắt, dữ liệu chỉ ở trên thiết bị. Khi bật, đồng bộ delta (chỉ gửi thay đổi).
+
+### 🛡️ Kiểm tra sức khỏe bảo mật
+Phát hiện mật khẩu yếu, trùng lặp và đề xuất cải thiện.
+
+<!-- TODO: Thêm screenshot security health -->
+<!-- ![Security Health](docs/images/security-health.png) -->
+
+### 📦 Xuất / Nhập
+Nhập từ file CSV (tương thích các trình quản lý khác). Xuất vault dưới dạng JSON mã hóa.
+
+---
+
+## 📥 Cài đặt Extension
+
+### Chrome / Edge / Brave
+> *Sắp có trên Chrome Web Store*
+
+Cài thủ công (Developer Mode):
+1. Build extension:
+   ```bash
+   git clone https://gitlabs.inet.vn/dattqh/vaultic.git && cd vaultic
+   pnpm install && pnpm build
+   ```
+2. Mở `chrome://extensions` → bật **Developer mode**
+3. Chọn **Load unpacked** → trỏ tới `packages/extension/.output/chrome-mv3`
+
+### Firefox
+> *Sắp có trên Firefox Add-ons*
+
+Build tương tự, chọn `packages/extension/.output/firefox-mv2`.
+
+---
+
+## 🚀 Bắt đầu sử dụng
+
+### Bước 1: Đăng ký tài khoản
+
+Click icon Vaultic trên thanh công cụ → nhập email và **mật khẩu chính** (master password).
+
+> ⚠️ **Quan trọng:** Mật khẩu chính là chìa khóa giải mã vault. Nếu quên, không ai có thể khôi phục dữ liệu — kể cả server.
+
+<!-- TODO: Thêm screenshot register -->
+<!-- ![Register](docs/images/register.png) -->
+
+### Bước 2: Thêm mật khẩu đầu tiên
+
+Có 2 cách:
+
+**Cách 1 — Thêm thủ công:**
+Click ➕ trong vault → nhập tên, URL, username, password → Lưu.
+
+**Cách 2 — Tự động lưu:**
+Đăng nhập vào website bất kỳ → Extension hiện banner "Lưu mật khẩu?" → Click **Lưu**.
+
+### Bước 3: Tự động điền
+
+Truy cập website đã lưu → click icon 🔑 bên cạnh ô mật khẩu → chọn tài khoản → điền tự động.
+
+### Bước 4: Chia sẻ (tùy chọn)
+
+Vào tab **Share** → chọn mật khẩu → tạo link → gửi cho người nhận. Link chỉ dùng được 1 lần.
+
+---
+
+## 🔒 Cách bảo mật hoạt động
 
 ```
-cd existing_repo
-git remote add origin https://gitlabs.inet.vn/dattqh/vaultic.git
-git branch -M main
-git push -uf origin main
+Mật khẩu chính
+      │
+      ▼
+  ┌─────────┐
+  │ Argon2id │  ← Hàm băm chống brute-force (19MB RAM, 2 lần lặp)
+  └────┬─────┘
+       │
+       ▼
+  Master Key (32 bytes)
+       │
+   ┌───┴───┐
+   │ HKDF  │  ← Tách khóa cho từng mục đích
+   └───┬───┘
+       │
+       ▼
+  ┌───────────┐
+  │ AES-256   │  ← Mã hóa từng mục riêng biệt
+  │   -GCM    │     (nonce ngẫu nhiên 12 bytes)
+  └───────────┘
+       │
+       ▼
+  Dữ liệu mã hóa → IndexedDB (local) / Server (nếu bật sync)
 ```
 
-## Integrate with your tools
+**Server không bao giờ nhận được master key hay dữ liệu gốc.**
 
-- [ ] [Set up project integrations](https://gitlabs.inet.vn/dattqh/vaultic/-/settings/integrations)
+---
 
-## Collaborate with your team
+## ⚙️ Cài đặt nâng cao
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+| Tùy chọn | Mặc định | Mô tả |
+|-----------|----------|-------|
+| Tự khóa | 15 phút | Tự động khóa vault sau thời gian không hoạt động |
+| Xóa clipboard | 30 giây | Tự xóa mật khẩu đã copy khỏi clipboard |
+| Đồng bộ cloud | Tắt | Bật để đồng bộ vault giữa các thiết bị |
+| Tạo mật khẩu | 16 ký tự | Tùy chỉnh độ dài và độ phức tạp |
 
-## Test and Deploy
+---
 
-Use the built-in continuous integration in GitLab.
+## 🛠 Dành cho nhà phát triển
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### Yêu cầu
+- Node.js 18+, pnpm 9+
+- Rust 1.82+, Cargo
+- PostgreSQL 16 (hoặc Docker)
 
-***
+### Khởi chạy nhanh
 
-# Editing this README
+```bash
+# Clone & cài đặt
+git clone https://gitlabs.inet.vn/dattqh/vaultic.git && cd vaultic
+pnpm install
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+# Khởi động database
+docker compose -f docker/docker-compose.yml up -d postgres
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+# Chạy server API (port 8080)
+cargo run -p vaultic-server
 
-## Name
-Choose a self-explaining name for your project.
+# Chạy extension (hot reload)
+pnpm --filter extension dev
+# → Load unpacked từ packages/extension/.wxt/chrome-mv3
+```
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+### Cấu trúc dự án
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+```
+vaultic/
+├── crates/                    # Rust
+│   ├── vaultic-crypto/        # Argon2id, AES-256-GCM, HKDF
+│   ├── vaultic-server/        # Axum API server
+│   ├── vaultic-types/         # Shared types
+│   └── vaultic-migration/     # Database migrations
+├── packages/                  # TypeScript
+│   ├── types/                 # Shared TS types
+│   ├── crypto/                # WebCrypto bridge
+│   ├── storage/               # IndexedDB vault store
+│   ├── sync/                  # Delta sync engine
+│   ├── api/                   # Server API client
+│   ├── ui/                    # Shared React components
+│   └── extension/             # WXT browser extension
+└── docker/                    # Docker configs
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### Lệnh phổ biến
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+```bash
+# Rust
+cargo test                           # Chạy tất cả test
+cargo clippy --all-targets           # Lint
+cargo fmt --check                    # Kiểm tra format
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+# TypeScript
+pnpm build                           # Build tất cả packages
+pnpm lint                            # Lint tất cả
+pnpm test                            # Test tất cả
+pnpm --filter @vaultic/crypto build  # Build 1 package
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Self-host server
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```bash
+# Copy & chỉnh sửa biến môi trường
+cp .env.example .env
+# Sửa DATABASE_URL, JWT_SECRET trong .env
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+# Chạy với Docker Compose
+docker compose -f docker/docker-compose.yml up -d
+```
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+---
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## 📄 Giấy phép
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+[AGPL-3.0](LICENSE) — Mã nguồn mở, tự do sử dụng và phân phối.
 
-## License
-For open source projects, say how it is licensed.
+---
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## 🤝 Đóng góp
+
+Mọi đóng góp đều được hoan nghênh! Xem [docs/](docs/) để hiểu kiến trúc và quy chuẩn code.
+
+1. Fork repo
+2. Tạo branch: `git checkout -b feat/tinh-nang-moi`
+3. Commit: `git commit -m "feat: thêm tính năng mới"`
+4. Push & tạo Merge Request

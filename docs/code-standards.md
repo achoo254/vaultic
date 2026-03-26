@@ -264,9 +264,9 @@ const Button = styled.button`
 `;
 ```
 
-### Testing
+### Testing (Vitest)
 ```bash
-# Run all tests
+# Run all tests (all packages)
 pnpm test
 
 # Watch mode
@@ -275,9 +275,22 @@ pnpm test --watch
 # Filter by package
 pnpm --filter @vaultic/crypto test
 
-# Coverage
+# Coverage report
 pnpm test --coverage
+
+# Single test file
+pnpm test src/__tests__/crypto.test.ts
 ```
+
+**Test Structure:**
+- Test files: `src/__tests__/{feature}.test.ts`
+- Configured via `vitest.config.ts` in workspace root + per-package
+- Framework: Vitest (fast, ESM-native, TypeScript support)
+- Packages with tests (84+ tests total):
+  - `@vaultic/crypto` — Key derivation, encryption/decryption roundtrips
+  - `@vaultic/storage` — IndexedDB CRUD, sync queue
+  - `@vaultic/sync` — Delta sync, conflict resolution (LWW)
+  - `@vaultic/api` — API client mocking, error handling
 
 ### Linting
 ```bash
@@ -458,20 +471,32 @@ mod tests {
 }
 ```
 
-### Unit Tests (TypeScript)
+### Unit Tests (TypeScript — Vitest)
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { encryptItem } from '@vaultic/crypto';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { encryptItem, decryptItem, deriveKey } from '@vaultic/crypto';
 
 describe('encryptItem', () => {
-  it('should encrypt and decrypt correctly', async () => {
-    const key = await deriveKey('password');
-    const plaintext = { username: 'user' };
+  let encKey;
 
-    const ciphertext = await encryptItem(plaintext, key);
-    const decrypted = await decryptItem(ciphertext, key);
+  beforeEach(async () => {
+    encKey = await deriveKey('test-password', new TextEncoder().encode('test-salt'));
+  });
+
+  it('should encrypt and decrypt correctly', async () => {
+    const plaintext = { username: 'user', password: 'secret' };
+
+    const ciphertext = await encryptItem(plaintext, encKey);
+    const decrypted = await decryptItem(ciphertext, encKey);
 
     expect(decrypted).toEqual(plaintext);
+  });
+
+  it('should produce different ciphertexts for same input (random nonce)', async () => {
+    const plaintext = { username: 'user' };
+    const ct1 = await encryptItem(plaintext, encKey);
+    const ct2 = await encryptItem(plaintext, encKey);
+    expect(ct1).not.toBe(ct2);
   });
 });
 ```
@@ -613,5 +638,6 @@ tokio = "~1.35.0"     # ❌ Too restrictive
 
 ---
 
-*Document updated: 2026-03-25*
-*Phase 1 Status: Complete*
+*Document updated: 2026-03-26*
+*All 8 MVP Phases: Complete*
+*Testing: Vitest with 84+ tests across 4 TS packages*
