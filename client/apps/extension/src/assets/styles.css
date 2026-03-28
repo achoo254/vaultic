@@ -18,3 +18,20 @@ body {
   height: 520px;
   overflow: hidden;
 }
+
+/* Force form elements to inherit colors from inline styles (fixes dark mode) */
+input, textarea, select {
+  color: inherit;
+  background-color: inherit;
+  color-scheme: light dark;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #A1A1AA;
+}
+
+/* Remove browser autofill background override */
+input:-webkit-autofill {
+  -webkit-text-fill-color: inherit;
+  transition: background-color 9999s ease-in-out 0s;
+}
