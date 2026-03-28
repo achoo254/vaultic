@@ -33,6 +33,7 @@ export default defineContentScript({
           msg.isUpdate,
           () => browser.runtime.sendMessage({ type: 'SAVE_CREDENTIAL', data: msg.credential }),
           () => {}, // Dismiss — do nothing
+          msg.credential?.username,
         );
       }
       if (msg.type === 'CLEAR_CLIPBOARD') {
