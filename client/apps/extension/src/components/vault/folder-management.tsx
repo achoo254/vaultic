@@ -1,7 +1,7 @@
 // Screen 22: Folder Management — view, add, delete folders
 import React, { useState } from 'react';
-import { tokens, useTheme } from '@vaultic/ui';
-import { ArrowLeft, Plus, List, Folder, MoreVertical } from 'lucide-react';
+import { tokens, Modal, Button, useTheme } from '@vaultic/ui';
+import { ArrowLeft, Plus, List, Folder, Trash2 } from 'lucide-react';
 import { useVaultStore } from '../../stores/vault-store';
 
 interface FolderManagementProps {
@@ -14,6 +14,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
   const [newName, setNewName] = useState('');
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const allItemCount = items.length;
 
@@ -37,9 +38,10 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete "${name}"? Items will be moved to All Items.`)) return;
-    await deleteFolder(id);
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    await deleteFolder(deleteTarget.id);
+    setDeleteTarget(null);
   };
 
   const handleSelectFolder = (folderId: string | null) => {
@@ -170,11 +172,11 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
               <span style={rowCountStyle}>{folder.itemCount}</span>
             </button>
             <button
-              onClick={() => handleDelete(folder.id, folder.name)}
+              onClick={() => setDeleteTarget({ id: folder.id, name: folder.name })}
               style={deleteBtn}
               title="Delete folder"
             >
-              <MoreVertical size={16} strokeWidth={1.5} />
+              <Trash2 size={16} strokeWidth={1.5} />
             </button>
           </div>
         ))}
@@ -202,6 +204,21 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
 
         {error && <div style={errorStyle}>{error}</div>}
       </div>
+
+      {/* Delete confirmation modal */}
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Folder">
+        <p style={{ fontSize: tokens.font.size.base, color: colors.secondary, fontFamily: tokens.font.family, marginBottom: tokens.spacing.lg }}>
+          Delete "{deleteTarget?.name}"? Items in this folder will be moved to All Items.
+        </p>
+        <div style={{ display: 'flex', gap: tokens.spacing.sm }}>
+          <Button variant="secondary" size="md" onClick={() => setDeleteTarget(null)} style={{ flex: 1 }}>
+            Cancel
+          </Button>
+          <Button variant="primary" size="md" onClick={handleConfirmDelete} style={{ flex: 1, backgroundColor: colors.error }}>
+            Delete
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
