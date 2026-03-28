@@ -1,6 +1,6 @@
 // Bottom navigation bar — 4 tabs matching design: Generator, Vault, Share, Health
 import React from 'react';
-import { tokens } from '@vaultic/ui';
+import { tokens, useTheme } from '@vaultic/ui';
 import { Dices, LayoutGrid, Share2, Shield } from 'lucide-react';
 
 export type NavTab = 'generator' | 'vault' | 'share' | 'health';
@@ -18,11 +18,20 @@ const tabs: { id: NavTab; label: string; Icon: React.FC<{ size: number; strokeWi
 ];
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
+  const { colors } = useTheme();
+
+  const navStyle: React.CSSProperties = {
+    display: 'flex',
+    borderTop: `1px solid ${colors.border}`,
+    backgroundColor: colors.background,
+    flexShrink: 0,
+  };
+
   return (
     <nav style={navStyle}>
       {tabs.map((tab) => {
         const isActive = active === tab.id;
-        const color = isActive ? tokens.colors.primary : tokens.colors.secondary;
+        const color = isActive ? colors.primary : colors.secondary;
         return (
           <button key={tab.id} onClick={() => onChange(tab.id)} style={{ ...tabStyle, color }}>
             <tab.Icon size={20} strokeWidth={1.5} color={color} />
@@ -33,13 +42,6 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
     </nav>
   );
 }
-
-const navStyle: React.CSSProperties = {
-  display: 'flex',
-  borderTop: `1px solid ${tokens.colors.border}`,
-  backgroundColor: tokens.colors.background,
-  flexShrink: 0,
-};
 
 const tabStyle: React.CSSProperties = {
   flex: 1,

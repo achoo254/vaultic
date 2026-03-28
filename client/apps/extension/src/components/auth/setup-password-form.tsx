@@ -1,19 +1,21 @@
 // First-run screen: set master password to create offline vault (no account needed)
 import React, { useState } from 'react';
-import { Button, Input } from '@vaultic/ui';
+import { Button, Input, tokens, useTheme } from '@vaultic/ui';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
-import {
-  formStyle, logoSection, logoText, headingStyle, fieldsSection,
-  actionsSection, linkStyle, eyeToggleStyle, strengthBarContainer, strengthBar,
-} from './register-form.styles';
-import { tokens } from '@vaultic/ui';
+import { getStyles } from './register-form.styles';
 
 interface SetupPasswordFormProps {
   onSwitchToLogin: () => void;
 }
 
 export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
+  const { colors } = useTheme();
+  const {
+    formStyle, logoSection, logoText, headingStyle, fieldsSection,
+    actionsSection, linkStyle, eyeToggleStyle, strengthBarContainer, strengthBar,
+  } = getStyles(colors);
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,7 +23,7 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const setupOfflineVault = useAuthStore((s) => s.setupOfflineVault);
 
-  const passwordStrength = getPasswordStrength(password);
+  const passwordStrength = getPasswordStrength(password, colors);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +46,16 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const warningStyle: React.CSSProperties = {
+    backgroundColor: '#fef3c7',
+    borderRadius: 8,
+    padding: '10px 14px',
+    fontSize: tokens.font.size.xs,
+    color: '#92400e',
+    fontFamily: tokens.font.family,
+    lineHeight: 1.4,
   };
 
   return (
@@ -121,8 +133,8 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
   );
 }
 
-function getPasswordStrength(pw: string) {
-  if (pw.length === 0) return { percent: 0, color: tokens.colors.border };
+function getPasswordStrength(pw: string, colors: ReturnType<typeof useTheme>['colors']) {
+  if (pw.length === 0) return { percent: 0, color: colors.border };
   let score = 0;
   if (pw.length >= 8) score++;
   if (pw.length >= 12) score++;
@@ -130,16 +142,6 @@ function getPasswordStrength(pw: string) {
   if (/[0-9]/.test(pw)) score++;
   if (/[^A-Za-z0-9]/.test(pw)) score++;
 
-  const colors = [tokens.colors.error, tokens.colors.error, tokens.colors.warning, tokens.colors.warning, tokens.colors.success, tokens.colors.success];
-  return { percent: Math.min(100, score * 20), color: colors[score] };
+  const colorList = [colors.error, colors.error, colors.warning, colors.warning, colors.success, colors.success];
+  return { percent: Math.min(100, score * 20), color: colorList[score] };
 }
-
-const warningStyle: React.CSSProperties = {
-  backgroundColor: '#fef3c7',
-  borderRadius: 8,
-  padding: '10px 14px',
-  fontSize: tokens.font.size.xs,
-  color: '#92400e',
-  fontFamily: tokens.font.family,
-  lineHeight: 1.4,
-};

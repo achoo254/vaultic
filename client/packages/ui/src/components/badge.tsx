@@ -2,19 +2,24 @@
 
 import React from 'react';
 import { tokens } from '../styles/design-tokens';
+import { useTheme } from '../styles/theme-provider';
+import type { ThemeColors } from '../styles/design-tokens';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?: 'default' | 'success' | 'warning' | 'error';
 }
 
-const variantStyles: Record<string, React.CSSProperties> = {
-  default: { backgroundColor: tokens.colors.surface, color: tokens.colors.secondary },
-  success: { backgroundColor: '#DCFCE7', color: '#166534' },
-  warning: { backgroundColor: '#FEF9C3', color: '#854D0E' },
-  error: { backgroundColor: '#FEE2E2', color: '#991B1B' },
-};
+function getVariantStyles(variant: string, colors: ThemeColors): React.CSSProperties {
+  switch (variant) {
+    case 'success': return { backgroundColor: colors.badgeSuccessBg, color: colors.badgeSuccessText };
+    case 'warning': return { backgroundColor: colors.badgeWarningBg, color: colors.badgeWarningText };
+    case 'error': return { backgroundColor: colors.badgeErrorBg, color: colors.badgeErrorText };
+    default: return { backgroundColor: colors.surface, color: colors.secondary };
+  }
+}
 
 export const Badge: React.FC<BadgeProps> = ({ variant = 'default', style, children, ...props }) => {
+  const { colors } = useTheme();
   const badgeStyle: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
@@ -24,7 +29,7 @@ export const Badge: React.FC<BadgeProps> = ({ variant = 'default', style, childr
     padding: `2px ${tokens.spacing.sm}px`,
     borderRadius: tokens.radius.full,
     lineHeight: tokens.font.lineHeight.normal,
-    ...variantStyles[variant],
+    ...getVariantStyles(variant, colors),
     ...style,
   };
 

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { tokens } from '../styles/design-tokens';
+import { useTheme } from '../styles/theme-provider';
 
 export interface PillGroupOption<T> {
   value: T;
@@ -16,6 +17,7 @@ export interface PillGroupProps<T> {
 }
 
 export function PillGroup<T>({ options, value, onChange, style }: PillGroupProps<T>) {
+  const { colors } = useTheme();
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexWrap: 'wrap',
@@ -33,9 +35,9 @@ export function PillGroup<T>({ options, value, onChange, style }: PillGroupProps
           fontWeight: tokens.font.weight.medium,
           fontFamily: tokens.font.family,
           borderRadius: tokens.radius.full,
-          border: isActive ? 'none' : `1px solid ${tokens.colors.border}`,
-          backgroundColor: isActive ? tokens.colors.primary : 'transparent',
-          color: isActive ? '#FFFFFF' : tokens.colors.text,
+          border: isActive ? 'none' : `1px solid ${colors.border}`,
+          backgroundColor: isActive ? colors.primary : 'transparent',
+          color: isActive ? '#FFFFFF' : colors.text,
           cursor: 'pointer',
           transition: 'all 0.15s ease',
         };

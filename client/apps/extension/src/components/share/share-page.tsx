@@ -1,6 +1,6 @@
 // Screen 13/14: Share Page — unified hybrid share (data in URL, metadata on server)
 import React, { useState } from 'react';
-import { Button, VStack, Checkbox, Textarea, ToggleGroup, Card, tokens } from '@vaultic/ui';
+import { Button, VStack, Checkbox, Textarea, ToggleGroup, Card, tokens, useTheme } from '@vaultic/ui';
 import { isWithinUrlLimit, estimateFragmentSize, MAX_FRAGMENT_LENGTH } from '@vaultic/crypto';
 import { ShareOptions } from './share-options';
 import { ShareLinkResult } from './share-link-result';
@@ -19,6 +19,7 @@ const MODE_OPTIONS = [
 ];
 
 export function SharePage() {
+  const { colors } = useTheme();
   const [mode, setMode] = useState<'vault' | 'quick'>('vault');
   const [ttlHours, setTtlHours] = useState<number | null>(24);
   const [maxViews, setMaxViews] = useState<number | null>(1);
@@ -112,6 +113,20 @@ export function SharePage() {
     }
   };
 
+  const itemBtn: React.CSSProperties = {
+    display: 'flex', justifyContent: 'space-between', padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
+    border: `1px solid ${colors.border}`, borderRadius: tokens.radius.sm,
+    backgroundColor: 'transparent', cursor: 'pointer', textAlign: 'left', fontFamily: tokens.font.family,
+  };
+  const itemName: React.CSSProperties = { fontSize: tokens.font.size.base, color: colors.text, fontWeight: tokens.font.weight.medium };
+  const itemUser: React.CSSProperties = { fontSize: tokens.font.size.sm, color: colors.secondary };
+  const changeBtn: React.CSSProperties = {
+    background: 'none', border: 'none', color: colors.primary, cursor: 'pointer',
+    fontSize: tokens.font.size.sm, fontFamily: tokens.font.family,
+  };
+  const errorStyle: React.CSSProperties = { color: colors.error, fontSize: tokens.font.size.sm, fontFamily: tokens.font.family };
+  const emptyStyle: React.CSSProperties = { color: colors.secondary, fontSize: tokens.font.size.sm, fontFamily: tokens.font.family, textAlign: 'center', padding: tokens.spacing.lg };
+
   if (result) {
     return (
       <ShareLinkResult
@@ -165,7 +180,7 @@ export function SharePage() {
 
         {/* Size indicator */}
         {plaintextBytes > 0 && (
-          <div style={{ fontSize: tokens.font.size.xs, color: overLimit ? tokens.colors.error : tokens.colors.secondary, fontFamily: tokens.font.family }}>
+          <div style={{ fontSize: tokens.font.size.xs, color: overLimit ? colors.error : colors.secondary, fontFamily: tokens.font.family }}>
             ~{(estimatedSize / 1000).toFixed(1)} KB / {(MAX_FRAGMENT_LENGTH / 1000).toFixed(0)} KB
             {overLimit && ' — too large'}
           </div>
@@ -180,17 +195,3 @@ export function SharePage() {
     </VStack>
   );
 }
-
-const itemBtn: React.CSSProperties = {
-  display: 'flex', justifyContent: 'space-between', padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
-  border: `1px solid ${tokens.colors.border}`, borderRadius: tokens.radius.sm,
-  backgroundColor: 'transparent', cursor: 'pointer', textAlign: 'left', fontFamily: tokens.font.family,
-};
-const itemName: React.CSSProperties = { fontSize: tokens.font.size.base, color: tokens.colors.text, fontWeight: tokens.font.weight.medium };
-const itemUser: React.CSSProperties = { fontSize: tokens.font.size.sm, color: tokens.colors.secondary };
-const changeBtn: React.CSSProperties = {
-  background: 'none', border: 'none', color: tokens.colors.primary, cursor: 'pointer',
-  fontSize: tokens.font.size.sm, fontFamily: tokens.font.family,
-};
-const errorStyle: React.CSSProperties = { color: tokens.colors.error, fontSize: tokens.font.size.sm, fontFamily: tokens.font.family };
-const emptyStyle: React.CSSProperties = { color: tokens.colors.secondary, fontSize: tokens.font.size.sm, fontFamily: tokens.font.family, textAlign: 'center', padding: tokens.spacing.lg };

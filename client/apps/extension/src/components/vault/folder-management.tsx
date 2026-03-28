@@ -1,6 +1,6 @@
 // Screen 22: Folder Management — view, add, delete folders
 import React, { useState } from 'react';
-import { tokens } from '@vaultic/ui';
+import { tokens, useTheme } from '@vaultic/ui';
 import { ArrowLeft, Plus, List, Folder, MoreVertical } from 'lucide-react';
 import { useVaultStore } from '../../stores/vault-store';
 
@@ -9,6 +9,7 @@ interface FolderManagementProps {
 }
 
 export function FolderManagement({ onBack }: FolderManagementProps) {
+  const { colors } = useTheme();
   const { folders, items, addFolder, deleteFolder, setSelectedFolder } = useVaultStore();
   const [newName, setNewName] = useState('');
   const [adding, setAdding] = useState(false);
@@ -46,6 +47,90 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
     onBack();
   };
 
+  const containerStyle: React.CSSProperties = {
+    display: 'flex', flexDirection: 'column', height: '100%',
+  };
+
+  const headerStyle: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: `0 ${tokens.spacing.lg}px`,
+    height: 52,
+    borderBottom: `1px solid ${colors.border}`,
+  };
+
+  const backBtn: React.CSSProperties = {
+    background: 'none', border: 'none', cursor: 'pointer',
+    color: colors.text, padding: 4, display: 'flex', alignItems: 'center',
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold,
+    color: colors.text, fontFamily: tokens.font.family,
+  };
+
+  const addBtnStyle: React.CSSProperties = {
+    background: 'none', border: 'none', cursor: 'pointer',
+    color: colors.primary, padding: 4, display: 'flex', alignItems: 'center',
+  };
+
+  const listStyle: React.CSSProperties = {
+    flex: 1, overflowY: 'auto',
+  };
+
+  const rowStyle: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: tokens.spacing.md,
+    padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
+    cursor: 'pointer', background: 'none', border: 'none',
+    width: '100%', textAlign: 'left',
+    fontFamily: tokens.font.family,
+  };
+
+  const rowClickArea: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: tokens.spacing.md,
+    flex: 1, background: 'none', border: 'none', cursor: 'pointer',
+    fontFamily: tokens.font.family, textAlign: 'left', padding: 0,
+  };
+
+  const rowNameStyle: React.CSSProperties = {
+    flex: 1, fontSize: tokens.font.size.base,
+    fontWeight: tokens.font.weight.regular,
+    color: colors.text,
+  };
+
+  const rowCountStyle: React.CSSProperties = {
+    fontSize: tokens.font.size.sm,
+    color: colors.secondary,
+  };
+
+  const deleteBtn: React.CSSProperties = {
+    background: 'none', border: 'none', cursor: 'pointer',
+    color: colors.secondary, fontSize: 16, padding: '4px 8px',
+  };
+
+  const addRowStyle: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: tokens.spacing.md,
+    padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
+  };
+
+  const inputStyle: React.CSSProperties = {
+    flex: 1, border: `1.5px solid ${colors.primary}`,
+    borderRadius: tokens.radius.md, padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
+    fontSize: tokens.font.size.base, fontFamily: tokens.font.family,
+    outline: 'none', color: colors.text,
+  };
+
+  const saveBtnStyle: React.CSSProperties = {
+    background: 'none', border: 'none', cursor: 'pointer',
+    color: colors.primary, fontWeight: tokens.font.weight.semibold,
+    fontSize: tokens.font.size.base, fontFamily: tokens.font.family,
+  };
+
+  const errorStyle: React.CSSProperties = {
+    padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px`,
+    color: colors.error, fontSize: tokens.font.size.sm,
+    fontFamily: tokens.font.family,
+  };
+
   return (
     <div style={containerStyle}>
       {/* Header */}
@@ -68,7 +153,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
           style={rowStyle}
           onClick={() => handleSelectFolder(null)}
         >
-          <List size={16} strokeWidth={1.5} color={tokens.colors.secondary} />
+          <List size={16} strokeWidth={1.5} color={colors.secondary} />
           <span style={rowNameStyle}>All Items</span>
           <span style={rowCountStyle}>{allItemCount}</span>
         </button>
@@ -80,7 +165,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
               style={rowClickArea}
               onClick={() => handleSelectFolder(folder.id)}
             >
-              <Folder size={16} strokeWidth={1.5} color={tokens.colors.secondary} />
+              <Folder size={16} strokeWidth={1.5} color={colors.secondary} />
               <span style={rowNameStyle}>{folder.name}</span>
               <span style={rowCountStyle}>{folder.itemCount}</span>
             </button>
@@ -97,7 +182,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
         {/* Add folder input */}
         {adding && (
           <div style={addRowStyle}>
-            <Folder size={16} strokeWidth={1.5} color={tokens.colors.secondary} />
+            <Folder size={16} strokeWidth={1.5} color={colors.secondary} />
             <input
               style={inputStyle}
               value={newName}
@@ -120,87 +205,3 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
     </div>
   );
 }
-
-const containerStyle: React.CSSProperties = {
-  display: 'flex', flexDirection: 'column', height: '100%',
-};
-
-const headerStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  padding: `0 ${tokens.spacing.lg}px`,
-  height: 52,
-  borderBottom: `1px solid ${tokens.colors.border}`,
-};
-
-const backBtn: React.CSSProperties = {
-  background: 'none', border: 'none', cursor: 'pointer',
-  color: tokens.colors.text, padding: 4, display: 'flex', alignItems: 'center',
-};
-
-const titleStyle: React.CSSProperties = {
-  fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold,
-  color: tokens.colors.text, fontFamily: tokens.font.family,
-};
-
-const addBtnStyle: React.CSSProperties = {
-  background: 'none', border: 'none', cursor: 'pointer',
-  color: tokens.colors.primary, padding: 4, display: 'flex', alignItems: 'center',
-};
-
-const listStyle: React.CSSProperties = {
-  flex: 1, overflowY: 'auto',
-};
-
-const rowStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: tokens.spacing.md,
-  padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
-  cursor: 'pointer', background: 'none', border: 'none',
-  width: '100%', textAlign: 'left',
-  fontFamily: tokens.font.family,
-};
-
-const rowClickArea: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: tokens.spacing.md,
-  flex: 1, background: 'none', border: 'none', cursor: 'pointer',
-  fontFamily: tokens.font.family, textAlign: 'left', padding: 0,
-};
-
-const rowNameStyle: React.CSSProperties = {
-  flex: 1, fontSize: tokens.font.size.base,
-  fontWeight: tokens.font.weight.regular,
-  color: tokens.colors.text,
-};
-
-const rowCountStyle: React.CSSProperties = {
-  fontSize: tokens.font.size.sm,
-  color: tokens.colors.secondary,
-};
-
-const deleteBtn: React.CSSProperties = {
-  background: 'none', border: 'none', cursor: 'pointer',
-  color: tokens.colors.secondary, fontSize: 16, padding: '4px 8px',
-};
-
-const addRowStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: tokens.spacing.md,
-  padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
-};
-
-const inputStyle: React.CSSProperties = {
-  flex: 1, border: `1.5px solid ${tokens.colors.primary}`,
-  borderRadius: tokens.radius.md, padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
-  fontSize: tokens.font.size.base, fontFamily: tokens.font.family,
-  outline: 'none', color: tokens.colors.text,
-};
-
-const saveBtnStyle: React.CSSProperties = {
-  background: 'none', border: 'none', cursor: 'pointer',
-  color: tokens.colors.primary, fontWeight: tokens.font.weight.semibold,
-  fontSize: tokens.font.size.base, fontFamily: tokens.font.family,
-};
-
-const errorStyle: React.CSSProperties = {
-  padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px`,
-  color: tokens.colors.error, fontSize: tokens.font.size.sm,
-  fontFamily: tokens.font.family,
-};
