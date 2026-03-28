@@ -20,8 +20,8 @@ const createShareSchema = z.object({
 // Hybrid: create metadata-only share (encrypted data in URL fragment)
 const createMetadataShareSchema = z.object({
   share_id: z.string().min(8).max(24),
-  max_views: z.number().int().positive().optional(),
-  ttl_hours: z.number().int().positive().optional(),
+  max_views: z.number().int().positive().nullable().optional(),
+  ttl_hours: z.number().int().positive().nullable().optional(),
 });
 
 // POST /api/v1/shares — legacy (encrypted data on server)
@@ -44,8 +44,8 @@ shareRouter.post("/metadata", authOptional, async (req, res) => {
   const result = await shareService.createMetadata(
     req.userId || null,
     body.share_id,
-    body.max_views,
-    body.ttl_hours,
+    body.max_views ?? undefined,
+    body.ttl_hours ?? undefined,
   );
   res.status(201).json(result);
 });
