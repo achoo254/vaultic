@@ -1,6 +1,7 @@
 // Screen 24: Import Passwords — support Chrome CSV, 1Password, Bitwarden
 import React, { useState, useRef } from 'react';
 import { Button, VStack, tokens } from '@vaultic/ui';
+import { ArrowLeft, Upload } from 'lucide-react';
 import { useVaultStore } from '../../stores/vault-store';
 import type { LoginCredential } from '@vaultic/types';
 
@@ -41,11 +42,11 @@ export function ImportPasswords({ onBack }: ImportPasswordsProps) {
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <button onClick={onBack} style={backBtn}>←</button>
+        <button onClick={onBack} style={backBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
         <span style={titleStyle}>Import Passwords</span>
       </div>
       <VStack gap="lg" style={{ padding: tokens.spacing.xxl, flex: 1 }}>
-        <div style={{ fontSize: 36, textAlign: 'center' }}>📤</div>
+        <div style={{ textAlign: 'center' }}><Upload size={36} strokeWidth={1.5} color={tokens.colors.primary} /></div>
         <div style={descStyle}>Import passwords from another manager</div>
 
         <div style={sourceGrid}>
@@ -117,7 +118,7 @@ function parseCSVLine(line: string): string[] {
 
 const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
 const headerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: tokens.spacing.sm, padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`, borderBottom: `1px solid ${tokens.colors.border}` };
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: tokens.colors.text, padding: 4 };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: tokens.colors.text, padding: 4, display: 'flex', alignItems: 'center' };
 const titleStyle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: tokens.colors.text, fontFamily: tokens.font.family };
 const descStyle: React.CSSProperties = { fontSize: tokens.font.size.base, color: tokens.colors.secondary, fontFamily: tokens.font.family, textAlign: 'center' };
 const sourceGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: tokens.spacing.sm };

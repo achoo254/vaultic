@@ -1,14 +1,17 @@
-// Screen 13/14: Share Page — toggle between "From Vault" and "Quick Share"
+// Screen 13/14: Share Page — unified hybrid share (data in URL, metadata on server)
 import React, { useState } from 'react';
 import { Button, VStack, Checkbox, Textarea, ToggleGroup, Card, tokens } from '@vaultic/ui';
+import { isWithinUrlLimit, estimateFragmentSize, MAX_FRAGMENT_LENGTH } from '@vaultic/crypto';
 import { ShareOptions } from './share-options';
 import { ShareLinkResult } from './share-link-result';
-import { encryptForShare } from '../../lib/share-crypto';
+import { encryptShareToUrl } from '../../lib/share-crypto';
 import { useVaultStore } from '../../stores/vault-store';
+import { useAuthStore } from '../../stores/auth-store';
 import type { DecryptedVaultItem } from '../../stores/vault-store';
 import { fetchWithAuth } from '../../lib/fetch-with-auth';
 
 const SHARE_BASE_URL = import.meta.env.VITE_SHARE_URL || 'http://localhost:8080/s';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 const MODE_OPTIONS = [
   { value: 'vault' as const, label: 'From Vault' },
@@ -21,7 +24,7 @@ export function SharePage() {
   const [maxViews, setMaxViews] = useState<number | null>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [result, setResult] = useState<{ url: string; ttl: number | null; views: number | null } | null>(null);
+  const [result, setResult] = useState<{ url: string; ttl: number | null; views: number | null; warning?: string } | null>(null);
 
   // From Vault state
   const [selectedItem, setSelectedItem] = useState<DecryptedVaultItem | null>(null);
@@ -32,38 +35,76 @@ export function SharePage() {
   const [quickText, setQuickText] = useState('');
 
   const items = useVaultStore((s) => s.items);
+  const authMode = useAuthStore((s) => s.mode);
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+
+  // Build plaintext from current selection
+  const getPlaintext = (): string | null => {
+    if (mode === 'vault') {
+      if (!selectedItem) return null;
+      const shared: Record<string, string> = {};
+      if (shareUsername) shared.username = selectedItem.credential.username || '';
+      if (sharePassword) shared.password = selectedItem.credential.password || '';
+      shared.name = selectedItem.credential.name;
+      return JSON.stringify(shared);
+    }
+    return quickText.trim() || null;
+  };
+
+  const plaintext = getPlaintext();
+  const plaintextBytes = plaintext ? new TextEncoder().encode(plaintext).length : 0;
+  const estimatedSize = plaintextBytes > 0 ? estimateFragmentSize(plaintextBytes) : 0;
+  const overLimit = estimatedSize > MAX_FRAGMENT_LENGTH;
 
   const handleGenerate = async () => {
     setError('');
+    if (!plaintext) {
+      setError(mode === 'vault' ? 'Select a credential' : 'Enter text to share');
+      return;
+    }
+    if (overLimit) {
+      setError('Data too large for URL share. Reduce notes or fields.');
+      return;
+    }
+
     setLoading(true);
     try {
-      let plaintext: string;
-      if (mode === 'vault') {
-        if (!selectedItem) { setError('Select a credential'); setLoading(false); return; }
-        const shared: Record<string, string> = {};
-        if (shareUsername) shared.username = selectedItem.credential.username || '';
-        if (sharePassword) shared.password = selectedItem.credential.password || '';
-        shared.name = selectedItem.credential.name;
-        plaintext = JSON.stringify(shared);
-      } else {
-        if (!quickText.trim()) { setError('Enter text to share'); setLoading(false); return; }
-        plaintext = quickText;
+      const { fragment, shareId } = await encryptShareToUrl(plaintext);
+      let metadataFailed = false;
+
+      // Post metadata to server (works for both online and offline-queued)
+      try {
+        if (authMode === 'online' && isLoggedIn) {
+          await fetchWithAuth('/api/v1/shares/metadata', {
+            method: 'POST',
+            body: JSON.stringify({
+              share_id: shareId,
+              max_views: maxViews,
+              ttl_hours: ttlHours,
+            }),
+          });
+        } else {
+          // Anonymous / offline: post without auth
+          await fetch(`${API_BASE_URL}/api/v1/shares/metadata`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              share_id: shareId,
+              max_views: maxViews,
+              ttl_hours: ttlHours,
+            }),
+          });
+        }
+      } catch {
+        // Server unreachable — link works for decryption but no access controls
+        metadataFailed = true;
       }
 
-      const { encryptedData, keyFragment } = await encryptForShare(plaintext);
-
-      const res = await fetchWithAuth('/api/share', {
-        method: 'POST',
-        body: JSON.stringify({
-          encrypted_data: encryptedData,
-          ttl_hours: ttlHours,
-          max_views: maxViews,
-        }),
+      const shareUrl = `${SHARE_BASE_URL}/${shareId}#${fragment}`;
+      setResult({
+        url: shareUrl, ttl: ttlHours, views: maxViews,
+        warning: metadataFailed ? 'Link created but access controls (expiry/view limit) could not be set.' : undefined,
       });
-      const data = await res.json();
-
-      const shareUrl = `${SHARE_BASE_URL}/${data.share_id}#${keyFragment}`;
-      setResult({ url: shareUrl, ttl: ttlHours, views: maxViews });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Share failed');
     } finally {
@@ -77,6 +118,7 @@ export function SharePage() {
         shareUrl={result.url}
         ttlHours={result.ttl}
         maxViews={result.views}
+        warning={result.warning}
         onDone={() => setResult(null)}
       />
     );
@@ -84,7 +126,7 @@ export function SharePage() {
 
   return (
     <VStack gap="lg" style={{ height: '100%', padding: tokens.spacing.lg }}>
-      <ToggleGroup options={MODE_OPTIONS} value={mode} onChange={setMode} />
+      <ToggleGroup options={MODE_OPTIONS} value={mode} onChange={(v) => setMode(v)} />
 
       <VStack gap="lg" style={{ flex: 1, overflowY: 'auto' }}>
         {mode === 'vault' ? (
@@ -121,9 +163,17 @@ export function SharePage() {
 
         <ShareOptions ttlHours={ttlHours} maxViews={maxViews} onTtlChange={setTtlHours} onMaxViewsChange={setMaxViews} />
 
+        {/* Size indicator */}
+        {plaintextBytes > 0 && (
+          <div style={{ fontSize: tokens.font.size.xs, color: overLimit ? tokens.colors.error : tokens.colors.secondary, fontFamily: tokens.font.family }}>
+            ~{(estimatedSize / 1000).toFixed(1)} KB / {(MAX_FRAGMENT_LENGTH / 1000).toFixed(0)} KB
+            {overLimit && ' — too large'}
+          </div>
+        )}
+
         {error && <div style={errorStyle}>{error}</div>}
 
-        <Button variant="primary" size="lg" loading={loading} onClick={handleGenerate} style={{ width: '100%' }}>
+        <Button variant="primary" size="lg" loading={loading} onClick={handleGenerate} disabled={overLimit} style={{ width: '100%' }}>
           Generate Secure Link
         </Button>
       </VStack>

@@ -2,15 +2,17 @@
 import React, { useState } from 'react';
 import { Button, Input } from '@vaultic/ui';
 import { tokens } from '@vaultic/ui';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
+  onSwitchToSetup?: () => void;
 }
 
-export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
+export function LoginForm({ onSwitchToRegister, onSwitchToSetup }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -65,7 +67,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
             style={eyeToggleStyle}
             tabIndex={-1}
           >
-            {showPassword ? '🔒' : '👁'}
+            {showPassword ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
           </button>
         </div>
       </div>
@@ -84,6 +86,12 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
         <button type="button" onClick={onSwitchToRegister} style={linkStyle}>
           Create account
         </button>
+
+        {onSwitchToSetup && (
+          <button type="button" onClick={onSwitchToSetup} style={linkStyle}>
+            ← Use without account
+          </button>
+        )}
       </div>
     </form>
   );

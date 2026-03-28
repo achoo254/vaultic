@@ -1,6 +1,7 @@
 // Screen 09: Password Generator — standalone tab view
 import React, { useState, useCallback } from 'react';
-import { Button, VStack, HStack, Card, Checkbox, tokens } from '@vaultic/ui';
+import { Button, VStack, HStack, Card, tokens } from '@vaultic/ui';
+import { RefreshCw } from 'lucide-react';
 import { generatePassword } from '@vaultic/crypto';
 import { CopyButton } from '../common/copy-button';
 
@@ -34,8 +35,10 @@ export function PasswordGeneratorView() {
       <Card variant="outlined" padding="md" style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.sm, backgroundColor: tokens.colors.surface }}>
         <div style={passwordText}>{password}</div>
         <HStack gap="xs" style={{ flexShrink: 0 }}>
-          <CopyButton text={password} label="📋" />
-          <button onClick={regenerate} style={regenBtn} title="Regenerate">🔄</button>
+          <CopyButton text={password} size={16} />
+          <button onClick={regenerate} style={regenBtn} title="Regenerate">
+            <RefreshCw size={16} strokeWidth={1.5} color={tokens.colors.secondary} />
+          </button>
         </HStack>
       </Card>
 
@@ -54,10 +57,10 @@ export function PasswordGeneratorView() {
       </HStack>
 
       {/* Toggles */}
-      <Checkbox label="Uppercase (A-Z)" checked={uppercase} onChange={setUppercase} />
-      <Checkbox label="Lowercase (a-z)" checked={lowercase} onChange={setLowercase} />
-      <Checkbox label="Numbers (0-9)" checked={digits} onChange={setDigits} />
-      <Checkbox label="Symbols (!@#$)" checked={symbols} onChange={setSymbols} />
+      <ToggleRow label="Uppercase (A-Z)" checked={uppercase} onChange={setUppercase} />
+      <ToggleRow label="Lowercase (a-z)" checked={lowercase} onChange={setLowercase} />
+      <ToggleRow label="Numbers (0-9)" checked={digits} onChange={setDigits} />
+      <ToggleRow label="Symbols (!@#$)" checked={symbols} onChange={setSymbols} />
 
       <Button variant="primary" size="md" onClick={regenerate} style={{ width: '100%', marginTop: 'auto' }}>
         Regenerate
@@ -70,7 +73,30 @@ const passwordText: React.CSSProperties = {
   flex: 1, fontFamily: 'monospace', fontSize: tokens.font.size.base,
   color: tokens.colors.text, wordBreak: 'break-all',
 };
-const regenBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: 4 };
+const regenBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' };
+
+// iOS-style toggle switch row
+function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div style={toggleRowStyle}>
+      <span style={optionLabel}>{label}</span>
+      <button type="button" onClick={() => onChange(!checked)} style={{ ...toggleTrack, backgroundColor: checked ? tokens.colors.primary : tokens.colors.border }}>
+        <div style={{ ...toggleThumb, transform: checked ? 'translateX(16px)' : 'translateX(0)' }} />
+      </button>
+    </div>
+  );
+}
+
+const toggleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
+const toggleTrack: React.CSSProperties = {
+  width: 40, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
+  position: 'relative', transition: 'background-color 0.2s', padding: 2,
+  display: 'flex', alignItems: 'center',
+};
+const toggleThumb: React.CSSProperties = {
+  width: 20, height: 20, borderRadius: '50%', backgroundColor: '#fff',
+  transition: 'transform 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+};
 const strengthBarBg: React.CSSProperties = { flex: 1, height: 6, backgroundColor: tokens.colors.border, borderRadius: tokens.radius.full, overflow: 'hidden' };
 const strengthBarFill: React.CSSProperties = { height: '100%', borderRadius: tokens.radius.full, transition: 'width 0.2s, background-color 0.2s' };
 const strengthLabelStyle: React.CSSProperties = { fontSize: tokens.font.size.sm, fontWeight: tokens.font.weight.medium, fontFamily: tokens.font.family, minWidth: 50 };

@@ -1,8 +1,10 @@
 // Screen 07: Add/Edit Credential form
 import React, { useState } from 'react';
 import { Button, Input, VStack, Textarea, tokens } from '@vaultic/ui';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import { generatePassword } from '@vaultic/crypto';
 import { useVaultStore } from '../../stores/vault-store';
+import { FolderSelect } from './folder-select';
 import type { LoginCredential } from '@vaultic/types';
 
 interface VaultItemFormProps {
@@ -21,6 +23,7 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
   const [username, setUsername] = useState(existing?.credential.username || '');
   const [password, setPassword] = useState(existing?.credential.password || '');
   const [notes, setNotes] = useState(existing?.credential.notes || '');
+  const [folderId, setFolderId] = useState<string | undefined>(existing?.folder_id);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -49,7 +52,7 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
       if (editId) {
         await updateItem(editId, credential);
       } else {
-        await addItem(credential);
+        await addItem(credential, folderId);
       }
       onSaved();
     } catch (err) {
@@ -62,11 +65,12 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <button onClick={onBack} style={backBtn}>←</button>
+        <button onClick={onBack} style={backBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
         <span style={titleStyle}>{editId ? 'Edit Credential' : 'Add Credential'}</span>
       </div>
 
       <form onSubmit={handleSubmit} style={formStyle}>
+        <FolderSelect value={folderId} onChange={setFolderId} />
         <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. GitHub" required />
         <Input label="URL" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="github.com" />
         <Input label="Username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="user@email.com" />
@@ -77,7 +81,7 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
               <Input label="Password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
             </div>
             <button type="button" onClick={handleGenerate} style={generateBtn} title="Generate">
-              ✨ Generate
+              <Sparkles size={14} strokeWidth={1.5} /> Generate
             </button>
           </div>
         </div>
@@ -106,7 +110,7 @@ const headerStyle: React.CSSProperties = {
   padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
   borderBottom: `1px solid ${tokens.colors.border}`,
 };
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: tokens.colors.text, padding: 4 };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: tokens.colors.text, padding: 4, display: 'flex', alignItems: 'center' };
 const titleStyle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: tokens.colors.text, fontFamily: tokens.font.family };
 const formStyle: React.CSSProperties = {
   display: 'flex', flexDirection: 'column', gap: tokens.spacing.md,
@@ -117,6 +121,6 @@ const generateBtn: React.CSSProperties = {
   background: 'none', border: `1px solid ${tokens.colors.primary}`, color: tokens.colors.primary,
   borderRadius: tokens.radius.md, padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
   cursor: 'pointer', fontSize: tokens.font.size.sm, fontFamily: tokens.font.family,
-  whiteSpace: 'nowrap', height: 40,
+  whiteSpace: 'nowrap', height: 40, display: 'flex', alignItems: 'center', gap: 4,
 };
 const errorStyle: React.CSSProperties = { color: tokens.colors.error, fontSize: tokens.font.size.sm, fontFamily: tokens.font.family };

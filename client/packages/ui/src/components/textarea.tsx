@@ -31,10 +31,12 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         {label && (
           <label
             style={{
-              fontSize: tokens.font.size.sm,
-              fontWeight: tokens.font.weight.medium,
-              color: tokens.colors.text,
+              fontSize: tokens.font.size.xs,
+              fontWeight: tokens.font.weight.semibold,
+              color: tokens.colors.secondary,
               fontFamily: tokens.font.family,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
             }}
           >
             {label}

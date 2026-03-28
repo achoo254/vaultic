@@ -1,28 +1,25 @@
-// Screen 01: Register — email + master password + confirm → create account
+// First-run screen: set master password to create offline vault (no account needed)
 import React, { useState } from 'react';
 import { Button, Input } from '@vaultic/ui';
-import { tokens } from '@vaultic/ui';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 import {
   formStyle, logoSection, logoText, headingStyle, fieldsSection,
   actionsSection, linkStyle, eyeToggleStyle, strengthBarContainer, strengthBar,
 } from './register-form.styles';
+import { tokens } from '@vaultic/ui';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-
-interface RegisterFormProps {
+interface SetupPasswordFormProps {
   onSwitchToLogin: () => void;
 }
 
-export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
-  const [email, setEmail] = useState('');
+export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const register = useAuthStore((s) => s.register);
+  const setupOfflineVault = useAuthStore((s) => s.setupOfflineVault);
 
   const passwordStrength = getPasswordStrength(password);
 
@@ -41,9 +38,9 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
     setLoading(true);
     try {
-      await register(email, password, API_BASE_URL);
+      await setupOfflineVault(password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : 'Setup failed');
     } finally {
       setLoading(false);
     }
@@ -53,19 +50,14 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     <form onSubmit={handleSubmit} style={formStyle}>
       <div style={logoSection}>
         <div style={logoText}>Vaultic</div>
-        <div style={headingStyle}>Create Account</div>
+        <div style={headingStyle}>Set Master Password</div>
+      </div>
+
+      <div style={warningStyle}>
+        There is no password recovery. If you forget your master password, your vault data will be permanently lost.
       </div>
 
       <div style={fieldsSection}>
-        <Input
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          required
-        />
-
         <div>
           <div style={{ position: 'relative' }}>
             <Input
@@ -75,6 +67,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Choose a strong password"
               required
+              autoFocus
             />
             <button
               type="button"
@@ -117,11 +110,11 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           loading={loading}
           style={{ width: '100%' }}
         >
-          Create Account
+          Create Vault
         </Button>
 
         <button type="button" onClick={onSwitchToLogin} style={linkStyle}>
-          Already have an account? Log in
+          Have an account? Log in
         </button>
       </div>
     </form>
@@ -141,3 +134,12 @@ function getPasswordStrength(pw: string) {
   return { percent: Math.min(100, score * 20), color: colors[score] };
 }
 
+const warningStyle: React.CSSProperties = {
+  backgroundColor: '#fef3c7',
+  borderRadius: 8,
+  padding: '10px 14px',
+  fontSize: tokens.font.size.xs,
+  color: '#92400e',
+  fontFamily: tokens.font.family,
+  lineHeight: 1.4,
+};

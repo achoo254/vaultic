@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { tokens } from '@vaultic/ui';
 import { useAuthStore } from '../../stores/auth-store';
+import { SetupPasswordForm } from '../../components/auth/setup-password-form';
 import { LoginForm } from '../../components/auth/login-form';
 import { RegisterForm } from '../../components/auth/register-form';
 import { LockScreen } from '../../components/auth/lock-screen';
@@ -14,12 +15,14 @@ import { SettingsPage } from '../../components/settings/settings-page';
 import { ExportVault } from '../../components/settings/export-vault';
 import { ImportPasswords } from '../../components/settings/import-passwords';
 import { SecurityHealth } from '../../components/settings/security-health';
+import { FolderManagement } from '../../components/vault/folder-management';
 import { ToastContainer } from '../../components/common/toast';
 import { BottomNav, type NavTab } from '../../components/common/bottom-nav';
 import { useVaultStore } from '../../stores/vault-store';
 
 type View =
   | { type: 'loading' }
+  | { type: 'setup' }
   | { type: 'register' }
   | { type: 'login' }
   | { type: 'locked' }
@@ -32,37 +35,39 @@ type View =
   | { type: 'settings' }
   | { type: 'export' }
   | { type: 'import' }
-  | { type: 'health' };
+  | { type: 'health' }
+  | { type: 'folders' };
 
 export function App() {
-  const { isLocked, isLoggedIn, email, hydrate } = useAuthStore();
+  const { vaultState, hydrate } = useAuthStore();
   const deleteItem = useVaultStore((s) => s.deleteItem);
   const [view, setView] = useState<View>({ type: 'loading' });
-  const [activeTab, setActiveTab] = useState<NavTab>('vault');
+  const [activeTab, setActiveTab] = useState<NavTab>('vault' as NavTab);
 
   // Hydrate auth state on mount
   useEffect(() => {
     hydrate();
   }, [hydrate]);
 
-  // Route based on auth state
+  // Route based on vaultState (replaces old isLoggedIn + isLocked logic)
   useEffect(() => {
     if (view.type !== 'loading') return;
-    if (!email && !isLoggedIn) setView({ type: 'register' });
-    else if (email && isLocked) setView({ type: 'locked' });
-    else if (email && !isLocked) setView({ type: 'vault-list' });
-    else setView({ type: 'login' });
-  }, [email, isLocked, isLoggedIn, view.type]);
+    if (vaultState === 'no_vault') setView({ type: 'setup' });
+    else if (vaultState === 'locked') setView({ type: 'locked' });
+    else if (vaultState === 'unlocked') setView({ type: 'vault-list' });
+  }, [vaultState, view.type]);
 
-  // React to auth state changes (after login/unlock/lock)
+  // React to auth state changes (after setup/login/unlock/lock)
   useEffect(() => {
     if (view.type === 'loading') return;
-    if (!email && !isLoggedIn) setView({ type: 'register' });
-    else if (email && isLocked) setView({ type: 'locked' });
-    else if (email && !isLocked && (view.type === 'locked' || view.type === 'login' || view.type === 'register')) {
+    if (vaultState === 'no_vault' && !['setup', 'login', 'register'].includes(view.type)) {
+      setView({ type: 'setup' });
+    } else if (vaultState === 'locked' && !['locked'].includes(view.type)) {
+      setView({ type: 'locked' });
+    } else if (vaultState === 'unlocked' && ['locked', 'login', 'register', 'setup'].includes(view.type)) {
       setView({ type: 'vault-list' });
     }
-  }, [email, isLocked, isLoggedIn]);
+  }, [vaultState]);
 
   // Tab navigation
   const handleTabChange = (tab: NavTab) => {
@@ -70,24 +75,37 @@ export function App() {
     if (tab === 'vault') setView({ type: 'vault-list' });
     else if (tab === 'generator') setView({ type: 'generator' });
     else if (tab === 'share') setView({ type: 'share' });
-    else if (tab === 'settings') setView({ type: 'settings' });
+    else if (tab === 'health') setView({ type: 'health' });
   };
 
-  const showBottomNav = !['loading', 'register', 'login', 'locked'].includes(view.type);
+  const showBottomNav = !['loading', 'setup', 'register', 'login', 'locked'].includes(view.type);
 
   return (
     <div style={containerStyle}>
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {view.type === 'loading' && <CenterMessage text="Loading..." />}
+        {view.type === 'setup' && (
+          <SetupPasswordForm onSwitchToLogin={() => setView({ type: 'login' })} />
+        )}
         {view.type === 'register' && <RegisterForm onSwitchToLogin={() => setView({ type: 'login' })} />}
-        {view.type === 'login' && <LoginForm onSwitchToRegister={() => setView({ type: 'register' })} />}
+        {view.type === 'login' && (
+          <LoginForm
+            onSwitchToRegister={() => setView({ type: 'register' })}
+            onSwitchToSetup={() => setView({ type: 'setup' })}
+          />
+        )}
         {view.type === 'locked' && <LockScreen />}
 
         {view.type === 'vault-list' && (
           <VaultList
             onItemClick={(id) => setView({ type: 'vault-detail', id })}
             onAddItem={() => setView({ type: 'vault-add' })}
+            onManageFolders={() => setView({ type: 'folders' })}
+            onSettings={() => setView({ type: 'settings' })}
           />
+        )}
+        {view.type === 'folders' && (
+          <FolderManagement onBack={() => setView({ type: 'vault-list' })} />
         )}
         {view.type === 'vault-detail' && (
           <VaultItemDetail
@@ -124,7 +142,7 @@ export function App() {
         )}
         {view.type === 'export' && <ExportVault onBack={() => setView({ type: 'settings' })} />}
         {view.type === 'import' && <ImportPasswords onBack={() => setView({ type: 'settings' })} />}
-        {view.type === 'health' && <SecurityHealth onBack={() => setView({ type: 'vault-list' })} />}
+        {view.type === 'health' && <SecurityHealth onBack={() => { setActiveTab('vault' as NavTab); setView({ type: 'vault-list' }); }} />}
       </div>
 
       {showBottomNav && <BottomNav active={activeTab} onChange={handleTabChange} />}

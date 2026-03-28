@@ -15,17 +15,20 @@
     "@vaultic/sync": "workspace:*",
     "@vaultic/types": "workspace:*",
     "@vaultic/ui": "workspace:*",
+    "lucide-react": "^0.468",
     "react": "^19",
     "react-dom": "^19",
     "zustand": "^5"
   },
   "devDependencies": {
+    "@types/chrome": "^0.0.268",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@wxt-dev/module-react": "^1.1.1",
     "typescript": "^5.7",
     "vite-plugin-top-level-await": "^1.6.0",
     "vite-plugin-wasm": "^3.6.0",
+    "webextension-polyfill": "^0.10.0",
     "wxt": "^0.19"
   }
 }

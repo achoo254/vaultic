@@ -1,6 +1,7 @@
 // Password field with show/hide toggle + copy button
 import React, { useState } from 'react';
 import { tokens } from '@vaultic/ui';
+import { Eye, EyeOff } from 'lucide-react';
 import { CopyButton } from './copy-button';
 
 interface PasswordFieldProps {
@@ -20,7 +21,7 @@ export function PasswordField({ value, label = 'Password' }: PasswordFieldProps)
         </span>
         <div style={actionsStyle}>
           <button onClick={() => setVisible(!visible)} style={iconBtn} title={visible ? 'Hide' : 'Show'}>
-            {visible ? '🔒' : '👁'}
+            {visible ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
           </button>
           <CopyButton text={value} />
         </div>

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@vaultic/ui';
 import { tokens } from '@vaultic/ui';
+import { PackageOpen } from 'lucide-react';
 
 interface EmptyVaultProps {
   onAddItem: () => void;
@@ -10,7 +11,7 @@ interface EmptyVaultProps {
 export function EmptyVault({ onAddItem }: EmptyVaultProps) {
   return (
     <div style={containerStyle}>
-      <div style={{ fontSize: 48 }}>🔐</div>
+      <PackageOpen size={48} strokeWidth={1.5} color={tokens.colors.secondary} />
       <div style={titleStyle}>Your vault is empty</div>
       <div style={subtitleStyle}>Add your first credential to get started</div>
       <Button variant="primary" size="md" onClick={onAddItem}>

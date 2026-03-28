@@ -1,6 +1,7 @@
 // Reusable TTL + max views pill selectors for share configuration
 import React from 'react';
 import { VStack, SectionHeader, PillGroup, tokens } from '@vaultic/ui';
+import { AlertTriangle } from 'lucide-react';
 
 interface ShareOptionsProps {
   ttlHours: number | null;
@@ -42,7 +43,9 @@ export function ShareOptions({ ttlHours, maxViews, onTtlChange, onMaxViewsChange
       </VStack>
 
       {ttlHours === null && maxViews === null && (
-        <div style={warningStyle}>⚠ This link will remain active until manually revoked</div>
+        <div style={warningStyle}>
+          <AlertTriangle size={14} strokeWidth={1.5} style={{ flexShrink: 0 }} /> This link will remain active until manually revoked
+        </div>
       )}
     </VStack>
   );
@@ -50,4 +53,5 @@ export function ShareOptions({ ttlHours, maxViews, onTtlChange, onMaxViewsChange
 
 const warningStyle: React.CSSProperties = {
   fontSize: tokens.font.size.xs, color: tokens.colors.warning, fontFamily: tokens.font.family,
+  display: 'flex', alignItems: 'center', gap: 4,
 };

@@ -1,6 +1,7 @@
 // Search bar with magnifier icon for vault items
 import React from 'react';
 import { tokens } from '@vaultic/ui';
+import { Search, X } from 'lucide-react';
 
 interface SearchBarProps {
   value: string;
@@ -10,7 +11,7 @@ interface SearchBarProps {
 export function SearchBar({ value, onChange }: SearchBarProps) {
   return (
     <div style={containerStyle}>
-      <span style={iconStyle}>🔍</span>
+      <Search size={16} strokeWidth={1.5} color={tokens.colors.secondary} />
       <input
         type="text"
         value={value}
@@ -19,7 +20,9 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
         style={inputStyle}
       />
       {value && (
-        <button onClick={() => onChange('')} style={clearBtn}>✕</button>
+        <button onClick={() => onChange('')} style={clearBtn}>
+          <X size={14} strokeWidth={1.5} />
+        </button>
       )}
     </div>
   );
@@ -30,7 +33,6 @@ const containerStyle: React.CSSProperties = {
   border: `1px solid ${tokens.colors.border}`, borderRadius: tokens.radius.md,
   padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`, backgroundColor: tokens.colors.background,
 };
-const iconStyle: React.CSSProperties = { fontSize: 14, color: tokens.colors.secondary };
 const inputStyle: React.CSSProperties = {
   flex: 1, border: 'none', outline: 'none', fontSize: tokens.font.size.base,
   fontFamily: tokens.font.family, color: tokens.colors.text, backgroundColor: 'transparent',

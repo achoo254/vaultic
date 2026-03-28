@@ -1,6 +1,7 @@
 // Single vault item card — used in VaultList
 import React from 'react';
 import { tokens } from '@vaultic/ui';
+import { Globe, ExternalLink } from 'lucide-react';
 import { CopyButton } from '../common/copy-button';
 import type { DecryptedVaultItem } from '../../stores/vault-store';
 
@@ -11,28 +12,26 @@ interface VaultItemCardProps {
 
 export function VaultItemCard({ item, onClick }: VaultItemCardProps) {
   const { credential } = item;
-  const initial = credential.name.charAt(0).toUpperCase();
-  // Generate a consistent color from the name
-  const hue = credential.name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
 
   return (
     <div style={cardStyle} onClick={onClick}>
-      <div style={{ ...avatarStyle, backgroundColor: `hsl(${hue}, 60%, 90%)`, color: `hsl(${hue}, 60%, 40%)` }}>
-        {initial}
+      {/* Blue rounded-square globe avatar matching design */}
+      <div style={avatarStyle}>
+        <Globe size={20} strokeWidth={1.5} color={tokens.colors.primary} />
       </div>
       <div style={infoStyle}>
         <div style={nameStyle}>{credential.name}</div>
         <div style={usernameStyle}>{credential.username || credential.url || ''}</div>
       </div>
       <div style={actionsStyle} onClick={(e) => e.stopPropagation()}>
-        {credential.password && <CopyButton text={credential.password} label="🔑" />}
+        {credential.password && <CopyButton text={credential.password} size={16} />}
         {credential.url && (
           <button
             onClick={() => window.open(credential.url!.startsWith('http') ? credential.url : `https://${credential.url}`, '_blank')}
             style={iconBtn}
             title="Open URL"
           >
-            ↗
+            <ExternalLink size={16} strokeWidth={1.5} />
           </button>
         )}
       </div>
@@ -48,8 +47,7 @@ const cardStyle: React.CSSProperties = {
 const avatarStyle: React.CSSProperties = {
   width: 36, height: 36, borderRadius: tokens.radius.md,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold,
-  fontFamily: tokens.font.family, flexShrink: 0,
+  backgroundColor: 'rgba(37, 99, 235, 0.1)', flexShrink: 0,
 };
 const infoStyle: React.CSSProperties = { flex: 1, minWidth: 0 };
 const nameStyle: React.CSSProperties = {

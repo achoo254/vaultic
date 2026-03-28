@@ -1,6 +1,7 @@
 // Screen 23: Export Vault — encrypted (.vaultic) or CSV format
 import React, { useState } from 'react';
 import { Button, VStack, HStack, tokens } from '@vaultic/ui';
+import { ArrowLeft, Download, AlertTriangle } from 'lucide-react';
 import { useVaultStore } from '../../stores/vault-store';
 
 interface ExportVaultProps { onBack: () => void; }
@@ -47,11 +48,11 @@ export function ExportVault({ onBack }: ExportVaultProps) {
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <button onClick={onBack} style={backBtn}>←</button>
+        <button onClick={onBack} style={backBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
         <span style={titleStyle}>Export Vault</span>
       </div>
       <VStack gap="lg" style={{ padding: tokens.spacing.xxl, flex: 1, justifyContent: 'center' }}>
-        <div style={{ fontSize: 36, textAlign: 'center' }}>📥</div>
+        <div style={{ textAlign: 'center' }}><Download size={36} strokeWidth={1.5} color={tokens.colors.primary} /></div>
         <div style={descStyle}>Export your vault data to a file</div>
 
         <HStack gap="sm">
@@ -68,7 +69,9 @@ export function ExportVault({ onBack }: ExportVaultProps) {
         </HStack>
 
         {format === 'csv' && (
-          <div style={warningStyle}>⚠ CSV exports are unencrypted. Handle with care.</div>
+          <div style={warningStyle}>
+            <AlertTriangle size={14} strokeWidth={1.5} style={{ flexShrink: 0 }} /> CSV exports are unencrypted. Handle with care.
+          </div>
         )}
 
         <Button variant="primary" size="lg" loading={loading} onClick={handleExport} style={{ width: '100%' }}>
@@ -81,11 +84,11 @@ export function ExportVault({ onBack }: ExportVaultProps) {
 
 const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
 const headerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: tokens.spacing.sm, padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`, borderBottom: `1px solid ${tokens.colors.border}` };
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: tokens.colors.text, padding: 4 };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: tokens.colors.text, padding: 4, display: 'flex', alignItems: 'center' };
 const titleStyle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: tokens.colors.text, fontFamily: tokens.font.family };
 const descStyle: React.CSSProperties = { fontSize: tokens.font.size.base, color: tokens.colors.secondary, fontFamily: tokens.font.family, textAlign: 'center' };
 const optionBtn: React.CSSProperties = { flex: 1, padding: tokens.spacing.md, border: `1px solid ${tokens.colors.border}`, borderRadius: tokens.radius.md, cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 2, backgroundColor: 'transparent' };
 const optionActive: React.CSSProperties = { ...optionBtn, borderColor: tokens.colors.primary, backgroundColor: 'rgba(37,99,235,0.05)' };
 const optionLabel: React.CSSProperties = { fontSize: tokens.font.size.base, fontWeight: tokens.font.weight.medium, color: tokens.colors.text, fontFamily: tokens.font.family };
 const optionHint: React.CSSProperties = { fontSize: tokens.font.size.xs, color: tokens.colors.secondary, fontFamily: tokens.font.family };
-const warningStyle: React.CSSProperties = { backgroundColor: '#fef3c7', padding: tokens.spacing.md, borderRadius: tokens.radius.md, fontSize: tokens.font.size.sm, color: '#92400e', fontFamily: tokens.font.family };
+const warningStyle: React.CSSProperties = { backgroundColor: '#fef3c7', padding: tokens.spacing.md, borderRadius: tokens.radius.md, fontSize: tokens.font.size.sm, color: '#92400e', fontFamily: tokens.font.family, display: 'flex', alignItems: 'center', gap: 6 };

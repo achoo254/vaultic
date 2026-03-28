@@ -2,15 +2,17 @@
 import React, { useState } from 'react';
 import { Button } from '@vaultic/ui';
 import { tokens } from '@vaultic/ui';
+import { CheckCircle, Copy, Check } from 'lucide-react';
 
 interface ShareLinkResultProps {
   shareUrl: string;
   ttlHours: number | null;
   maxViews: number | null;
+  warning?: string;
   onDone: () => void;
 }
 
-export function ShareLinkResult({ shareUrl, ttlHours, maxViews, onDone }: ShareLinkResultProps) {
+export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone }: ShareLinkResultProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -28,17 +30,25 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, onDone }: ShareL
 
   return (
     <div style={containerStyle}>
-      <div style={{ fontSize: 48, textAlign: 'center' }}>✅</div>
+      <div style={{ textAlign: 'center' }}>
+        <CheckCircle size={48} strokeWidth={1.5} color={tokens.colors.success} />
+      </div>
       <div style={headingStyle}>Secure Link Created!</div>
 
       <div style={linkBox}>
         <div style={linkText}>{shareUrl}</div>
-        <button onClick={handleCopy} style={copyIcon}>{copied ? '✓' : '📋'}</button>
+        <button onClick={handleCopy} style={copyIcon}>
+          {copied ? <Check size={16} strokeWidth={1.5} color={tokens.colors.success} /> : <Copy size={16} strokeWidth={1.5} color={tokens.colors.secondary} />}
+        </button>
       </div>
 
       <Button variant="primary" size="lg" onClick={handleCopy} style={{ width: '100%' }}>
         {copied ? 'Copied!' : 'Copy Link'}
       </Button>
+
+      {warning && (
+        <div style={warningStyle}>{warning}</div>
+      )}
 
       <div style={infoCard}>
         <div style={infoRow}><span style={infoLabel}>Expires:</span> {expiryText}</div>
@@ -80,3 +90,7 @@ const infoCard: React.CSSProperties = {
 const infoRow: React.CSSProperties = { fontSize: tokens.font.size.sm, color: tokens.colors.text, fontFamily: tokens.font.family };
 const infoLabel: React.CSSProperties = { fontWeight: tokens.font.weight.medium };
 const infoHint: React.CSSProperties = { fontSize: tokens.font.size.xs, color: tokens.colors.secondary, fontFamily: tokens.font.family };
+const warningStyle: React.CSSProperties = {
+  backgroundColor: '#fef3c7', borderRadius: 8, padding: '8px 12px',
+  fontSize: tokens.font.size.xs, color: '#92400e', fontFamily: tokens.font.family, lineHeight: 1.4,
+};

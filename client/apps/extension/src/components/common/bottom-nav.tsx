@@ -1,37 +1,35 @@
-// Bottom navigation bar — 4 tabs: Vault, Generator, Share, Settings
+// Bottom navigation bar — 4 tabs matching design: Generator, Vault, Share, Health
 import React from 'react';
 import { tokens } from '@vaultic/ui';
+import { Dices, LayoutGrid, Share2, Shield } from 'lucide-react';
 
-export type NavTab = 'vault' | 'generator' | 'share' | 'settings';
+export type NavTab = 'generator' | 'vault' | 'share' | 'health';
 
 interface BottomNavProps {
   active: NavTab;
   onChange: (tab: NavTab) => void;
 }
 
-const tabs: { id: NavTab; icon: string; label: string }[] = [
-  { id: 'vault', icon: '🔐', label: 'Vault' },
-  { id: 'generator', icon: '🎲', label: 'Generator' },
-  { id: 'share', icon: '🔗', label: 'Share' },
-  { id: 'settings', icon: '⚙️', label: 'Settings' },
+const tabs: { id: NavTab; label: string; Icon: React.FC<{ size: number; strokeWidth: number; color: string }> }[] = [
+  { id: 'generator', label: 'Generator', Icon: Dices },
+  { id: 'vault', label: 'Vault', Icon: LayoutGrid },
+  { id: 'share', label: 'Share', Icon: Share2 },
+  { id: 'health', label: 'Health', Icon: Shield },
 ];
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
   return (
     <nav style={navStyle}>
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() => onChange(tab.id)}
-          style={{
-            ...tabStyle,
-            color: active === tab.id ? tokens.colors.primary : tokens.colors.secondary,
-          }}
-        >
-          <span style={{ fontSize: 18 }}>{tab.icon}</span>
-          <span style={{ fontSize: tokens.font.size.xs }}>{tab.label}</span>
-        </button>
-      ))}
+      {tabs.map((tab) => {
+        const isActive = active === tab.id;
+        const color = isActive ? tokens.colors.primary : tokens.colors.secondary;
+        return (
+          <button key={tab.id} onClick={() => onChange(tab.id)} style={{ ...tabStyle, color }}>
+            <tab.Icon size={20} strokeWidth={1.5} color={color} />
+            <span style={{ fontSize: tokens.font.size.xs, fontWeight: isActive ? 600 : 400 }}>{tab.label}</span>
+          </button>
+        );
+      })}
     </nav>
   );
 }

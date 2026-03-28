@@ -1,18 +1,22 @@
 // Screen 05: Vault List — main popup view with search, suggested, recent, all items
 import React, { useEffect, useState } from 'react';
 import { tokens } from '@vaultic/ui';
+import { Settings, Plus } from 'lucide-react';
 import { useVaultStore, useFilteredItems } from '../../stores/vault-store';
 import { SearchBar } from './search-bar';
 import { EmptyVault } from './empty-vault';
 import { VaultItemCard } from './vault-item-card';
+import { FolderBar } from './folder-bar';
 import type { DecryptedVaultItem } from '../../stores/vault-store';
 
 interface VaultListProps {
   onItemClick: (id: string) => void;
   onAddItem: () => void;
+  onManageFolders: () => void;
+  onSettings?: () => void;
 }
 
-export function VaultList({ onItemClick, onAddItem }: VaultListProps) {
+export function VaultList({ onItemClick, onAddItem, onManageFolders, onSettings }: VaultListProps) {
   const { items, searchQuery, setSearchQuery, loadVault, loading } = useVaultStore();
   const filtered = useFilteredItems();
   const [currentHost, setCurrentHost] = useState('');
@@ -48,8 +52,16 @@ export function VaultList({ onItemClick, onAddItem }: VaultListProps) {
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <SearchBar value={searchQuery} onChange={setSearchQuery} />
+        <div style={{ flex: 1 }}>
+          <SearchBar value={searchQuery} onChange={setSearchQuery} />
+        </div>
+        {onSettings && (
+          <button onClick={onSettings} style={settingsBtn} title="Settings">
+            <Settings size={20} strokeWidth={1.5} color={tokens.colors.secondary} />
+          </button>
+        )}
       </div>
+      <FolderBar onManageFolders={onManageFolders} />
 
       <div style={scrollStyle}>
         {suggested.length > 0 && (
@@ -71,7 +83,9 @@ export function VaultList({ onItemClick, onAddItem }: VaultListProps) {
         )}
       </div>
 
-      <button onClick={onAddItem} style={fabStyle} title="Add credential">+</button>
+      <button onClick={onAddItem} style={fabStyle} title="Add credential">
+        <Plus size={24} strokeWidth={2} color="#fff" />
+      </button>
     </div>
   );
 }
@@ -89,7 +103,8 @@ function Section({ title, items, onItemClick }: { title: string; items: Decrypte
 }
 
 const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' };
-const headerStyle: React.CSSProperties = { padding: tokens.spacing.md };
+const headerStyle: React.CSSProperties = { padding: tokens.spacing.md, display: 'flex', alignItems: 'center', gap: tokens.spacing.sm };
+const settingsBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' };
 const scrollStyle: React.CSSProperties = { flex: 1, overflowY: 'auto' };
 const sectionTitle: React.CSSProperties = {
   fontSize: tokens.font.size.xs, fontWeight: tokens.font.weight.semibold,
@@ -108,7 +123,7 @@ const emptySearchStyle: React.CSSProperties = {
 const fabStyle: React.CSSProperties = {
   position: 'absolute', bottom: 16, right: 16, width: 44, height: 44,
   borderRadius: tokens.radius.full, backgroundColor: tokens.colors.primary,
-  color: '#fff', border: 'none', fontSize: 24, cursor: 'pointer',
+  border: 'none', cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
 };

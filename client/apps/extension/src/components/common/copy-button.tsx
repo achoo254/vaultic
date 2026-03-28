@@ -1,13 +1,14 @@
 // Copy to clipboard with auto-clear via background alarm (survives popup close)
 import React, { useState } from 'react';
 import { tokens } from '@vaultic/ui';
+import { Copy, Check } from 'lucide-react';
 
 interface CopyButtonProps {
   text: string;
-  label?: string;
+  size?: number;
 }
 
-export function CopyButton({ text, label = '📋' }: CopyButtonProps) {
+export function CopyButton({ text, size = 16 }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async (e: React.MouseEvent) => {
@@ -21,7 +22,7 @@ export function CopyButton({ text, label = '📋' }: CopyButtonProps) {
 
   return (
     <button onClick={handleCopy} style={btnStyle} title="Copy">
-      {copied ? '✓' : label}
+      {copied ? <Check size={size} strokeWidth={1.5} /> : <Copy size={size} strokeWidth={1.5} />}
     </button>
   );
 }

@@ -1,7 +1,8 @@
-// Screen 03: Lock Screen — re-enter master password to unlock vault (offline)
+// Screen 03: Lock Screen — re-enter master password to unlock vault (offline + online)
 import React, { useState } from 'react';
 import { Button, Input } from '@vaultic/ui';
 import { tokens } from '@vaultic/ui';
+import { Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 
 export function LockScreen() {
@@ -10,6 +11,7 @@ export function LockScreen() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const email = useAuthStore((s) => s.email);
+  const mode = useAuthStore((s) => s.mode);
   const unlock = useAuthStore((s) => s.unlock);
   const logout = useAuthStore((s) => s.logout);
 
@@ -29,8 +31,12 @@ export function LockScreen() {
   return (
     <form onSubmit={handleSubmit} style={formStyle}>
       <div style={topSection}>
-        <div style={lockIcon}>🔒</div>
-        <div style={emailStyle}>{email}</div>
+        <div style={lockIcon}>
+          <Lock size={48} strokeWidth={1.5} color={tokens.colors.primary} />
+        </div>
+        <div style={emailStyle}>
+          {mode === 'online' && email ? email : 'Offline Vault'}
+        </div>
       </div>
 
       <div style={fieldSection}>
@@ -51,7 +57,7 @@ export function LockScreen() {
             style={eyeToggleStyle}
             tabIndex={-1}
           >
-            {showPassword ? '🔒' : '👁'}
+            {showPassword ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
           </button>
         </div>
       </div>
@@ -68,7 +74,7 @@ export function LockScreen() {
         </Button>
 
         <button type="button" onClick={() => logout()} style={logoutLink}>
-          Log out
+          {mode === 'online' ? 'Log out' : 'Reset vault'}
         </button>
       </div>
     </form>
@@ -93,7 +99,9 @@ const topSection: React.CSSProperties = {
 };
 
 const lockIcon: React.CSSProperties = {
-  fontSize: 48,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
 };
 
 const emailStyle: React.CSSProperties = {

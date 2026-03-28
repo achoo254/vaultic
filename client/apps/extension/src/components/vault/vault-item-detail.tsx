@@ -1,6 +1,7 @@
 // Screen 06: Credential Detail — view username, password, notes, folder
 import React, { useState } from 'react';
 import { tokens, VStack, HStack, Modal, Button } from '@vaultic/ui';
+import { ArrowLeft, Pencil, Trash2, Globe } from 'lucide-react';
 import { PasswordField } from '../common/password-field';
 import { CopyButton } from '../common/copy-button';
 import { useVaultStore } from '../../stores/vault-store';
@@ -19,25 +20,23 @@ export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemD
   if (!item) return <div style={centerStyle}>Item not found</div>;
 
   const { credential } = item;
-  const initial = credential.name.charAt(0).toUpperCase();
-  const hue = credential.name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
 
   return (
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <button onClick={onBack} style={iconBtn}>←</button>
+        <button onClick={onBack} style={iconBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
         <span style={headerTitle}>{credential.name}</span>
         <div style={headerActions}>
-          <button onClick={onEdit} style={iconBtn} title="Edit">✏️</button>
-          <button onClick={() => setShowDeleteConfirm(true)} style={iconBtn} title="Delete">🗑️</button>
+          <button onClick={onEdit} style={iconBtn} title="Edit"><Pencil size={16} strokeWidth={1.5} /></button>
+          <button onClick={() => setShowDeleteConfirm(true)} style={iconBtn} title="Delete"><Trash2 size={16} strokeWidth={1.5} /></button>
         </div>
       </div>
 
       {/* Item badge */}
       <div style={badgeSection}>
-        <div style={{ ...avatarLg, backgroundColor: `hsl(${hue}, 60%, 90%)`, color: `hsl(${hue}, 60%, 40%)` }}>
-          {initial}
+        <div style={avatarLg}>
+          <Globe size={24} strokeWidth={1.5} color={tokens.colors.primary} />
         </div>
         <div>
           <div style={nameStyle}>{credential.name}</div>
@@ -74,7 +73,7 @@ export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemD
       {/* Delete confirmation */}
       <Modal open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title="Delete Credential?">
         <VStack gap="md" align="center">
-          <div style={{ fontSize: 32 }}>🗑️</div>
+          <Trash2 size={32} strokeWidth={1.5} color={tokens.colors.error} />
           <div style={modalText}>This will permanently delete "{credential.name}". This action cannot be undone.</div>
           <HStack gap="md" style={{ width: '100%' }}>
             <Button variant="secondary" size="md" onClick={() => setShowDeleteConfirm(false)} style={{ flex: 1 }}>Cancel</Button>
@@ -99,7 +98,7 @@ const headerTitle: React.CSSProperties = {
   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
 };
 const headerActions: React.CSSProperties = { display: 'flex', gap: 4 };
-const iconBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: 4, color: tokens.colors.secondary };
+const iconBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: tokens.colors.secondary, display: 'flex', alignItems: 'center' };
 const badgeSection: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: tokens.spacing.md,
   padding: `${tokens.spacing.lg}px ${tokens.spacing.xxl}px`,
@@ -107,7 +106,7 @@ const badgeSection: React.CSSProperties = {
 const avatarLg: React.CSSProperties = {
   width: 48, height: 48, borderRadius: tokens.radius.lg,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  fontSize: tokens.font.size.xxl, fontWeight: tokens.font.weight.bold, fontFamily: tokens.font.family,
+  backgroundColor: 'rgba(37, 99, 235, 0.1)',
 };
 const nameStyle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: tokens.colors.text, fontFamily: tokens.font.family };
 const urlStyle: React.CSSProperties = { fontSize: tokens.font.size.sm, color: tokens.colors.secondary, fontFamily: tokens.font.family };
