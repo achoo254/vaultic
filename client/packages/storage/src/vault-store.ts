@@ -4,18 +4,20 @@ import type { VaultItem, Folder } from '@vaultic/types';
 
 export interface VaultStore {
   // Vault items
-  getItem(id: string): Promise<VaultItem | null>;
+  getItem(userId: string, id: string): Promise<VaultItem | null>;
   putItem(item: VaultItem): Promise<void>;
-  deleteItem(id: string): Promise<void>;
-  getAllItems(): Promise<VaultItem[]>;
-  getChangedSince(timestamp: number): Promise<VaultItem[]>;
+  deleteItem(userId: string, id: string): Promise<void>;
+  getAllItems(userId: string): Promise<VaultItem[]>;
+  getAllItemsUnfiltered(): Promise<VaultItem[]>;
+  getChangedSince(userId: string, timestamp: number): Promise<VaultItem[]>;
 
   // Folders
-  getFolder(id: string): Promise<Folder | null>;
+  getFolder(userId: string, id: string): Promise<Folder | null>;
   putFolder(folder: Folder): Promise<void>;
-  deleteFolder(id: string): Promise<void>;
-  getAllFolders(): Promise<Folder[]>;
+  deleteFolder(userId: string, id: string): Promise<void>;
+  getAllFolders(userId: string): Promise<Folder[]>;
+  getAllFoldersUnfiltered(): Promise<Folder[]>;
 
   // Bulk operations
-  clear(): Promise<void>;
+  clear(userId?: string): Promise<void>;
 }

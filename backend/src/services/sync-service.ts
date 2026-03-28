@@ -6,7 +6,7 @@ import { AppError } from "../utils/app-error.js";
 interface SyncItemInput {
   id: string;
   folderId?: string | null;
-  itemType?: number;
+  itemType?: string;
   encryptedData: string;
   version: number;
   updatedAt: string;

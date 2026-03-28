@@ -9,6 +9,7 @@ export enum ItemType {
 
 export interface VaultItem {
   id: string;
+  user_id: string;
   folder_id?: string;
   item_type: ItemType;
   /** Base64-encoded nonce + ciphertext */
@@ -22,6 +23,7 @@ export interface VaultItem {
 
 export interface Folder {
   id: string;
+  user_id: string;
   encrypted_name: string;
   parent_id?: string;
   created_at: string;

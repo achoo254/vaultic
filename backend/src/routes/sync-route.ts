@@ -9,7 +9,7 @@ export const syncRouter: RouterType = Router();
 const syncItemSchema = z.object({
   id: z.string().uuid(),
   folderId: z.string().uuid().nullable().optional(),
-  itemType: z.number().optional(),
+  itemType: z.string().optional(),
   encryptedData: z.string().min(1),
   version: z.number().int().positive(),
   updatedAt: z.string().datetime(),

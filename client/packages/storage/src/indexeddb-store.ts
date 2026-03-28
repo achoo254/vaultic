@@ -22,59 +22,103 @@ async function withStore<T>(
   });
 }
 
-/** Get all records from a store. */
+/** Get all records from a store using user_id index. */
+async function getAllByUserId<T>(storeName: string, userId: string): Promise<T[]> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readonly');
+    const index = tx.objectStore(storeName).index('user_id');
+    const request = index.getAll(userId);
+    request.onsuccess = () => resolve(request.result as T[]);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+/** Get all records from a store (unfiltered). */
 async function getAll<T>(storeName: string): Promise<T[]> {
   return withStore(storeName, 'readonly', (s) => s.getAll());
 }
 
 /** IndexedDB-backed vault store for browser extension. */
 export class IndexedDBStore implements VaultStore {
-  async getItem(id: string): Promise<VaultItem | null> {
+  async getItem(userId: string, id: string): Promise<VaultItem | null> {
     const item = await withStore<VaultItem | undefined>(
       ITEMS_STORE, 'readonly', (s) => s.get(id),
     );
-    return item ?? null;
+    if (!item) return null;
+    // Allow match if item has no user_id (pre-migration) or matches userId
+    return (!item.user_id || item.user_id === userId) ? item : null;
   }
 
   async putItem(item: VaultItem): Promise<void> {
     await withStore(ITEMS_STORE, 'readwrite', (s) => s.put(item));
   }
 
-  async deleteItem(id: string): Promise<void> {
-    await withStore(ITEMS_STORE, 'readwrite', (s) => s.delete(id));
+  async deleteItem(userId: string, id: string): Promise<void> {
+    const item = await this.getItem(userId, id);
+    if (item) {
+      await withStore(ITEMS_STORE, 'readwrite', (s) => s.delete(id));
+    }
   }
 
-  async getAllItems(): Promise<VaultItem[]> {
-    const items = await getAll<VaultItem>(ITEMS_STORE);
-    // Exclude soft-deleted items from default query
+  async getAllItems(userId: string): Promise<VaultItem[]> {
+    const items = await getAllByUserId<VaultItem>(ITEMS_STORE, userId);
     return items.filter((i) => !i.deleted_at);
   }
 
-  async getChangedSince(timestamp: number): Promise<VaultItem[]> {
-    const all = await getAll<VaultItem>(ITEMS_STORE);
-    return all.filter((i) => new Date(i.updated_at).getTime() > timestamp);
+  async getAllItemsUnfiltered(): Promise<VaultItem[]> {
+    return getAll<VaultItem>(ITEMS_STORE);
   }
 
-  async getFolder(id: string): Promise<Folder | null> {
+  async getChangedSince(userId: string, timestamp: number): Promise<VaultItem[]> {
+    const items = await getAllByUserId<VaultItem>(ITEMS_STORE, userId);
+    return items.filter((i) => new Date(i.updated_at).getTime() > timestamp);
+  }
+
+  async getFolder(userId: string, id: string): Promise<Folder | null> {
     const folder = await withStore<Folder | undefined>(
       FOLDERS_STORE, 'readonly', (s) => s.get(id),
     );
-    return folder ?? null;
+    if (!folder) return null;
+    return (!folder.user_id || folder.user_id === userId) ? folder : null;
   }
 
   async putFolder(folder: Folder): Promise<void> {
     await withStore(FOLDERS_STORE, 'readwrite', (s) => s.put(folder));
   }
 
-  async deleteFolder(id: string): Promise<void> {
-    await withStore(FOLDERS_STORE, 'readwrite', (s) => s.delete(id));
+  async deleteFolder(userId: string, id: string): Promise<void> {
+    const folder = await this.getFolder(userId, id);
+    if (folder) {
+      await withStore(FOLDERS_STORE, 'readwrite', (s) => s.delete(id));
+    }
   }
 
-  async getAllFolders(): Promise<Folder[]> {
+  async getAllFolders(userId: string): Promise<Folder[]> {
+    return getAllByUserId<Folder>(FOLDERS_STORE, userId);
+  }
+
+  async getAllFoldersUnfiltered(): Promise<Folder[]> {
     return getAll<Folder>(FOLDERS_STORE);
   }
 
-  async clear(): Promise<void> {
+  async clear(userId?: string): Promise<void> {
+    if (userId) {
+      // Clear only this user's data
+      const items = await getAllByUserId<VaultItem>(ITEMS_STORE, userId);
+      const folders = await getAllByUserId<Folder>(FOLDERS_STORE, userId);
+      const db = await openDB();
+      const tx = db.transaction([ITEMS_STORE, FOLDERS_STORE], 'readwrite');
+      const itemStore = tx.objectStore(ITEMS_STORE);
+      const folderStore = tx.objectStore(FOLDERS_STORE);
+      for (const item of items) itemStore.delete(item.id);
+      for (const folder of folders) folderStore.delete(folder.id);
+      return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+    // Clear all data
     const db = await openDB();
     const tx = db.transaction([ITEMS_STORE, FOLDERS_STORE, META_STORE], 'readwrite');
     tx.objectStore(ITEMS_STORE).clear();
