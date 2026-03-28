@@ -1,7 +1,7 @@
 // Screen 07: Add/Edit Credential form
-import React, { useState } from 'react';
-import { Button, Input, VStack, Textarea, tokens, useTheme } from '@vaultic/ui';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Button, Input, VStack, HStack, Modal, Card, Textarea, tokens, useTheme } from '@vaultic/ui';
+import { ArrowLeft, Sparkles, RefreshCw } from 'lucide-react';
 import { generatePassword } from '@vaultic/crypto';
 import { useVaultStore } from '../../stores/vault-store';
 import { FolderSelect } from './folder-select';
@@ -27,12 +27,31 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
   const [folderId, setFolderId] = useState<string | undefined>(existing?.folder_id);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showGenModal, setShowGenModal] = useState(false);
+  const [genLength, setGenLength] = useState(20);
+  const [genUpper, setGenUpper] = useState(true);
+  const [genLower, setGenLower] = useState(true);
+  const [genDigits, setGenDigits] = useState(true);
+  const [genSymbols, setGenSymbols] = useState(true);
+  const [genPreview, setGenPreview] = useState('');
 
-  const handleGenerate = () => {
-    const pw = generatePassword({
-      length: 20, uppercase: true, lowercase: true, digits: true, symbols: true,
-    });
-    setPassword(pw);
+  const regeneratePreview = () => {
+    setGenPreview(generatePassword({ length: genLength, uppercase: genUpper, lowercase: genLower, digits: genDigits, symbols: genSymbols }));
+  };
+
+  // Auto-regenerate when options change while modal is open
+  useEffect(() => {
+    if (showGenModal) regeneratePreview();
+  }, [genLength, genUpper, genLower, genDigits, genSymbols]);
+
+  const openGenModal = () => {
+    regeneratePreview();
+    setShowGenModal(true);
+  };
+
+  const applyGenerated = () => {
+    setPassword(genPreview);
+    setShowGenModal(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,7 +121,7 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
             <div style={{ flex: 1 }}>
               <Input label="Password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
             </div>
-            <button type="button" onClick={handleGenerate} style={generateBtn} title="Generate">
+            <button type="button" onClick={openGenModal} style={generateBtn} title="Generate">
               <Sparkles size={14} strokeWidth={1.5} /> Generate
             </button>
           </div>
@@ -122,6 +141,54 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
           {editId ? 'Save Changes' : 'Add Credential'}
         </Button>
       </form>
+
+      {/* Password Generator Modal */}
+      <Modal open={showGenModal} onClose={() => setShowGenModal(false)} title="Generate Password">
+        <VStack gap="md">
+          <Card variant="outlined" padding="sm" style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.sm, backgroundColor: colors.surface }}>
+            <span style={{ flex: 1, fontFamily: 'monospace', fontSize: tokens.font.size.sm, color: colors.text, wordBreak: 'break-all' }}>{genPreview}</span>
+            <button type="button" onClick={regeneratePreview} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
+              <RefreshCw size={14} strokeWidth={1.5} color={colors.secondary} />
+            </button>
+          </Card>
+
+          <HStack gap="md">
+            <span style={{ fontSize: tokens.font.size.base, color: colors.text, fontFamily: tokens.font.family }}>Length: {genLength}</span>
+            <input type="range" min={8} max={64} value={genLength} onChange={(e) => { setGenLength(+e.target.value); }} style={{ flex: 1 }} />
+          </HStack>
+
+          <GenToggle label="Uppercase (A-Z)" checked={genUpper} onChange={setGenUpper} />
+          <GenToggle label="Lowercase (a-z)" checked={genLower} onChange={setGenLower} />
+          <GenToggle label="Numbers (0-9)" checked={genDigits} onChange={setGenDigits} />
+          <GenToggle label="Symbols (!@#$)" checked={genSymbols} onChange={setGenSymbols} />
+
+          <HStack gap="sm" style={{ marginTop: tokens.spacing.sm }}>
+            <Button variant="secondary" size="md" onClick={regeneratePreview} style={{ flex: 1 }}>Regenerate</Button>
+            <Button variant="primary" size="md" onClick={applyGenerated} style={{ flex: 1 }}>Use Password</Button>
+          </HStack>
+        </VStack>
+      </Modal>
+    </div>
+  );
+}
+
+function GenToggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  const { colors } = useTheme();
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <span style={{ fontSize: tokens.font.size.base, color: colors.text, fontFamily: tokens.font.family }}>{label}</span>
+      <button type="button" onClick={() => onChange(!checked)} style={{
+        width: 40, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
+        padding: 2, display: 'flex', alignItems: 'center',
+        backgroundColor: checked ? colors.primary : colors.border,
+        transition: 'background-color 0.2s',
+      }}>
+        <div style={{
+          width: 20, height: 20, borderRadius: '50%', backgroundColor: '#fff',
+          transition: 'transform 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+          transform: checked ? 'translateX(16px)' : 'translateX(0)',
+        }} />
+      </button>
     </div>
   );
 }
