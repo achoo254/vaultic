@@ -1,7 +1,6 @@
 // Screen 02: Login — email + master password → derive keys → call API
 import React, { useState } from 'react';
-import { Button, Input } from '@vaultic/ui';
-import { tokens } from '@vaultic/ui';
+import { Button, Input, tokens, useTheme } from '@vaultic/ui';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 
@@ -13,6 +12,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSwitchToRegister, onSwitchToSetup }: LoginFormProps) {
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -31,6 +31,70 @@ export function LoginForm({ onSwitchToRegister, onSwitchToSetup }: LoginFormProp
     } finally {
       setLoading(false);
     }
+  };
+
+  const formStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    padding: tokens.spacing.xxl,
+    gap: tokens.spacing.xl,
+    height: '100%',
+  };
+
+  const logoSection: React.CSSProperties = {
+    textAlign: 'center',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacing.sm,
+    paddingTop: tokens.spacing.xl,
+  };
+
+  const logoText: React.CSSProperties = {
+    fontSize: tokens.font.size.xxl,
+    fontWeight: tokens.font.weight.bold,
+    color: colors.primary,
+    fontFamily: tokens.font.family,
+  };
+
+  const headingStyle: React.CSSProperties = {
+    fontSize: tokens.font.size.xl,
+    fontWeight: tokens.font.weight.semibold,
+    color: colors.text,
+    fontFamily: tokens.font.family,
+  };
+
+  const fieldsSection: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacing.lg,
+    flex: 1,
+  };
+
+  const actionsSection: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacing.md,
+    alignItems: 'center',
+  };
+
+  const linkStyle: React.CSSProperties = {
+    background: 'none',
+    border: 'none',
+    color: colors.primary,
+    cursor: 'pointer',
+    fontSize: tokens.font.size.sm,
+    fontFamily: tokens.font.family,
+  };
+
+  const eyeToggleStyle: React.CSSProperties = {
+    position: 'absolute',
+    right: 12,
+    top: 30,
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: 14,
+    padding: 4,
   };
 
   return (
@@ -96,67 +160,3 @@ export function LoginForm({ onSwitchToRegister, onSwitchToSetup }: LoginFormProp
     </form>
   );
 }
-
-const formStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  padding: tokens.spacing.xxl,
-  gap: tokens.spacing.xl,
-  height: '100%',
-};
-
-const logoSection: React.CSSProperties = {
-  textAlign: 'center',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: tokens.spacing.sm,
-  paddingTop: tokens.spacing.xl,
-};
-
-const logoText: React.CSSProperties = {
-  fontSize: tokens.font.size.xxl,
-  fontWeight: tokens.font.weight.bold,
-  color: tokens.colors.primary,
-  fontFamily: tokens.font.family,
-};
-
-const headingStyle: React.CSSProperties = {
-  fontSize: tokens.font.size.xl,
-  fontWeight: tokens.font.weight.semibold,
-  color: tokens.colors.text,
-  fontFamily: tokens.font.family,
-};
-
-const fieldsSection: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: tokens.spacing.lg,
-  flex: 1,
-};
-
-const actionsSection: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: tokens.spacing.md,
-  alignItems: 'center',
-};
-
-const linkStyle: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  color: tokens.colors.primary,
-  cursor: 'pointer',
-  fontSize: tokens.font.size.sm,
-  fontFamily: tokens.font.family,
-};
-
-const eyeToggleStyle: React.CSSProperties = {
-  position: 'absolute',
-  right: 12,
-  top: 30,
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  fontSize: 14,
-  padding: 4,
-};

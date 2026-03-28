@@ -1,6 +1,6 @@
 // Extension popup — root component with offline-aware routing + bottom nav
 import React, { useEffect, useState } from 'react';
-import { tokens } from '@vaultic/ui';
+import { tokens, ThemeProvider, useTheme } from '@vaultic/ui';
 import { useAuthStore } from '../../stores/auth-store';
 import { SetupPasswordForm } from '../../components/auth/setup-password-form';
 import { LoginForm } from '../../components/auth/login-form';
@@ -81,6 +81,30 @@ export function App() {
   const showBottomNav = !['loading', 'setup', 'register', 'login', 'locked'].includes(view.type);
 
   return (
+    <ThemeProvider>
+      <AppShell view={view} setView={setView} activeTab={activeTab} setActiveTab={setActiveTab}
+        showBottomNav={showBottomNav} handleTabChange={handleTabChange} deleteItem={deleteItem} />
+    </ThemeProvider>
+  );
+}
+
+function AppShell({ view, setView, activeTab, setActiveTab, showBottomNav, handleTabChange, deleteItem }: {
+  view: View; setView: (v: View) => void; activeTab: NavTab; setActiveTab: (t: NavTab) => void;
+  showBottomNav: boolean; handleTabChange: (t: NavTab) => void; deleteItem: (id: string) => Promise<void>;
+}) {
+  const { colors } = useTheme();
+
+  const containerStyle: React.CSSProperties = {
+    width: tokens.extension.width,
+    height: tokens.extension.height,
+    fontFamily: tokens.font.family,
+    backgroundColor: colors.background,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+  };
+
+  return (
     <div style={containerStyle}>
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {view.type === 'loading' && <CenterMessage text="Loading..." />}
@@ -152,24 +176,15 @@ export function App() {
 }
 
 function CenterMessage({ text }: { text: string }) {
+  const { colors } = useTheme();
   return (
     <div style={centerStyle}>
-      <span style={{ color: tokens.colors.secondary, fontFamily: tokens.font.family, fontSize: tokens.font.size.base }}>
+      <span style={{ color: colors.secondary, fontFamily: tokens.font.family, fontSize: tokens.font.size.base }}>
         {text}
       </span>
     </div>
   );
 }
-
-const containerStyle: React.CSSProperties = {
-  width: tokens.extension.width,
-  height: tokens.extension.height,
-  fontFamily: tokens.font.family,
-  backgroundColor: tokens.colors.background,
-  display: 'flex',
-  flexDirection: 'column',
-  overflow: 'hidden',
-};
 
 const centerStyle: React.CSSProperties = {
   display: 'flex',

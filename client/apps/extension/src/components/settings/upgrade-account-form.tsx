@@ -1,12 +1,12 @@
 // Upgrade offline vault to online account — enter email + re-enter password
 import React, { useState } from 'react';
-import { Button, Input } from '@vaultic/ui';
-import { tokens } from '@vaultic/ui';
+import { Button, Input, tokens, useTheme } from '@vaultic/ui';
 import { useAuthStore } from '../../stores/auth-store';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export function UpgradeAccountForm() {
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -30,6 +30,34 @@ export function UpgradeAccountForm() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const sectionStyle: React.CSSProperties = {
+    padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px ${tokens.spacing.md}px`,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacing.md,
+  };
+
+  const descStyle: React.CSSProperties = {
+    fontSize: tokens.font.size.xs,
+    color: colors.secondary,
+    fontFamily: tokens.font.family,
+    lineHeight: 1.4,
+  };
+
+  const fieldsStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacing.sm,
+  };
+
+  const successStyle: React.CSSProperties = {
+    fontSize: tokens.font.size.sm,
+    color: colors.success,
+    fontFamily: tokens.font.family,
+    textAlign: 'center',
+    padding: tokens.spacing.md,
   };
 
   if (success) {
@@ -79,31 +107,3 @@ export function UpgradeAccountForm() {
     </form>
   );
 }
-
-const sectionStyle: React.CSSProperties = {
-  padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px ${tokens.spacing.md}px`,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: tokens.spacing.md,
-};
-
-const descStyle: React.CSSProperties = {
-  fontSize: tokens.font.size.xs,
-  color: tokens.colors.secondary,
-  fontFamily: tokens.font.family,
-  lineHeight: 1.4,
-};
-
-const fieldsStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: tokens.spacing.sm,
-};
-
-const successStyle: React.CSSProperties = {
-  fontSize: tokens.font.size.sm,
-  color: tokens.colors.success,
-  fontFamily: tokens.font.family,
-  textAlign: 'center',
-  padding: tokens.spacing.md,
-};

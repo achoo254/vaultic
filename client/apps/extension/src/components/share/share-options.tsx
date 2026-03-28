@@ -1,6 +1,6 @@
 // Reusable TTL + max views pill selectors for share configuration
 import React from 'react';
-import { VStack, SectionHeader, PillGroup, tokens } from '@vaultic/ui';
+import { VStack, SectionHeader, PillGroup, tokens, useTheme } from '@vaultic/ui';
 import { AlertTriangle } from 'lucide-react';
 
 interface ShareOptionsProps {
@@ -26,17 +26,24 @@ const VIEW_OPTIONS = [
 ];
 
 export function ShareOptions({ ttlHours, maxViews, onTtlChange, onMaxViewsChange }: ShareOptionsProps) {
+  const { colors } = useTheme();
+
+  const warningStyle: React.CSSProperties = {
+    fontSize: tokens.font.size.xs, color: colors.warning, fontFamily: tokens.font.family,
+    display: 'flex', alignItems: 'center', gap: 4,
+  };
+
   return (
     <VStack gap="md">
       <VStack gap="xs">
-        <SectionHeader style={{ textTransform: 'none', fontSize: tokens.font.size.sm, fontWeight: tokens.font.weight.medium, color: tokens.colors.text }}>
+        <SectionHeader style={{ textTransform: 'none', fontSize: tokens.font.size.sm, fontWeight: tokens.font.weight.medium, color: colors.text }}>
           Expires after
         </SectionHeader>
         <PillGroup options={TTL_OPTIONS} value={ttlHours} onChange={onTtlChange} />
       </VStack>
 
       <VStack gap="xs">
-        <SectionHeader style={{ textTransform: 'none', fontSize: tokens.font.size.sm, fontWeight: tokens.font.weight.medium, color: tokens.colors.text }}>
+        <SectionHeader style={{ textTransform: 'none', fontSize: tokens.font.size.sm, fontWeight: tokens.font.weight.medium, color: colors.text }}>
           Max views
         </SectionHeader>
         <PillGroup options={VIEW_OPTIONS} value={maxViews} onChange={onMaxViewsChange} />
@@ -50,8 +57,3 @@ export function ShareOptions({ ttlHours, maxViews, onTtlChange, onMaxViewsChange
     </VStack>
   );
 }
-
-const warningStyle: React.CSSProperties = {
-  fontSize: tokens.font.size.xs, color: tokens.colors.warning, fontFamily: tokens.font.family,
-  display: 'flex', alignItems: 'center', gap: 4,
-};

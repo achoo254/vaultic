@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { tokens } from '../styles/design-tokens';
+import { useTheme } from '../styles/theme-provider';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -10,12 +11,13 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, style, ...props }, ref) => {
+    const { colors } = useTheme();
     const inputStyle: React.CSSProperties = {
       fontFamily: tokens.font.family,
       fontSize: tokens.font.size.base,
-      color: tokens.colors.text,
-      backgroundColor: tokens.colors.background,
-      border: `1px solid ${error ? tokens.colors.error : tokens.colors.border}`,
+      color: colors.text,
+      backgroundColor: colors.background,
+      border: `1px solid ${error ? colors.error : colors.border}`,
       borderRadius: tokens.radius.md,
       padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
       height: 40,
@@ -32,7 +34,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             style={{
               fontSize: tokens.font.size.xs,
               fontWeight: tokens.font.weight.semibold,
-              color: tokens.colors.secondary,
+              color: colors.secondary,
               fontFamily: tokens.font.family,
               textTransform: 'uppercase',
               letterSpacing: 0.5,
@@ -46,7 +48,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <span
             style={{
               fontSize: tokens.font.size.xs,
-              color: tokens.colors.error,
+              color: colors.error,
               fontFamily: tokens.font.family,
             }}
           >

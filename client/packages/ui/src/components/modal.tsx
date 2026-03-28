@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { tokens } from '../styles/design-tokens';
+import { useTheme } from '../styles/theme-provider';
 
 export interface ModalProps {
   open: boolean;
@@ -12,6 +13,8 @@ export interface ModalProps {
 }
 
 export const Modal: React.FC<ModalProps> = ({ open, onClose, children, title, style }) => {
+  const { colors } = useTheme();
+
   // Close on Escape key
   useEffect(() => {
     if (!open) return;
@@ -36,7 +39,7 @@ export const Modal: React.FC<ModalProps> = ({ open, onClose, children, title, st
   };
 
   const cardStyle: React.CSSProperties = {
-    backgroundColor: tokens.colors.background,
+    backgroundColor: colors.background,
     borderRadius: tokens.radius.lg,
     padding: tokens.spacing.xl,
     maxWidth: 360,
@@ -49,7 +52,7 @@ export const Modal: React.FC<ModalProps> = ({ open, onClose, children, title, st
     fontSize: tokens.font.size.lg,
     fontWeight: tokens.font.weight.semibold,
     fontFamily: tokens.font.family,
-    color: tokens.colors.text,
+    color: colors.text,
     marginBottom: tokens.spacing.md,
   };
 

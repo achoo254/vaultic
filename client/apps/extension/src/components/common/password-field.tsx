@@ -1,6 +1,6 @@
 // Password field with show/hide toggle + copy button
 import React, { useState } from 'react';
-import { tokens } from '@vaultic/ui';
+import { tokens, useTheme } from '@vaultic/ui';
 import { Eye, EyeOff } from 'lucide-react';
 import { CopyButton } from './copy-button';
 
@@ -10,7 +10,15 @@ interface PasswordFieldProps {
 }
 
 export function PasswordField({ value, label = 'Password' }: PasswordFieldProps) {
+  const { colors } = useTheme();
   const [visible, setVisible] = useState(false);
+
+  const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 2 };
+  const labelStyle: React.CSSProperties = { fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family };
+  const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
+  const valueStyle: React.CSSProperties = { fontSize: tokens.font.size.base, color: colors.text, fontFamily: 'monospace' };
+  const actionsStyle: React.CSSProperties = { display: 'flex', gap: 4 };
+  const iconBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, padding: 4, color: colors.secondary };
 
   return (
     <div style={containerStyle}>
@@ -29,10 +37,3 @@ export function PasswordField({ value, label = 'Password' }: PasswordFieldProps)
     </div>
   );
 }
-
-const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 2 };
-const labelStyle: React.CSSProperties = { fontSize: tokens.font.size.xs, color: tokens.colors.secondary, fontFamily: tokens.font.family };
-const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
-const valueStyle: React.CSSProperties = { fontSize: tokens.font.size.base, color: tokens.colors.text, fontFamily: 'monospace' };
-const actionsStyle: React.CSSProperties = { display: 'flex', gap: 4 };
-const iconBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, padding: 4, color: tokens.colors.secondary };
