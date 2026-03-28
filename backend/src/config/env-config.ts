@@ -1,4 +1,6 @@
-import "dotenv/config";
+// Load .env file (skips vars already set by --env-file or system env)
+import dotenv from "dotenv";
+dotenv.config();
 
 export const envConfig = {
   mongodbUri: requireEnv("MONGODB_URI"),
