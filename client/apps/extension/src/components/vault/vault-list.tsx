@@ -58,7 +58,7 @@ export function VaultList({ onItemClick, onAddItem, onManageFolders, onSettings 
   }
 
   if (items.length === 0 && !searchQuery) {
-    return <EmptyVault onAddItem={onAddItem} />;
+    return <EmptyVault onAddItem={onAddItem} onSettings={onSettings} onManageFolders={onManageFolders} />;
   }
 
   // Split into suggested (matching current site) and rest
