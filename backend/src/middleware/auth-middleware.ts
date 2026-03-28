@@ -26,3 +26,25 @@ export function authRequired(req: Request, _res: Response, next: NextFunction) {
     throw AppError.unauthorized("invalid token");
   }
 }
+
+/**
+ * Optional JWT auth — sets req.userId if valid token present, otherwise continues.
+ */
+export function authOptional(req: Request, _res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ")) {
+    next();
+    return;
+  }
+
+  const token = header.slice(7);
+  try {
+    const payload = verifyToken(token, envConfig.jwtSecret);
+    if (payload.tokenType === "access") {
+      req.userId = payload.sub;
+    }
+  } catch {
+    // Invalid token — continue without auth
+  }
+  next();
+}

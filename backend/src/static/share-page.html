@@ -70,17 +70,18 @@
   <script>
     const NONCE_SIZE = 12;
     const shareId = window.location.pathname.split('/').pop();
-    const keyFragment = window.location.hash.slice(1);
+    const fragment = window.location.hash.slice(1);
+    const isHybrid = fragment.startsWith('v1.');
 
     async function init() {
-      if (!shareId || !keyFragment) {
+      if (!shareId || !fragment) {
         showError('Invalid Link', 'This share link is malformed.');
         return;
       }
 
       try {
         // Fetch metadata first — does NOT count a view
-        const metaRes = await fetch(`/api/share/${shareId}/meta`);
+        const metaRes = await fetch(`/api/v1/shares/${shareId}/meta`);
         if (!metaRes.ok) {
           const err = await metaRes.json().catch(() => ({}));
           if (metaRes.status === 410) {
@@ -119,16 +120,28 @@
 
       document.getElementById('btn-view').addEventListener('click', async () => {
         try {
-          // Fetch content — THIS counts the view
-          const res = await fetch(`/api/share/${shareId}`);
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            showError('Error', err.error || 'Failed to load share.');
-            return;
+          if (isHybrid) {
+            // Hybrid: check access on server (increments view), decrypt from URL fragment
+            const checkRes = await fetch(`/api/v1/shares/${shareId}/check`);
+            if (!checkRes.ok) {
+              const err = await checkRes.json().catch(() => ({}));
+              showError('Error', err.error || 'Access denied.');
+              return;
+            }
+            const plaintext = await decryptHybridShare(fragment);
+            showRevealed(plaintext);
+          } else {
+            // Legacy: fetch encrypted data from server + decrypt with key from fragment
+            const res = await fetch(`/api/v1/shares/${shareId}`);
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              showError('Error', err.error || 'Failed to load share.');
+              return;
+            }
+            const data = await res.json();
+            const plaintext = await decryptLegacyShare(data.encrypted_data, fragment);
+            showRevealed(plaintext);
           }
-          const data = await res.json();
-          const plaintext = await decryptShare(data.encrypted_data, keyFragment);
-          showRevealed(plaintext);
         } catch {
           showError('Decryption Failed', 'Could not decrypt this share. The link may be corrupted.');
         }
@@ -193,7 +206,26 @@
     function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function escapeAttr(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
 
-    async function decryptShare(encryptedBase64, keyBase64) {
+    // --- Hybrid share decryption (v1.{iv}.{ciphertext}.{key}) ---
+    function fromBase64Url(str) {
+      const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+      return Uint8Array.from(atob(padded), c => c.charCodeAt(0));
+    }
+
+    async function decryptHybridShare(frag) {
+      const parts = frag.split('.');
+      if (parts.length !== 4 || parts[0] !== 'v1') throw new Error('Invalid fragment');
+      const iv = fromBase64Url(parts[1]);
+      const ciphertext = fromBase64Url(parts[2]);
+      const rawKey = fromBase64Url(parts[3]);
+      const key = await crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['decrypt']);
+      const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+      return new TextDecoder().decode(plaintext);
+    }
+
+    // --- Legacy share decryption (base64 key, encrypted data from server) ---
+    async function decryptLegacyShare(encryptedBase64, keyBase64) {
       const rawKey = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
       const key = await crypto.subtle.importKey('raw', rawKey, { name: 'AES-GCM' }, false, ['decrypt']);
       const data = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));

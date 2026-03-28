@@ -18,7 +18,7 @@ export async function getEncryptionKey(): Promise<CryptoKey | null> {
     'raw',
     new Uint8Array(result.enc_key),
     { name: 'AES-GCM' },
-    false,
+    true, // extractable — needed for upgrade flow + verifier computation
     ['encrypt', 'decrypt'],
   );
 }
@@ -97,4 +97,20 @@ export async function getAuthHashVerifier(): Promise<string | null> {
 /** Clear auth hash verifier. */
 export async function clearAuthHashVerifier(): Promise<void> {
   await chrome.storage.local.remove('auth_hash_verifier');
+}
+
+/** Store VaultConfig in local storage. */
+export async function storeVaultConfig(config: import('@vaultic/types').VaultConfig): Promise<void> {
+  await chrome.storage.local.set({ vault_config: config });
+}
+
+/** Retrieve VaultConfig from local storage. */
+export async function getVaultConfig(): Promise<import('@vaultic/types').VaultConfig | null> {
+  const result = await chrome.storage.local.get('vault_config');
+  return result.vault_config || null;
+}
+
+/** Clear VaultConfig from local storage. */
+export async function clearVaultConfig(): Promise<void> {
+  await chrome.storage.local.remove('vault_config');
 }

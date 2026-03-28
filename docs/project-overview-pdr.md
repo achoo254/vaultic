@@ -71,14 +71,16 @@
 
 ## Tech Stack
 
-### Server (Rust)
-| Component | Tech | Crate |
-|-----------|------|-------|
-| Framework | Axum (async HTTP) | vaultic-server |
-| Database | SeaORM + PostgreSQL 16 | vaultic-migration |
-| Crypto | Argon2id, AES-256-GCM, HKDF | vaultic-crypto |
-| TLS | rustls (no openssl-sys) | Axum default |
-| Serialization | serde + serde_json | Workspace deps |
+### Server (Node.js/Express)
+| Component | Tech | Location |
+|-----------|------|----------|
+| Framework | Express 4 + TypeScript | `backend/` |
+| Database | MongoDB (external) | MONGODB_URI env var |
+| Auth | JWT (HS256, 15min access, 7d refresh) | `backend/services/auth-service.ts` |
+| Crypto | Argon2id, bcrypt (client uses WebCrypto) | `backend/utils/jwt-utils.ts` |
+| Logger | Pino + pino-http | `backend/middleware/` |
+| Validation | Zod | `backend/utils/validate-request.ts` |
+| Middleware | CORS, rate-limit, error-handler | `backend/middleware/` |
 
 ### Client (TypeScript)
 | Component | Tech | Package |
@@ -94,12 +96,13 @@
 ### DevOps
 | Component | Tech |
 |-----------|------|
-| Container Runtime | Docker + Docker Compose |
-| Database (Dev) | PostgreSQL 16 in container |
+| Process Manager | PM2 |
+| Runtime | Node.js 22 |
+| Database | MongoDB (external) |
 | CI/CD | GitLab CI (self-hosted on gitlabs.inet.vn) |
 | Container Registry | gitlabs.inet.vn:5050/dattqh/vaultic |
-| Orchestration | Docker Compose on CentOS 7 |
-| TLS | rustls, no OpenSSL (CentOS 7 compatibility) |
+| Orchestration | PM2 on CentOS 7 |
+| TLS | HTTPS via nginx (CentOS 7) |
 
 ---
 
@@ -130,11 +133,13 @@ Master Password
 - Background service worker: Manages encryption, sync, notifications
 - Desktop/mobile: Future phases (same sync engine, different UI)
 
-### Monorepo (Cargo + Turborepo)
-- **Rust crates** share types via serde
-- **TS packages** use TypeScript interfaces + unified @vaultic namespace
+### Monorepo (pnpm Workspace + Turborepo)
+- **Backend** (Node.js/Express) in `backend/` directory
+- **Client packages** use TypeScript interfaces + unified @vaultic namespace
+- **Shared types** in `shared/types/` (used by backend + client)
 - **Shared design tokens** prevent UI/extension drift
 - **Turbo caching** speeds dev iteration
+- **Rust crypto crate** archived in `_archive/crates/` (reference only)
 
 ---
 
@@ -159,7 +164,7 @@ Master Password
 
 ### Phase 1 (Complete)
 - ✅ Monorepo compiles (all crates + packages)
-- ✅ Docker Compose starts PostgreSQL
+- ✅ MongoDB connection configured
 - ✅ CI/CD skeleton integrated
 - ✅ Design tokens centralized
 
@@ -230,15 +235,15 @@ All UI must use design tokens from `packages/ui/src/styles/design-tokens.ts`. No
 ## Deployment Model
 
 ### Development
-- **Workstation:** Windows 11 with native Rust + Node.js toolchain
-- **Database:** PostgreSQL 16 via `docker compose up`
+- **Workstation:** Windows 11 with native Node.js toolchain
+- **Database:** MongoDB (local or remote)
 - **Testing:** Local unit tests + integration tests in CI
 
 ### Production
-- **Server:** CentOS 7 Docker container (rustls for TLS)
-- **Database:** PostgreSQL 16 (managed separately or in Docker)
+- **Server:** CentOS 7 via PM2 (Node.js 22)
+- **Database:** MongoDB (external, managed separately)
 - **Reverse Proxy:** nginx (TLS termination)
-- **Deployment:** Docker pull + compose restart
+- **Deployment:** git pull + pnpm build + pm2 reload
 - **CI/CD:** GitLab CI on gitlabs.inet.vn (self-hosted)
 
 ---

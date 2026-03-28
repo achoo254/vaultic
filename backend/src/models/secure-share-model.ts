@@ -5,7 +5,7 @@ export interface ISecureShare {
   _id: string;
   vaultItemId: string | null;
   userId: string;
-  encryptedData: string;
+  encryptedData: string | null; // null for new hybrid shares, present for legacy
   maxViews: number | null;
   currentViews: number;
   expiresAt: Date | null;
@@ -27,7 +27,7 @@ const secureShareSchema = new Schema<ISecureShare>(
     _id: { type: String, default: generateShareId },
     vaultItemId: { type: String, default: null },
     userId: { type: String, required: true, index: true },
-    encryptedData: { type: String, required: true },
+    encryptedData: { type: String, default: null }, // null for hybrid, present for legacy
     maxViews: { type: Number, default: null },
     currentViews: { type: Number, default: 0 },
     expiresAt: { type: Date, default: null },

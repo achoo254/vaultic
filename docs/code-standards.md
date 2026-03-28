@@ -4,269 +4,437 @@
 
 ```
 vaultic/
-├── crates/
-│   ├── vaultic-crypto/
-│   │   ├── src/
-│   │   │   ├── lib.rs           # Public API exports
-│   │   │   ├── cipher.rs        # AES-256-GCM encryption
-│   │   │   ├── kdf.rs           # Argon2id + HKDF
-│   │   │   └── password_gen.rs  # Secure password generation
-│   │   └── Cargo.toml
-│   ├── vaultic-types/
-│   │   ├── src/
-│   │   │   ├── lib.rs           # Type exports
-│   │   │   ├── user.rs          # User, Auth models
-│   │   │   ├── vault.rs         # VaultItem, Vault models
-│   │   │   ├── sync.rs          # Delta, Device, SyncState
-│   │   │   └── share.rs         # ShareLink, ShareKey models
-│   │   └── Cargo.toml
-│   ├── vaultic-server/
-│   │   ├── src/
-│   │   │   ├── main.rs          # Axum server setup
-│   │   │   ├── routes/          # API endpoint handlers
-│   │   │   ├── db/              # Database queries
-│   │   │   ├── middleware/      # Auth, CORS, logging
-│   │   │   └── error.rs         # Error types
-│   │   └── Cargo.toml
-│   └── vaultic-migration/
-│       ├── src/
-│       │   └── lib.rs           # SeaORM migrations
-│       └── Cargo.toml
-├── packages/
-│   ├── types/                   # TS types (mirror of vaultic-types)
-│   │   ├── src/
-│   │   │   ├── index.ts
-│   │   │   ├── user.ts
-│   │   │   ├── vault.ts
-│   │   │   ├── sync.ts
-│   │   │   ├── share.ts
-│   │   │   └── crypto.ts
-│   │   └── package.json
-│   ├── crypto/                  # WebCrypto + argon2-browser
-│   │   ├── src/
-│   │   │   ├── index.ts
-│   │   │   ├── cipher.ts        # AES-256-GCM in TS
-│   │   │   ├── kdf.ts           # Argon2id + HKDF in TS
-│   │   │   └── password-gen.ts
-│   │   └── package.json
-│   ├── storage/                 # VaultStore abstraction
-│   │   ├── src/
-│   │   │   ├── index.ts
-│   │   │   ├── vault-store.ts   # Interface
-│   │   │   ├── indexeddb-store.ts
-│   │   │   ├── memory-store.ts  # Testing
-│   │   │   └── sync-queue.ts
-│   │   └── package.json
-│   ├── sync/                    # Sync engine
-│   │   ├── src/
-│   │   │   ├── index.ts
-│   │   │   ├── sync-engine.ts
-│   │   │   ├── conflict-resolver.ts
-│   │   │   └── device.ts
-│   │   └── package.json
-│   ├── api/                     # API client (ofetch)
-│   │   ├── src/
-│   │   │   ├── index.ts
-│   │   │   ├── client.ts        # Base HTTP client
-│   │   │   ├── auth-api.ts      # /auth/* endpoints
-│   │   │   ├── sync-api.ts      # /sync/* endpoints
-│   │   │   └── share-api.ts     # /share/* endpoints
-│   │   └── package.json
-│   ├── ui/                      # React components + tokens
-│   │   ├── src/
-│   │   │   ├── index.ts         # Component exports (13 components)
-│   │   │   ├── components/
-│   │   │   │   ├── button.tsx, input.tsx
-│   │   │   │   ├── stack.tsx, divider.tsx, card.tsx
-│   │   │   │   ├── checkbox.tsx, select.tsx, textarea.tsx
-│   │   │   │   ├── modal.tsx, toggle-group.tsx, pill-group.tsx
-│   │   │   │   ├── icon-button.tsx, section-header.tsx, badge.tsx
-│   │   │   │   └── (All with TypeScript prop types)
-│   │   │   └── styles/
-│   │   │       └── design-tokens.ts  # SINGLE SOURCE OF TRUTH
-│   │   └── package.json
-│   └── extension/               # WXT browser extension
-│       ├── src/
-│       │   ├── entrypoints/
-│       │   │   ├── popup/       # 380x520px popup UI
-│       │   │   │   ├── index.html
-│       │   │   │   ├── main.tsx
-│       │   │   │   └── app.tsx
-│       │   │   └── background.ts  # Service worker
-│       │   ├── content-scripts/ # Form detection (Phase 6)
-│       │   └── assets/
-│       │       └── styles.css
-│       ├── wxt.config.ts
-│       └── package.json
+├── backend/                      # Node.js/Express/TypeScript server
+│   ├── src/
+│   │   ├── server.ts             # Express app + MongoDB setup
+│   │   ├── config/
+│   │   │   └── env-config.ts     # Environment variables (MONGODB_URI, JWT_SECRET, etc)
+│   │   ├── routes/
+│   │   │   ├── auth-route.ts     # Auth endpoints
+│   │   │   ├── health-route.ts   # Health probe
+│   │   │   ├── sync-route.ts     # Sync endpoints
+│   │   │   └── share-route.ts    # Share endpoints
+│   │   ├── models/
+│   │   │   ├── user-model.ts     # User schema
+│   │   │   ├── vault-item-model.ts
+│   │   │   ├── folder-model.ts
+│   │   │   └── secure-share-model.ts
+│   │   ├── services/
+│   │   │   ├── auth-service.ts   # Business logic
+│   │   │   ├── sync-service.ts
+│   │   │   └── share-service.ts
+│   │   ├── middleware/
+│   │   │   ├── auth-middleware.ts
+│   │   │   ├── error-handler-middleware.ts
+│   │   │   ├── rate-limit-middleware.ts
+│   │   │   └── request-logger-middleware.ts
+│   │   ├── utils/
+│   │   │   ├── app-error.ts      # Custom error class
+│   │   │   ├── jwt-utils.ts      # Token management
+│   │   │   └── validate-request.ts
+│   │   ├── types/
+│   │   │   └── express.d.ts      # Express type extensions
+│   │   └── static/               # Share page HTML
+│   ├── dist/                     # Compiled output
+│   └── package.json
+│
+├── client/                       # Client-side TypeScript
+│   ├── apps/
+│   │   └── extension/            # WXT browser extension
+│   │       ├── src/entrypoints/
+│   │       │   ├── popup/        # 380x520px popup UI
+│   │       │   ├── background.ts
+│   │       │   └── content.ts
+│   │       └── wxt.config.ts
+│   │
+│   └── packages/
+│       ├── api/                  # @vaultic/api (ofetch client)
+│       ├── crypto/               # @vaultic/crypto (WebCrypto)
+│       ├── storage/              # @vaultic/storage (IndexedDB)
+│       ├── sync/                 # @vaultic/sync (delta sync)
+│       └── ui/                   # @vaultic/ui (React components)
+│
+├── shared/types/                 # @vaultic/types (shared)
 ├── docker/
-│   ├── Dockerfile              # Multi-stage: build stage + runtime
-│   └── docker-compose.yml      # PostgreSQL 16 + vaultic-server
-├── .gitlab-ci.yml              # CI/CD pipeline
-├── Cargo.toml                  # Workspace root
-├── package.json                # pnpm workspace root
-├── turbo.json                  # Turborepo config
-├── tsconfig.base.json          # Base TS config
-└── docs/                       # Documentation (this folder)
+│   ├── Dockerfile                # Node.js 22 Alpine
+│   └── docker-compose.yml        # Backend only
+├── pnpm-workspace.yaml
+├── package.json
+├── turbo.json
+└── docs/                         # Documentation
 ```
 
 ---
 
 ## Naming Conventions
 
-### Rust
-- **Crates:** snake_case (`vaultic_crypto`, `vaultic_server`)
-- **Modules:** snake_case (`cipher.rs`, `kdf.rs`)
-- **Types/Structs:** PascalCase (`User`, `VaultItem`, `SyncDelta`)
-- **Functions:** snake_case (`encrypt_item`, `derive_key`)
-- **Constants:** SCREAMING_SNAKE_CASE (`ARGON2_MEMORY_COST`)
-
 ### TypeScript/JavaScript
-- **Packages:** kebab-case within scope (`@vaultic/crypto`, `@vaultic/storage`)
-- **Files (code):** kebab-case or PascalCase based on exports
-  - **Interfaces/Classes:** PascalCase in filenames (`User.ts`, `VaultStore.ts`)
-  - **Utilities:** kebab-case (`conflict-resolver.ts`, `sync-engine.ts`)
-- **Types/Interfaces:** PascalCase (`User`, `VaultItem`, `SyncDelta`)
-- **Functions:** camelCase (`encryptItem()`, `deriveKey()`)
-- **Constants:** SCREAMING_SNAKE_CASE or camelCase (readonly) based on use
-- **File size:** Keep under 200 lines; split larger modules
+
+**Packages:** kebab-case within scope
+- `@vaultic/api`, `@vaultic/crypto`, `@vaultic/storage`, `@vaultic/sync`
+- `@vaultic/ui`, `@vaultic/types`, `@vaultic/extension`, `@vaultic/backend`
+
+**Files:** kebab-case (descriptive purpose)
+- Components: `auth-route.ts`, `user-model.ts`, `jwt-utils.ts`
+- Services: `auth-service.ts`, `sync-service.ts`
+- Middleware: `auth-middleware.ts`, `error-handler-middleware.ts`
+- Utilities: `validate-request.ts`, `app-error.ts`
+
+**Exports:** PascalCase for classes, camelCase for functions
+```typescript
+// authRoute.ts
+export const authRoute = Router(); // Route handler
+export class AppError extends Error { }  // Custom error
+export function validateEmail(email: string): boolean { } // Utility
+```
+
+**Types/Interfaces:** PascalCase
+- `User`, `VaultItem`, `LoginRequest`, `SyncDelta`, `SecureShare`
+
+**Constants:** SCREAMING_SNAKE_CASE or camelCase (readonly)
+```typescript
+export const MAX_PASSWORD_LENGTH = 128;
+export const JWT_ALGORITHM = 'HS256';
+```
+
+**Database:** Collection names lowercase + plural
+- Collections: `users`, `vaultitems`, `folders`, `secureshares`
+- Fields: camelCase (`userId`, `createdAt`, `passwordHash`)
+
+**File size:** Keep under 150 lines; split larger modules
 
 ---
 
-## Rust Code Standards
+## Backend Code Standards (Node.js/Express)
 
-### Module Organization
-```rust
-// lib.rs: Clean public API
-pub mod cipher;
-pub mod kdf;
-pub mod password_gen;
+### Express Route Structure
 
-pub use cipher::{encrypt, decrypt};
-pub use kdf::derive_key;
-```
+```typescript
+// routes/auth-route.ts
+import { Router, Request, Response, NextFunction } from 'express';
+import { authService } from '../services/auth-service';
 
-### Error Handling
-```rust
-use thiserror::Error;
+const router = Router();
 
-#[derive(Error, Debug)]
-pub enum CryptoError {
-    #[error("Encryption failed: {0}")]
-    EncryptionFailed(String),
+router.post('/register', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, password } = req.body;
+    const result = await authService.register(email, password);
+    res.status(201).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+});
 
-    #[error("Invalid key length: expected {expected}, got {actual}")]
-    InvalidKeyLength { expected: usize, actual: usize },
-}
-
-pub type Result<T> = std::result::Result<T, CryptoError>;
-```
-
-### Type Definitions
-- Use `serde` for serialization: `#[derive(Serialize, Deserialize)]`
-- Export shared types from `vaultic-types` crate
-- Keep types in `types.rs` or dedicated modules
-
-### Testing
-```bash
-# Run all tests
-cargo test --workspace
-
-# Test single crate
-cargo test -p vaultic-crypto
-
-# Run with logs (debug)
-RUST_LOG=debug cargo test --lib -- --nocapture
-```
-
-### Linting & Formatting
-```bash
-cargo fmt --check           # Check formatting
-cargo fmt                   # Auto-format
-cargo clippy --all-targets  # Lint
+export const authRoute = router;
 ```
 
 **Principles:**
-- No warnings allowed in CI/CD
-- Use `#[allow(...)]` sparingly, with comments
-- Prefer compiler guidance over manual style rules
+- Routes: Define path + handler
+- Handler: Parse request → call service → send response
+- Error: Catch and pass to middleware via `next(error)`
+- Type request body with `req.body`
+- No business logic in routes (extract to services)
+
+### Mongoose Models
+
+```typescript
+// models/user-model.ts
+import mongoose from 'mongoose';
+
+const userSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+    },
+    passwordHash: {
+      type: String,
+      required: true,
+    },
+  },
+  { timestamps: true } // createdAt, updatedAt auto
+);
+
+export const User = mongoose.model('User', userSchema);
+```
+
+**Principles:**
+- Schema: Define fields + validation
+- Types: Use `mongoose.Schema` + field types
+- Timestamps: Enable auto `createdAt`, `updatedAt`
+- Indexes: Add for frequently queried fields (email unique)
+- No business logic in models (use services)
+
+### Services (Business Logic)
+
+```typescript
+// services/auth-service.ts
+import { User } from '../models/user-model';
+import { hashPassword, verifyPassword } from '../utils/jwt-utils';
+import { generateToken } from '../utils/jwt-utils';
+import { AppError } from '../utils/app-error';
+
+export const authService = {
+  async register(email: string, password: string) {
+    const existing = await User.findOne({ email });
+    if (existing) throw new AppError('Email already registered', 'EMAIL_EXISTS', 409);
+
+    const passwordHash = await hashPassword(password);
+    const user = await User.create({ email, passwordHash });
+
+    const token = generateToken({ userId: user._id, email: user.email });
+    return { user: user.toObject(), token };
+  },
+
+  async login(email: string, password: string) {
+    const user = await User.findOne({ email });
+    if (!user) throw new AppError('Invalid credentials', 'AUTH_FAILED', 401);
+
+    const valid = await verifyPassword(password, user.passwordHash);
+    if (!valid) throw new AppError('Invalid credentials', 'AUTH_FAILED', 401);
+
+    const token = generateToken({ userId: user._id, email: user.email });
+    return { user: user.toObject(), token };
+  },
+};
+```
+
+**Principles:**
+- Single responsibility: handle one domain (auth, sync, share)
+- Async/await: all DB operations async
+- Error handling: throw AppError with code + status
+- No request/response in services (only data)
+- Testable: inject dependencies if needed
+
+### Custom Error Class
+
+```typescript
+// utils/app-error.ts
+export class AppError extends Error {
+  constructor(
+    message: string,
+    public code: string = 'INTERNAL_ERROR',
+    public statusCode: number = 500
+  ) {
+    super(message);
+    Object.setPrototypeOf(this, AppError.prototype);
+  }
+}
+```
+
+### Middleware Stack
+
+```typescript
+// server.ts
+import express from 'express';
+import cors from 'cors';
+import { errorHandler } from './middleware/error-handler-middleware';
+import { authMiddleware } from './middleware/auth-middleware';
+
+const app = express();
+
+// Order matters
+app.use(cors({ origin: process.env.CORS_ORIGIN }));
+app.use(express.json({ limit: '1mb' }));
+app.use(requestLogger);
+app.use(rateLimiter);
+
+// Public routes
+app.use('/api/v1/auth', authRoute);
+app.use('/api/v1/shares', shareRoute); // GET public share
+
+// Protected routes
+app.use('/api/v1', authMiddleware); // Verify JWT here
+app.use('/api/v1/sync', syncRoute);
+app.use('/api/v1/shares', shareRoute); // DELETE/POST (protected)
+
+// Error handler (must be last)
+app.use(errorHandler);
+```
+
+**Middleware order:**
+1. CORS
+2. Body parser
+3. Logger
+4. Rate limiter
+5. Public routes
+6. Auth middleware (protected routes after this)
+7. Error handler (last)
+
+### Error Handling Middleware
+
+```typescript
+// middleware/error-handler-middleware.ts
+import { Request, Response, NextFunction } from 'express';
+import { AppError } from '../utils/app-error';
+
+export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
+  const statusCode = err instanceof AppError ? err.statusCode : 500;
+  const code = err instanceof AppError ? err.code : 'INTERNAL_ERROR';
+  const message = process.env.NODE_ENV === 'production'
+    ? 'Internal server error'
+    : err.message;
+
+  logger.error({ statusCode, code, message, err });
+
+  res.status(statusCode).json({
+    success: false,
+    error: { code, message },
+    data: null,
+  });
+};
+```
+
+### Authentication Flow
+
+```typescript
+// middleware/auth-middleware.ts
+import { Request, Response, NextFunction } from 'express';
+import { verifyToken } from '../utils/jwt-utils';
+
+export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new AppError('Missing token', 'NO_TOKEN', 401);
+    }
+
+    const token = authHeader.slice(7);
+    const payload = verifyToken(token);
+
+    // Extend Express Request type
+    req.user = { userId: payload.userId, email: payload.email };
+    next();
+  } catch (error) {
+    next(new AppError('Invalid token', 'INVALID_TOKEN', 401));
+  }
+};
+
+// Type extension in types/express.d.ts
+declare global {
+  namespace Express {
+    interface Request {
+      user?: { userId: string; email: string };
+    }
+  }
+}
+```
+
+### Environment Configuration
+
+```typescript
+// config/env-config.ts
+import 'dotenv/config';
+
+export const config = {
+  mongodb: {
+    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/vaultic',
+  },
+  jwt: {
+    secret: process.env.JWT_SECRET || 'dev-secret-not-for-prod',
+    accessTokenTtl: parseInt(process.env.ACCESS_TOKEN_TTL_MIN || '15'),
+    refreshTokenTtl: parseInt(process.env.REFRESH_TOKEN_TTL_DAYS || '7'),
+  },
+  server: {
+    port: parseInt(process.env.SERVER_PORT || '8080'),
+    nodeEnv: process.env.NODE_ENV || 'development',
+  },
+  cors: {
+    origin: process.env.CORS_ORIGIN || '*',
+  },
+  logging: {
+    level: process.env.LOG_LEVEL || 'info',
+  },
+};
+
+// Validation
+if (!config.jwt.secret || config.jwt.secret === 'dev-secret-not-for-prod') {
+  if (config.server.nodeEnv === 'production') {
+    throw new Error('JWT_SECRET must be set in production');
+  }
+}
+```
 
 ---
 
-## TypeScript Code Standards
+## Client Code Standards (TypeScript)
 
 ### Type Definitions
+
 ```typescript
-// Always explicit types, never use 'any'
-interface User {
+// types/index.ts — Always explicit types, no 'any'
+export interface User {
   id: string;
   email: string;
   createdAt: Date;
 }
 
-type VaultItemType = 'password' | 'note' | 'card' | 'identity';
-
-export class VaultStore {
-  async getItem(id: string): Promise<VaultItem> { ... }
-}
-```
-
-### Error Handling
-```typescript
-// Use explicit error types
-class VaultError extends Error {
-  constructor(message: string, public code: string) {
-    super(message);
-  }
+export interface VaultItem {
+  id: string;
+  userId: string;
+  type: 'password' | 'note' | 'card' | 'identity';
+  title: string;
+  ciphertext: string; // base64 AES-256-GCM
+  timestamp: Date;
 }
 
-// In async functions
-async function encryptVault(password: string) {
-  try {
-    // ...
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new VaultError(`Encryption failed: ${error.message}`, 'ENC_FAILED');
-    }
-    throw error;
-  }
+export interface SyncDelta {
+  id: string;
+  itemId: string;
+  encrypted: string;
+  timestamp: Date;
 }
 ```
 
 ### Async/Await Patterns
+
 ```typescript
-// Prefer async/await over .then()
+// ✅ Prefer async/await
 async function syncVault() {
   try {
     const deltas = await fetchDeltas();
     await applyDeltas(deltas);
   } catch (error) {
     logger.error('Sync failed', error);
+    throw error;
   }
+}
+
+// ❌ Avoid .then() chains
+function syncVault() {
+  return fetchDeltas()
+    .then(applyDeltas)
+    .catch(err => logger.error('Sync failed', err));
 }
 ```
 
-### Design Tokens (MANDATORY)
-**ALL UI must use tokens from `packages/ui/src/styles/design-tokens.ts`:**
+### Design Tokens (MANDATORY for UI)
 
 ```typescript
-// ❌ DON'T
+// All UI must use tokens from @vaultic/ui/styles/design-tokens.ts
+import { colors, spacing, typography } from '@vaultic/ui/styles/design-tokens';
+
+// ❌ DON'T hardcode colors
 const Button = styled.button`
   background-color: #2563EB;
   padding: 8px 16px;
 `;
 
-// ✅ DO
-import { colors, spacing } from '@vaultic/ui/styles/design-tokens';
-
+// ✅ DO use tokens
 const Button = styled.button`
   background-color: ${colors.primary};
   padding: ${spacing.sm} ${spacing.md};
+  font-family: ${typography.fontFamily};
 `;
 ```
 
 ### Testing (Vitest)
+
 ```bash
-# Run all tests (all packages)
+# Run all tests
 pnpm test
 
 # Watch mode
@@ -275,52 +443,74 @@ pnpm test --watch
 # Filter by package
 pnpm --filter @vaultic/crypto test
 
-# Coverage report
+# Coverage
 pnpm test --coverage
 
-# Single test file
+# Single file
 pnpm test src/__tests__/crypto.test.ts
 ```
 
 **Test Structure:**
-- Test files: `src/__tests__/{feature}.test.ts`
-- Configured via `vitest.config.ts` in workspace root + per-package
-- Framework: Vitest (fast, ESM-native, TypeScript support)
-- Packages with tests (84+ tests total):
-  - `@vaultic/crypto` — Key derivation, encryption/decryption roundtrips
-  - `@vaultic/storage` — IndexedDB CRUD, sync queue
-  - `@vaultic/sync` — Delta sync, conflict resolution (LWW)
-  - `@vaultic/api` — API client mocking, error handling
+- Location: `src/__tests__/{feature}.test.ts`
+- Framework: Vitest (ESM-native, TypeScript support)
+- Covered packages: crypto, storage, sync, api (84+ tests)
 
-### Linting
-```bash
-pnpm lint                        # Check all packages
-pnpm --filter @vaultic/crypto lint  # Lint single package
+### Error Handling
+
+```typescript
+class VaultError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public context?: Record<string, any>
+  ) {
+    super(message);
+  }
+}
+
+async function encryptVault(password: string) {
+  try {
+    // ...
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new VaultError(
+        `Encryption failed: ${error.message}`,
+        'ENC_FAILED',
+        { originalError: error }
+      );
+    }
+    throw error;
+  }
+}
 ```
-
-**ESLint Config:**
-- `@typescript-eslint/recommended`
-- No unused variables
-- No implicit any
-- Consistent import ordering
 
 ---
 
-## Build Commands
+## Build & Deploy
 
-### Rust
+### Backend Build
+
 ```bash
-# Build all crates
-cargo build --release
+cd backend
 
-# Build single crate
-cargo build -p vaultic-crypto --release
+# Install
+pnpm install
 
-# Check (faster than build)
-cargo check --workspace
+# Dev (tsx watch — hot reload)
+pnpm dev
+
+# Build (TypeScript → JavaScript)
+pnpm build
+
+# Production start
+pnpm start
+
+# PM2 cluster mode
+pnpm start:pm2
 ```
 
-### TypeScript
+### Client Build
+
 ```bash
 # Build all packages (Turbo caching)
 pnpm build
@@ -328,29 +518,37 @@ pnpm build
 # Build single package
 pnpm --filter @vaultic/crypto build
 
-# Dev (watch mode, all packages)
+# Dev mode (watch)
 pnpm dev
 
-# Dev single package
+# Extension dev (hot reload)
 pnpm --filter @vaultic/extension dev
+```
+
+### Docker
+
+```bash
+docker build -f docker/Dockerfile -t vaultic:latest .
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ---
 
 ## API Contract Standards
 
-### Request/Response Format
-All endpoints return JSON with consistent envelope:
+### Response Format
+
+All endpoints return JSON:
 
 ```json
 {
   "success": true,
-  "data": { ... },
+  "data": { },
   "error": null
 }
 ```
 
-Or on error:
+Error response:
 ```json
 {
   "success": false,
@@ -363,60 +561,55 @@ Or on error:
 ```
 
 ### Auth Endpoints
-- `POST /auth/register` — Email + master password → JWT token
-- `POST /auth/login` — Email + master password → JWT token
-- `POST /auth/refresh` — Refresh token → New JWT
-- `POST /auth/logout` — Invalidate token
-- `GET /auth/me` — Current user profile (requires Bearer token)
+- `POST /api/v1/auth/register` — Email + password → JWT
+- `POST /api/v1/auth/login` — Email + password → JWT
+- `POST /api/v1/auth/refresh` — Refresh token → new JWT
+- `POST /api/v1/auth/logout` — Invalidate token
+- `GET /api/v1/auth/me` — User profile (Bearer required)
 
-### Sync Endpoints
-- `POST /sync/pull` — Fetch deltas since last sync
-- `POST /sync/push` — Send encrypted vault deltas
-- `GET /sync/status` — Sync state check
-
-### Share Endpoints
-- `POST /share/create` — Generate encrypted share link
-- `GET /share/:link_id` — Download encrypted item
-- `DELETE /share/:link_id` — Revoke share link
-
-### Auth Header
+### Protected Routes Header
 ```
 Authorization: Bearer <jwt_token>
 ```
 
-All sensitive endpoints require Bearer token. CORS restricted to extension origin.
-
 ---
 
-## Database Standards
+## Database Standards (MongoDB/Mongoose)
 
-### Models (SeaORM)
-```rust
-// Define entities in migrations or sea-orm entity files
-pub struct Model {
-    pub id: i32,
-    pub email: String,
-    pub password_hash: String,
-    pub created_at: DateTime,
-}
+### Collection Naming
+- Lowercase + plural: `users`, `vaultitems`, `folders`, `secureshares`
+
+### Field Naming
+- camelCase: `userId`, `createdAt`, `passwordHash`
+- Reserved: `_id` (ObjectId auto), `__v` (version)
+
+### Schema Validation
+```typescript
+const schema = new Schema({
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    match: /.+@.+/,
+  },
+  passwordHash: {
+    type: String,
+    required: true,
+    minlength: 60,
+  },
+});
 ```
 
-### Migrations
-- One migration file per feature
-- Name: `m<YYYYMMDD>_<HHMMSS>_<feature_name>.rs`
-- Migrations are reversible (up/down)
-- Never alter production schema without migration
-
 ### Query Patterns
-```rust
-// Always use parameterized queries
-let user = User::find_by_id(user_id).one(db).await?;
+```typescript
+// ✅ Use async/await
+const user = await User.findById(userId);
+const items = await VaultItem.find({ userId });
 
-// Avoid raw SQL; use entity methods
-let items = VaultItem::find()
-    .filter(vault_item::Column::UserId.eq(user_id))
-    .all(db)
-    .await?;
+// ✅ Use indexes for frequently queried fields
+userSchema.index({ email: 1 });
+
+// ❌ Avoid raw MongoDB commands in service layer
 ```
 
 ---
@@ -424,78 +617,61 @@ let items = VaultItem::find()
 ## Security Standards
 
 ### Password Hashing
-- Use Argon2id with:
-  - Memory: 64 MiB
-  - Time cost: 2
-  - Parallelism: 4
-  - Hash length: 32 bytes
+- Use bcrypt with salt rounds 10+
+- Never log passwords or hashes (only error codes)
+- Constant-time comparison for verification
+
+### JWT Tokens
+- Algorithm: HS256
+- Access token TTL: 15 minutes
+- Refresh token TTL: 7 days
+- Stored in Authorization header: `Bearer <token>`
 
 ### Encryption Keys
-- Never log keys (only hashes)
-- Use secure random for salt/IV (getrandom crate)
-- HKDF for key derivation (multi-purpose keys)
-- Keys in memory: clear after use (zeroize crate)
+- Master key: Argon2id (client-side)
+- Encryption key: HKDF-SHA256 derived
+- Vault items: AES-256-GCM encrypted
+- Keys never logged (only success/failure codes)
 
 ### API Security
-- CORS: Restrict to extension/frontend origin
-- HTTPS only in production (enforced at nginx)
-- Rate limiting: 100 req/min per IP on `/auth/*`
-- CSRF tokens if adding web UI later
+- CORS: Restrict to extension origins
+- HTTPS: Required in production (nginx enforces)
+- Rate limiting: 100 req/min per IP on auth endpoints
+- Input validation: Zod schemas on all routes
 
 ### Secrets Management
-- `.env` file: LOCAL ONLY (never commit)
-- Use `.env.example` for required variables
-- CI/CD: GitLab CI secrets (masked in logs)
+- `.env` file: **NEVER** commit
+- `.env.example`: Template only (no real values)
+- CI/CD: GitLab CI masked secrets
 - Production: Environment variables or secrets manager
 
 ---
 
 ## Testing Standards
 
-### Unit Tests (Rust)
-```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
+### Unit Tests
 
-    #[test]
-    fn test_encrypt_decrypt_roundtrip() {
-        let key = generate_key().unwrap();
-        let plaintext = b"test data";
-
-        let ciphertext = encrypt(plaintext, &key).unwrap();
-        let decrypted = decrypt(&ciphertext, &key).unwrap();
-
-        assert_eq!(plaintext, &decrypted[..]);
-    }
-}
-```
-
-### Unit Tests (TypeScript — Vitest)
 ```typescript
 import { describe, it, expect, beforeEach } from 'vitest';
-import { encryptItem, decryptItem, deriveKey } from '@vaultic/crypto';
+import { encryptItem, decryptItem } from '@vaultic/crypto';
 
 describe('encryptItem', () => {
-  let encKey;
+  let encKey: CryptoKey;
 
   beforeEach(async () => {
-    encKey = await deriveKey('test-password', new TextEncoder().encode('test-salt'));
+    encKey = await generateEncryptionKey();
   });
 
   it('should encrypt and decrypt correctly', async () => {
     const plaintext = { username: 'user', password: 'secret' };
-
     const ciphertext = await encryptItem(plaintext, encKey);
     const decrypted = await decryptItem(ciphertext, encKey);
-
     expect(decrypted).toEqual(plaintext);
   });
 
-  it('should produce different ciphertexts for same input (random nonce)', async () => {
-    const plaintext = { username: 'user' };
-    const ct1 = await encryptItem(plaintext, encKey);
-    const ct2 = await encryptItem(plaintext, encKey);
+  it('should produce different ciphertexts (random nonce)', async () => {
+    const ct1 = await encryptItem({ username: 'user' }, encKey);
+    const ct2 = await encryptItem({ username: 'user' }, encKey);
     expect(ct1).not.toBe(ct2);
   });
 });
@@ -503,12 +679,24 @@ describe('encryptItem', () => {
 
 ### Coverage Requirements
 - Minimum 70% line coverage for new code
-- 100% coverage for crypto modules
-- Integration tests for sync/conflict resolution
+- 100% for crypto modules (critical path)
+- Integration tests for sync (delta merge, conflict resolution)
+
+### Linting
+
+```bash
+pnpm lint              # Check all packages
+pnpm lint --fix        # Auto-fix issues
+```
+
+**ESLint Config:**
+- `@typescript-eslint/recommended`
+- No `any` types, no unused variables
+- No implicit `unknown`
 
 ---
 
-## Git & Commit Standards
+## Git & Commits
 
 ### Branch Naming
 - Feature: `feature/vault-crud`, `feature/autofill`
@@ -516,65 +704,37 @@ describe('encryptItem', () => {
 - Docs: `docs/api-documentation`
 - Chore: `chore/upgrade-deps`
 
-### Commit Messages (Conventional Commits)
+### Commit Messages (Conventional)
+
 ```
 feat: add vault item encryption
 fix: resolve sync conflict on multi-device update
 docs: update API endpoint documentation
 test: add crypto roundtrip tests
-chore: upgrade tokio to 1.35
+chore: upgrade express to 4.19
 refactor: extract password-gen into separate module
 ```
 
-### Pre-commit Checks (Recommended)
+### Pre-commit Checks
+
 ```bash
 # Before git push:
-cargo fmt --check && cargo clippy --all-targets
-pnpm lint && pnpm test
+pnpm lint && pnpm test && pnpm build
 ```
 
 ---
 
 ## Code Review Checklist
 
-- [ ] Code compiles/builds without warnings
-- [ ] Tests pass (Rust: `cargo test`, TS: `pnpm test`)
-- [ ] Linting passes (`cargo clippy`, `pnpm lint`)
-- [ ] Type safety: no `any` types, all types explicit
-- [ ] Error handling: no unwraps in production code
-- [ ] Security: no hardcoded secrets, proper HTTPS/auth
-- [ ] Documentation: public API has doc comments
-- [ ] Design tokens used (UI code only)
+- [ ] Code compiles/builds without errors
+- [ ] Tests pass (`pnpm test`)
+- [ ] Linting passes (`pnpm lint`)
+- [ ] Type safety: no `any` types
+- [ ] Error handling: throw AppError, no unwraps
+- [ ] Security: no hardcoded secrets, HTTPS/auth enforced
+- [ ] Documentation: public API has comments
+- [ ] Design tokens used (UI only)
 - [ ] Commit messages follow conventional format
-
----
-
-## Documentation Standards
-
-### Code Comments
-```rust
-/// Encrypts a vault item using AES-256-GCM.
-///
-/// # Arguments
-/// * `item` - The vault item to encrypt
-/// * `key` - The encryption key (32 bytes)
-///
-/// # Returns
-/// Encrypted blob with nonce prepended
-pub fn encrypt_item(item: &VaultItem, key: &[u8; 32]) -> Result<Vec<u8>> {
-```
-
-### README.md (per package)
-- Purpose (1 line)
-- Quick usage example
-- Build/test commands
-- Links to main docs
-
-### Markdown Documentation
-- Keep files under 800 lines
-- Use headers for organization (H2–H4)
-- Include code examples
-- Link to related docs
 
 ---
 
@@ -582,11 +742,12 @@ pub fn encrypt_item(item: &VaultItem, key: &[u8; 32]) -> Result<Vec<u8>> {
 
 | Operation | Target | Notes |
 |-----------|--------|-------|
-| Vault search | <200ms | 10K items |
-| Form auto-fill | <1s | Content script injection + DOM scan |
-| Sync (push) | <2s | 100 item deltas |
-| Sync (pull) | <2s | Decrypt + merge |
+| Vault search | <200ms | 10K items, IndexedDB |
+| Form auto-fill | <1s | Content script + DOM injection |
+| Sync push | <2s | 100 item deltas, encrypted |
+| Sync pull | <2s | Decrypt + merge (LWW) |
 | Key derivation | <1s | Argon2id on weak CPU |
+| Login | <500ms | bcrypt verify |
 
 ---
 
@@ -594,33 +755,35 @@ pub fn encrypt_item(item: &VaultItem, key: &[u8; 32]) -> Result<Vec<u8>> {
 
 | Type | Limit | Action |
 |------|-------|--------|
-| Rust module | 500 lines | Split into submodules |
-| TS file | 200 lines | Extract utilities/components |
+| Backend file | 150 lines | Split into services/utils/routes |
+| TS file | 200 lines | Extract components/utilities |
 | Markdown doc | 800 lines | Split into topic directories |
+| Route handler | 40 lines | Move logic to services |
 
 ---
 
 ## Dependencies Management
 
-### Principle: YAGNI (You Aren't Gonna Need It)
-- Add dependencies only when actively needed
-- Prefer std library (Rust) and native APIs (TS)
-- Avoid bloat: review dependency tree (`cargo tree`, `pnpm audit`)
+### Principle: YAGNI
+- Add only when actively needed
+- Prefer Node.js built-ins and WebCrypto
+- Avoid bloat: review `pnpm audit`, `pnpm list`
 
 ### Version Pinning
-```toml
-# Cargo.toml: Allow patch updates
-tokio = "1.35"        # ✅ Auto-patch 1.35.x
 
-# Avoid these patterns
-tokio = "*"           # ❌ Unbounded
-tokio = "~1.35.0"     # ❌ Too restrictive
+```json
+{
+  "dependencies": {
+    "express": "4.18",
+    "mongoose": "8.0"
+  }
+}
 ```
 
 ### Update Frequency
-- Monthly: Run `cargo update` + `pnpm update`
+- Monthly: `pnpm update` check
 - Security alerts: Immediate response
-- Check breaking changes before merging
+- Review breaking changes before merge
 
 ---
 
@@ -628,16 +791,16 @@ tokio = "~1.35.0"     # ❌ Too restrictive
 
 - [ ] All tests pass
 - [ ] Linting passes
-- [ ] No console.log / println! in production code
-- [ ] Secrets not hardcoded (.env variables used)
-- [ ] HTTPS enabled on API
-- [ ] CORS correctly configured
-- [ ] Database migrations tested
+- [ ] No `console.log` in production code
+- [ ] Secrets use `.env` variables
+- [ ] HTTPS enabled
+- [ ] CORS correctly scoped
+- [ ] MongoDB connection string validated
 - [ ] Docker image builds successfully
-- [ ] CI/CD pipeline green
+- [ ] CI/CD pipeline passes
 
 ---
 
-*Document updated: 2026-03-26*
-*All 8 MVP Phases: Complete*
-*Testing: Vitest with 84+ tests across 4 TS packages*
+**Last updated: 2026-03-27**
+**Backend: Node.js/Express/MongoDB | Client: TypeScript/React**
+**Testing: Vitest 84+ tests across 4 packages**

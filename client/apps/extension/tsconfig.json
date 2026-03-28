@@ -3,7 +3,11 @@
   "compilerOptions": {
     "outDir": ".output",
     "rootDir": ".",
-    "noEmit": true
+    "noEmit": true,
+    "types": ["chrome"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
+    "skipLibCheck": true,
+    "strict": false
   },
   "include": ["src", "wxt.config.ts"]
 }

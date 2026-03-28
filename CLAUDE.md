@@ -70,11 +70,6 @@ vaultic/
 │       └── ui/                   # Shared React components (shadcn/ui)
 ├── shared/                       # ── SHARED ──
 │   └── types/                    # Shared TS types (all platforms)
-├── docker/
-│   ├── Dockerfile                # Node.js 22 Alpine multi-stage build
-│   ├── docker-compose.yml        # Backend only (MongoDB external)
-│   ├── docker-compose.staging.yml
-│   └── nginx/
 ├── pnpm-workspace.yaml           # Workspace root
 ├── package.json                  # Root config
 ├── turbo.json                    # Turborepo config
@@ -97,7 +92,7 @@ vaultic/
 | Extension | WXT framework (Chrome + Firefox) | `client/apps/extension/` |
 | CI/CD | GitLab CI on gitlabs.inet.vn | Self-hosted |
 | Container Registry | gitlabs.inet.vn:5050/dattqh/vaultic | |
-| Deploy | Docker (Node.js 22 Alpine) on CentOS 7 | Production |
+| Deploy | PM2 on CentOS 7 (direct Node.js) | Production |
 | Auth | JWT tokens (access 15min, refresh 7d) | Backend |
 
 ## Build & Dev Commands
@@ -130,12 +125,6 @@ pnpm test                            # Test all packages
 - Backend: `@vaultic/backend` (scoped in workspace)
 - Client: `@vaultic/types`, `@vaultic/crypto`, `@vaultic/storage`, `@vaultic/sync`, `@vaultic/api`, `@vaultic/ui`
 - Extension: `@vaultic/extension`
-
-### Docker
-```bash
-docker compose -f docker/docker-compose.yml up           # Start backend (MongoDB external)
-docker build -f docker/Dockerfile -t vaultic:latest .   # Build image locally
-```
 
 ### Environment Variables
 Backend requires: `MONGODB_URI`, `JWT_SECRET`. See `backend/.env.example`.
@@ -182,8 +171,8 @@ For each screen: read design (`system-design.pen` via Pencil MCP) → implement 
 
 ## Environment
 
-- **Dev**: Windows 11 — Node.js 22 + pnpm, MongoDB (external or Docker)
-- **Prod**: CentOS 7 — Docker Compose (Node.js backend + nginx), MongoDB external
+- **Dev**: Windows 11 — Node.js 22 + pnpm, MongoDB (external)
+- **Prod**: CentOS 7 — PM2 (Node.js backend) + nginx, MongoDB external
 - **CI/CD**: GitLab CI on gitlabs.inet.vn (self-hosted)
 - **Container Registry**: gitlabs.inet.vn:5050/dattqh/vaultic
 - **License**: AGPL-3.0

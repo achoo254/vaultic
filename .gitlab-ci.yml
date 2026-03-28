@@ -3,24 +3,23 @@ stages:
   - build
   - deploy
 
-variables:
-  CARGO_HOME: /cache/cargo
+# --- Backend TypeScript Check ---
 
-# --- Rust ---
-
-rust-test:
+backend-check:
   stage: test
-  image: rust:1.82-bookworm
+  image: node:22-alpine
+  before_script:
+    - corepack enable
+    - pnpm install --frozen-lockfile
   script:
-    - cargo test --workspace
-    - cargo clippy --all-targets -- -D warnings
-    - cargo fmt --check
+    - pnpm --filter @vaultic/types build
+    - pnpm --filter @vaultic/backend build
   cache:
-    key: rust-deps
+    key: node-deps
     paths:
-      - target/
+      - node_modules/
 
-# --- Node.js ---
+# --- Client Build & Lint ---
 
 node-build:
   stage: test
@@ -35,7 +34,6 @@ node-build:
     key: node-deps
     paths:
       - node_modules/
-      - packages/*/node_modules/
 
 # --- Extension Build ---
 
@@ -49,7 +47,7 @@ extension-build:
     - pnpm install --frozen-lockfile
   script:
     - pnpm --filter @vaultic/extension build
-    - cd packages/extension/.output/chrome-mv3 && zip -r ../../../../vaultic-extension.zip .
+    - cd client/apps/extension/.output/chrome-mv3 && zip -r ../../../../vaultic-extension.zip .
   artifacts:
     paths:
       - vaultic-extension.zip
@@ -58,9 +56,8 @@ extension-build:
     key: node-deps
     paths:
       - node_modules/
-      - packages/*/node_modules/
 
-# --- Deploy Staging ---
+# --- Deploy Staging (PM2 via SSH) ---
 
 deploy-staging:
   stage: deploy
@@ -68,48 +65,38 @@ deploy-staging:
   only:
     - main
   before_script:
-    - apk add --no-cache openssh-client
+    - apk add --no-cache openssh-client curl
     - mkdir -p ~/.ssh
     - cp "$DEPLOY_SSH_KEY" ~/.ssh/id_ed25519
     - chmod 600 ~/.ssh/id_ed25519
     - ssh-keyscan -p "$DEPLOY_PORT" "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
   script:
+    - SSH_CMD="ssh -p $DEPLOY_PORT $DEPLOY_USER@$DEPLOY_HOST"
+
+    # Pull latest code
+    - $SSH_CMD "cd $DEPLOY_PATH && git fetch origin main && git reset --hard origin/main"
+
+    # Write .env from CI variables
     - |
-      SSH_CMD="ssh -p $DEPLOY_PORT -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST"
-
-      # Ensure deploy directory exists
-      $SSH_CMD "mkdir -p $DEPLOY_PATH/extension"
-
-      # Install Docker if not present
-      $SSH_CMD "command -v docker || (dnf install -y dnf-plugins-core && dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin && systemctl enable --now docker)"
-
-      # Setup deploy key for git access if not done
-      $SSH_CMD "test -d $DEPLOY_PATH/.git || (cd $DEPLOY_PATH && git clone git@gitlabs.inet.vn:dattqh/vaultic.git .)"
-
-      # Pull latest code
-      $SSH_CMD "cd $DEPLOY_PATH && git fetch origin main && git reset --hard origin/main"
-
-      # Write .env.staging from CI variables
-      $SSH_CMD "cat > $DEPLOY_PATH/.env.staging << ENVEOF
-      POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-      DATABASE_URL=postgres://vaultic:$POSTGRES_PASSWORD@postgres:5432/vaultic
-      JWT_SECRET=$JWT_SECRET
-      RUST_LOG=info
+      $SSH_CMD "cat > $DEPLOY_PATH/backend/.env << ENVEOF
+      NODE_ENV=production
       SERVER_PORT=8080
-      VITE_API_URL=https://vaultic.inetdev.io.vn
+      MONGODB_URI=$MONGODB_URI
+      JWT_SECRET=$JWT_SECRET
+      CORS_ORIGIN=$CORS_ORIGIN
+      LOG_LEVEL=info
       ENVEOF"
 
-      # Build and deploy
-      $SSH_CMD "cd $DEPLOY_PATH && docker compose -f docker/docker-compose.staging.yml --env-file .env.staging up -d --build --remove-orphans"
-
-      # Setup Nginx vhost if not present
-      $SSH_CMD "test -f /etc/nginx/conf.d/vaultic.conf || (cp $DEPLOY_PATH/docker/nginx/vaultic.conf /etc/nginx/conf.d/vaultic.conf && nginx -t && systemctl reload nginx)"
+    # Install deps + build + restart PM2
+    - $SSH_CMD "cd $DEPLOY_PATH && pnpm install --frozen-lockfile"
+    - $SSH_CMD "cd $DEPLOY_PATH && pnpm --filter @vaultic/types build && pnpm --filter @vaultic/backend build"
+    - $SSH_CMD "cd $DEPLOY_PATH/backend && pm2 reload ecosystem.config.cjs --update-env || pm2 start ecosystem.config.cjs"
 
     # Upload extension artifact
     - scp -P "$DEPLOY_PORT" vaultic-extension.zip "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/extension/vaultic-extension.zip"
 
-    # Verify deployment
-    - $SSH_CMD "curl -sf http://127.0.0.1:8080/health || echo 'WARNING: Health check failed'"
+    # Health check
+    - $SSH_CMD "sleep 2 && curl -sf http://127.0.0.1:8080/api/v1/health || echo 'WARNING: Health check failed'"
   environment:
     name: staging
     url: https://vaultic.inetdev.io.vn

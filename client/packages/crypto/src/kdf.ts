@@ -84,6 +84,23 @@ export async function deriveAuthHash(
   return bufferToHex(hash);
 }
 
+/** Derive master key from password + raw salt bytes (for offline mode). */
+export async function deriveMasterKeyWithSalt(
+  password: string,
+  salt: Uint8Array,
+): Promise<ArrayBuffer> {
+  const hashHex = await argon2id({
+    password,
+    salt,
+    memorySize: ARGON2_M_COST,
+    iterations: ARGON2_T_COST,
+    parallelism: ARGON2_P_COST,
+    hashLength: KEY_LENGTH,
+    outputType: 'hex',
+  });
+  return hexToBuffer(hashHex);
+}
+
 /** Derive all keys from password + email in one call. */
 export async function deriveKeys(
   password: string,

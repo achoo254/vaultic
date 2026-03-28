@@ -1,863 +1,663 @@
 # Vaultic: System Architecture
 
-## High-Level Architecture
+## High-Level Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        USER DEVICES                                 │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                       │
-│  Desktop/Laptop                              Mobile (Future)         │
-│  ┌────────────────┐                         ┌──────────────┐        │
-│  │  Browser Ext   │                         │  Native App  │        │
-│  │  (Chrome/FF)   │                         │  (iOS/Droid) │        │
-│  │                │                         │              │        │
-│  │ ┌────────────┐ │                         └──────────────┘        │
-│  │ │ Popup UI   │ │                                                 │
-│  │ │ (380x520)  │ │                                                 │
-│  │ └────────────┘ │                                                 │
-│  │                │                                                 │
-│  │ ┌────────────────────────────────────────────────────────┐      │
-│  │ │        Local Vault Storage (IndexedDB/SQLite)         │      │
-│  │ │  - Encrypted vault items                              │      │
-│  │ │  - Sync queue (pending changes)                       │      │
-│  │ │  - Device metadata                                    │      │
-│  │ │  - Sync state                                         │      │
-│  │ └────────────────────────────────────────────────────────┘      │
-│  │                │                                                 │
-│  │ ┌────────────────────────────────────────────────────────┐      │
-│  │ │         Client-Side Encryption Engine                 │      │
-│  │ │  ┌───────────────────────────────────────────────┐    │      │
-│  │ │  │ Master Password → Argon2id → Master Key      │    │      │
-│  │ │  │ Master Key → HKDF → {Enc Key, Auth Key, ...} │    │      │
-│  │ │  │ Each Item → AES-256-GCM (individual blobs)   │    │      │
-│  │ │  └───────────────────────────────────────────────┘    │      │
-│  │ └────────────────────────────────────────────────────────┘      │
-│  │                │                                                 │
-│  │         HTTPS (encrypted channel)                               │
-│  │                │                                                 │
-│  └────────────────┘                                                 │
-│                                                                       │
-└─────────────────────────────────────────────────────────────────────┘
-                                │
-                                ↓ (Cloud Sync Optional)
-                        ┌───────────────┐
-                        │  VAULTIC API  │
-                        │   (Axum)      │
-                        └───────────────┘
-                                │
-                ┌───────────────┼───────────────┐
-                ↓               ↓               ↓
-         ┌──────────────┐ ┌──────────┐ ┌──────────────┐
-         │  Auth        │ │  Sync    │ │  Share       │
-         │  Endpoints   │ │  Relay   │ │  Broker      │
-         └──────────────┘ └──────────┘ └──────────────┘
-                │               │               │
-                └───────────────┼───────────────┘
-                                │
-                                ↓
-                        ┌──────────────────┐
-                        │  PostgreSQL 16   │
-                        │  (Encrypted DB)  │
-                        └──────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│              USER DEVICES (Client-Side)                 │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  Browser Extension (Chrome/Firefox)                    │
+│  ┌───────────────────────────────────────────────────┐ │
+│  │  Popup UI (380×520px)                             │ │
+│  │  ├─ Vault search & item management               │ │
+│  │  ├─ Settings (sync toggle, export/import)        │ │
+│  │  └─ Auto-fill credentials (content script)       │ │
+│  └───────────────────────────────────────────────────┘ │
+│                                                         │
+│  Local Storage & Crypto                                │
+│  ├─ IndexedDB vault (encrypted items + sync queue)    │
+│  ├─ WebCrypto API (AES-256-GCM, Argon2id)            │
+│  └─ Key derivation (no plaintext storage)             │
+│                                                         │
+│  HTTPS ↔ Vaultic API (Optional Cloud Sync)           │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+                         │
+                         ↓ (Cloud Sync Optional)
+        ┌────────────────────────────────────┐
+        │  VAULTIC API (Node.js/Express)     │
+        │  Port 8080 / https://api.vaultic   │
+        ├────────────────────────────────────┤
+        │  • Auth (register, login, refresh) │
+        │  • Sync (push/pull deltas)         │
+        │  • Share (create encrypted links)  │
+        │  • Health probes                   │
+        └────────────────────────────────────┘
+                    │    │    │
+        ┌───────────┼────┼────┴──────────┐
+        │ Mongoose  │    │               │
+        ↓           │    │               │
+    ┌─────────────┐ │    │         ┌──────────┐
+    │  MongoDB    │ │    └────────→│ Rate     │
+    │  (external) │ │               │ Limiter  │
+    │             │ │               └──────────┘
+    │ • users     │ │
+    │ • vault     │ ├──────────────→ JWT Auth
+    │   items     │ │
+    │ • folders   │ └──────────────→ Error
+    │ • shares    │                  Handler
+    └─────────────┘
 ```
 
 ---
 
-## Component Architecture
+## System Layers
 
-### Layer 1: Client (TypeScript)
+### Layer 1: Client (Browser Extension)
 
-#### 1.1 UI Layer (`@vaultic/ui` + `@vaultic/extension`)
-```
-┌─────────────────────────────────────────────────┐
-│              Extension Popup (React)             │
-│              380×520px fixed size                │
-├─────────────────────────────────────────────────┤
-│  ┌──────────────────────────────────────────┐   │
-│  │  Header: Search + Settings                │   │
-│  ├──────────────────────────────────────────┤   │
-│  │  List: Vault Items (name, URL, type)     │   │
-│  │  - Quick copy to clipboard               │   │
-│  │  - Click to reveal password              │   │
-│  ├──────────────────────────────────────────┤   │
-│  │  Actions: Add Item, Collections, Sync    │   │
-│  └──────────────────────────────────────────┘   │
-│                                                  │
-│  Design Tokens (SINGLE SOURCE OF TRUTH)        │
-│  @vaultic/ui/styles/design-tokens.ts           │
-│  - Colors, typography, spacing, icons          │
-└─────────────────────────────────────────────────┘
+#### 1.1 Popup UI (`@vaultic/extension`)
+- **Location:** `client/apps/extension/src/entrypoints/popup/`
+- **Framework:** React 18 + Tailwind CSS
+- **Size:** Fixed 380×520px
+- **Features:**
+  - SetupPasswordForm (offline vault creation, no account)
+  - Vault item list with search
+  - Item CRUD (create, read, update, delete)
+  - Settings (sync toggle, account upgrade, export/import)
+  - Password generator
+  - Security health check
+
+**Routing Logic (`vaultState`):**
+```typescript
+type VaultState = 'no_vault' | 'locked' | 'unlocked'
+- no_vault: First run → SetupPasswordForm (create offline vault)
+- locked: Password protected (inactivity timeout or browser reload)
+- unlocked: Vault accessible → VaultList + navigation
 ```
 
-**Responsibility:**
-- Render vault list with search
-- Item details (view/edit modal)
-- Settings & sync toggle
-- Generate passwords
-
-**Files:**
-- `packages/extension/src/entrypoints/popup/` — React components
-- `packages/ui/src/components/` — Shared UI library
-- `packages/ui/src/styles/design-tokens.ts` — Tokens (no hardcoding)
+**Responsibilities:**
+- Render UI with design tokens
+- User input handling
+- Display decrypted vault items
+- Message background service worker
+- Route based on vaultState (offline-first aware)
 
 #### 1.2 Content Script (`@vaultic/extension`)
-```
-┌─────────────────────────────────────────────────┐
-│       Content Script (Runs in web page)         │
-├─────────────────────────────────────────────────┤
-│  1. Detect login forms (username/password)      │
-│  2. Detect signup forms (generate password)     │
-│  3. Message service worker for encryption       │
-│  4. Inject auto-fill action into DOM            │
-│  5. Listen for user interaction (click)         │
-└─────────────────────────────────────────────────┘
-```
+- **Location:** `client/apps/extension/src/entrypoints/content.ts`
+- **Executes:** In web page context
+- **Triggered:** On page load
 
-**Responsibility:**
-- DOM scanning for forms
-- User gesture detection (click)
-- Communication with background service worker
-- Auto-fill injection (Phase 6)
+**Responsibilities:**
+- Detect login/signup forms (DOM scanning)
+- Suggest auto-fill on recognized domains
+- Message background worker for credentials
+- Inject password generator on signup
 
 #### 1.3 Service Worker (`@vaultic/extension`)
-```
-┌──────────────────────────────────────────────────┐
-│    Background Service Worker (Persistent)       │
-├──────────────────────────────────────────────────┤
-│  ┌────────────────────────────────────────────┐  │
-│  │  Message Router                            │  │
-│  │  - Popup ↔ Content Script ↔ Web APIs      │  │
-│  └────────────────────────────────────────────┘  │
-│                                                   │
-│  ┌────────────────────────────────────────────┐  │
-│  │  Vault Manager                             │  │
-│  │  - Load vault from storage                 │  │
-│  │  - Cache in memory (encrypted)             │  │
-│  │  - Sync trigger listener                   │  │
-│  └────────────────────────────────────────────┘  │
-│                                                   │
-│  ┌────────────────────────────────────────────┐  │
-│  │  Crypto Operations                         │  │
-│  │  - Decrypt items on-demand                 │  │
-│  │  - Key derivation (master password)        │  │
-│  └────────────────────────────────────────────┘  │
-│                                                   │
-│  ┌────────────────────────────────────────────┐  │
-│  │  Sync Coordinator                          │  │
-│  │  - Trigger sync on timer                   │  │
-│  │  - Queue local changes                     │  │
-│  │  - Apply remote deltas                     │  │
-│  │  - Conflict resolution (LWW)               │  │
-│  └────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────┘
-```
+- **Location:** `client/apps/extension/src/entrypoints/background.ts`
+- **Scope:** Extension-wide background process
+- **Persistence:** Survives page unload
 
-**Responsibility:**
-- Request handling (popup, content script)
+**Responsibilities:**
+- Route messages (popup ↔ content script)
+- Manage encryption/decryption
 - Cache vault in memory
-- Trigger sync on interval
-- No plaintext persistence
+- Trigger sync periodically
+- Handle token refresh
+- No plaintext on disk
 
-#### 1.4 Storage Abstraction (`@vaultic/storage`)
+#### 1.4 Encryption Engine (`@vaultic/crypto`)
+**Key Derivation (Online):**
 ```
-┌──────────────────────────────────────────────┐
-│     VaultStore Interface (abstraction)        │
-├──────────────────────────────────────────────┤
-│  - getItem(id): Promise<VaultItem>           │
-│  - setItem(item): Promise<void>              │
-│  - deleteItem(id): Promise<void>             │
-│  - getAll(): Promise<VaultItem[]>            │
-│  - clearAll(): Promise<void>                 │
-│  - registerSyncQueue(queue): Promise<void>   │
-└──────────────────────────────────────────────┘
-           ↓                      ↓
-┌──────────────────────┐  ┌──────────────────┐
-│  IndexedDB Store     │  │  Memory Store    │
-│  (Production)        │  │  (Testing)       │
-├──────────────────────┤  ├──────────────────┤
-│ - Persistent local   │  │ - RAM only       │
-│ - Encrypted at rest  │  │ - Clears on exit │
-│ - Survives reload    │  │ - For unit tests │
-└──────────────────────┘  └──────────────────┘
+Master Password
+  ↓ + email (salt)
+Argon2id (64MB, t=3, p=4)
+  ↓
+Master Key (256-bit, never sent)
+  ↓ HKDF-SHA256
+{Enc Key, Auth Key, ...}
 ```
 
-**Responsibility:**
-- Abstract storage backend
-- CRUD operations on vault items
-- Sync queue management
-- No encryption (handled by crypto layer)
+**Key Derivation (Offline):**
+```
+Master Password
+  ↓ + random salt (stored in VaultConfig)
+Argon2id (64MB, t=3, p=4) — deriveMasterKeyWithSalt()
+  ↓
+Master Key (256-bit, never sent)
+  ↓ HKDF-SHA256
+{Enc Key, Auth Key/authHashVerifier}
+```
+
+**VaultConfig Type** (`shared/types/vault-config.ts`):
+```typescript
+interface VaultConfig {
+  mode: 'offline' | 'online'
+  salt: string               // Base64 Argon2id salt
+  authHashVerifier: string   // SHA256(encryption_key) for offline password check
+  createdAt: number
+  email?: string             // Online only
+  userId?: string            // Online only
+}
+```
+
+**Encryption:**
+```
+VaultItem (JSON)
+  ↓
+AES-256-GCM encrypt (WebCrypto)
+  ↓
+Ciphertext (base64 + random nonce)
+```
 
 **Files:**
-- `packages/storage/src/vault-store.ts` — Interface
-- `packages/storage/src/indexeddb-store.ts` — IndexedDB impl
-- `packages/storage/src/sync-queue.ts` — Delta queue
+- `client/packages/crypto/src/kdf.ts` — Key derivation
+- `client/packages/crypto/src/cipher.ts` — Encryption/decryption
+- `client/packages/crypto/src/password-gen.ts` — Secure generation
 
-#### 1.5 Encryption Layer (`@vaultic/crypto`)
-```
-┌─────────────────────────────────────────────┐
-│       Crypto Engine (WebCrypto API)         │
-├─────────────────────────────────────────────┤
-│                                              │
-│  Key Derivation                             │
-│  ┌────────────────────────────────────────┐ │
-│  │ Master Password + Salt                 │ │
-│  │  ↓                                     │ │
-│  │ Argon2id (memory-hard, slow)          │ │
-│  │  ↓                                     │ │
-│  │ Master Key (256-bit)                  │ │
-│  │  ↓                                     │ │
-│  │ HKDF (multi-purpose derivation)       │ │
-│  │  ↓                                     │ │
-│  │ {Enc Key, Auth Key, IV Salt, ...}     │ │
-│  └────────────────────────────────────────┘ │
-│                                              │
-│  Encryption                                 │
-│  ┌────────────────────────────────────────┐ │
-│  │ VaultItem (JSON)                       │ │
-│  │  ↓                                     │ │
-│  │ Serialize (JSON.stringify)             │ │
-│  │  ↓                                     │ │
-│  │ AES-256-GCM encrypt (SubtleCrypto)    │ │
-│  │  ↓                                     │ │
-│  │ Ciphertext + Nonce (base64)           │ │
-│  └────────────────────────────────────────┘ │
-│                                              │
-└─────────────────────────────────────────────┘
+#### 1.5 Storage Abstraction (`@vaultic/storage`)
+**Interface:**
+```typescript
+interface VaultStore {
+  getItem(id: string): Promise<VaultItem>
+  setItem(item: VaultItem): Promise<void>
+  deleteItem(id: string): Promise<void>
+  getAll(): Promise<VaultItem[]>
+}
 ```
 
-**Responsibility:**
-- Argon2id key derivation (via argon2-browser)
-- HKDF for multi-purpose keys
-- AES-256-GCM encryption/decryption
-- No key storage (generated on-the-fly from password)
+**Implementations:**
+- **IndexedDB Store** (Production) — Persistent, survives reload
+- **Memory Store** (Testing) — RAM only, for unit tests
+
+**Responsibilities:**
+- CRUD vault items locally
+- Manage sync queue
+- No encryption (crypto layer handles)
 
 **Files:**
-- `packages/crypto/src/kdf.ts` — Argon2id + HKDF
-- `packages/crypto/src/cipher.ts` — AES-256-GCM
-- `packages/crypto/src/password-gen.ts` — Secure generation
+- `client/packages/storage/src/vault-store.ts` — Interface
+- `client/packages/storage/src/indexeddb-store.ts` — IndexedDB impl
 
 #### 1.6 Sync Engine (`@vaultic/sync`)
-```
-┌─────────────────────────────────────────────┐
-│        Sync Engine (Offline-first)          │
-├─────────────────────────────────────────────┤
-│                                              │
-│  1. Local Changes                           │
-│  ┌────────────────────────────────────────┐ │
-│  │ Item modified → Queue delta locally    │ │
-│  │ Delta = {id, timestamp, encrypted}    │ │
-│  │ Persisted in SyncQueue                 │ │
-│  └────────────────────────────────────────┘ │
-│                                              │
-│  2. Push (Device → Server)                  │
-│  ┌────────────────────────────────────────┐ │
-│  │ Read SyncQueue                         │ │
-│  │ POST /sync/push {deltas, device_id}   │ │
-│  │ Server ACK → clear queue               │ │
-│  └────────────────────────────────────────┘ │
-│                                              │
-│  3. Pull (Server → Device)                  │
-│  ┌────────────────────────────────────────┐ │
-│  │ GET /sync/pull {since_timestamp}      │ │
-│  │ Receive remote deltas                  │ │
-│  │ Apply with conflict resolver           │ │
-│  └────────────────────────────────────────┘ │
-│                                              │
-│  4. Conflict Resolution (LWW)               │
-│  ┌────────────────────────────────────────┐ │
-│  │ Local item modified 10:00              │ │
-│  │ Remote item modified 10:05             │ │
-│  │  → Remote wins (last-write)            │ │
-│  │ Resolver: timestamp comparison         │ │
-│  └────────────────────────────────────────┘ │
-│                                              │
-└─────────────────────────────────────────────┘
-```
+**Delta Sync Flow:**
+1. User modifies item locally
+2. Service worker creates delta (id, timestamp, encrypted)
+3. Delta queued in SyncQueue
+4. On interval or manually:
+   - **Push:** Send queued deltas to `/sync/push`
+   - **Pull:** Fetch remote deltas from `/sync/pull`
+   - **Merge:** Apply remote with LWW resolution
+   - **ACK:** Clear queue on success
 
-**Responsibility:**
-- Track local changes (timestamp)
-- Queue deltas for push
-- Fetch & merge remote deltas
-- LWW conflict resolution
-- Device tracking (multi-device sync)
+**Conflict Resolution (Last-Write-Wins):**
+- Local item timestamp: 10:00
+- Remote item timestamp: 10:05
+- Result: Remote wins (newer timestamp)
+- Strategy: Timestamp comparison
 
 **Files:**
-- `packages/sync/src/sync-engine.ts` — Main logic
-- `packages/sync/src/conflict-resolver.ts` — LWW strategy
-- `packages/sync/src/device.ts` — Device identity
+- `client/packages/sync/src/sync-engine.ts` — Main logic
+- `client/packages/sync/src/conflict-resolver.ts` — LWW strategy
 
 #### 1.7 API Client (`@vaultic/api`)
-```
-┌────────────────────────────────────────────────┐
-│         API Client (ofetch wrapper)            │
-├────────────────────────────────────────────────┤
-│  Base: https://api.vaultic.com                 │
-│                                                 │
-│  Auth: POST /auth/register                     │
-│        POST /auth/login                        │
-│        POST /auth/refresh                      │
-│        POST /auth/logout                       │
-│                                                 │
-│  Sync: POST /sync/pull                         │
-│        POST /sync/push                         │
-│        GET  /sync/status                       │
-│                                                 │
-│  Share: POST /share/create                     │
-│         GET  /share/:link_id                   │
-│         DELETE /share/:link_id                 │
-│                                                 │
-│  Headers: Authorization: Bearer <jwt>         │
-│           Content-Type: application/json      │
-│                                                 │
-└────────────────────────────────────────────────┘
-```
+**Transport:** ofetch (lightweight HTTP client)
 
-**Responsibility:**
-- HTTP requests (ofetch)
-- Auth token management
-- Error handling & retry logic
-- Type-safe request/response
+**Endpoints:**
+```
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+POST /api/v1/auth/refresh
+POST /api/v1/auth/logout
+GET  /api/v1/auth/me
+
+POST /api/v1/sync/push
+POST /api/v1/sync/pull
+GET  /api/v1/sync/status
+
+POST /api/v1/shares/create
+GET  /api/v1/shares/:id
+DELETE /api/v1/shares/:id
+```
 
 **Files:**
-- `packages/api/src/client.ts` — Base HTTP client
-- `packages/api/src/auth-api.ts` — /auth/* endpoints
-- `packages/api/src/sync-api.ts` — /sync/* endpoints
-- `packages/api/src/share-api.ts` — /share/* endpoints
+- `client/packages/api/src/client.ts` — Base HTTP client
+- `client/packages/api/src/auth-api.ts` — Auth endpoints
+- `client/packages/api/src/sync-api.ts` — Sync endpoints
+- `client/packages/api/src/share-api.ts` — Share endpoints
+
+### Layer 2: Backend (Node.js/Express)
+
+#### 2.1 Server Entry Point (`backend/src/server.ts`)
+```typescript
+- Express app initialization
+- MongoDB connection
+- Middleware stack (CORS, body parser, logger, rate limiter)
+- Route registration
+- Error handler
+- Graceful shutdown (SIGTERM/SIGINT)
+- Pino logger setup
+```
+
+**Environment variables:**
+- `MONGODB_URI` — MongoDB connection string
+- `JWT_SECRET` — Secret for token signing
+- `SERVER_PORT` — Port (default 8080)
+- `CORS_ORIGIN` — CORS whitelist
+- `LOG_LEVEL` — Pino log level
+
+#### 2.2 Routes (REST API)
+
+**Auth Routes** (`backend/src/routes/auth-route.ts`)
+```typescript
+POST /api/v1/auth/register
+  Input: { email, password }
+  Output: { user: User, token: JWT }
+
+POST /api/v1/auth/login
+  Input: { email, password }
+  Output: { user: User, token: JWT }
+
+POST /api/v1/auth/refresh
+  Input: { refreshToken }
+  Output: { accessToken: JWT }
+
+GET /api/v1/auth/me (protected)
+  Output: { user: User }
+```
+
+**Sync Routes** (`backend/src/routes/sync-route.ts`)
+```typescript
+POST /api/v1/sync/push (protected)
+  Input: { deltas: Delta[], deviceId }
+  Output: { ack: boolean }
+
+POST /api/v1/sync/pull (protected)
+  Input: { since: timestamp }
+  Output: { deltas: Delta[] }
+
+GET /api/v1/sync/status (protected)
+  Output: { lastSync: timestamp, queueSize: number }
+```
+
+**Share Routes** (`backend/src/routes/share-route.ts`)
+```typescript
+POST /api/v1/shares/create (protected)
+  Input: { encData, expiresAt, maxViews }
+  Output: { linkId, shareUrl }
+
+GET /api/v1/shares/:linkId
+  Output: { encData, expiresAt } (public, no auth)
+
+GET /api/v1/shares/:linkId/metadata (authOptional)
+  Output: { viewCount, maxViews, expiresAt } (public metadata)
+  Note: Encrypted data stays in URL fragment (never to server)
+
+DELETE /api/v1/shares/:linkId (protected)
+  Output: { success: boolean }
+```
+
+**Health Routes** (`backend/src/routes/health-route.ts`)
+```typescript
+GET /health
+  Output: { status: "ok", timestamp }
+
+GET /api/v1
+  Output: { version: "1.0.0", status: "ok" }
+```
+
+#### 2.3 Middleware Stack
+
+**Order matters:**
+1. CORS (cross-origin requests)
+2. Body parser (JSON, URL-encoded 1MB limit)
+3. Request logger (Pino HTTP)
+4. Rate limiter (100 req/min on auth endpoints)
+5. Public routes (health, GET shares)
+6. Auth middleware (JWT validation or optional)
+7. Protected routes (sync, delete shares)
+8. Error handler (global catch-all)
+
+**Key Middleware:**
+- `authRequired(req, res, next)` — JWT token validation (throws on missing/invalid)
+- `authOptional(req, res, next)` — Optional JWT (sets req.userId if valid, continues if not)
+- `error-handler-middleware.ts` — Global error catch
+- `rate-limit-middleware.ts` — API throttling
+- `request-logger-middleware.ts` — Pino logging
+
+**Note:** Share metadata endpoint uses `authOptional` to allow unauthenticated clients to check view counts while keeping encrypted data client-side (URL fragment).
+
+#### 2.4 Services (Business Logic)
+
+**Auth Service** (`backend/src/services/auth-service.ts`)
+```typescript
+- register(email, password)
+  • Hash password (bcrypt)
+  • Create user document
+  • Generate JWT token
+
+- login(email, password)
+  • Find user by email
+  • Verify password
+  • Generate JWT token
+
+- refreshToken(refreshToken)
+  • Validate refresh token
+  • Issue new access token
+```
+
+**Sync Service** (`backend/src/services/sync-service.ts`)
+```typescript
+- pushDeltas(userId, deltas)
+  • Validate deltas
+  • Persist to MongoDB
+  • ACK to client
+
+- pullDeltas(userId, since)
+  • Query MongoDB for deltas > timestamp
+  • Return encrypted blobs only
+```
+
+**Share Service** (`backend/src/services/share-service.ts`)
+```typescript
+- createShare(userId, encData)
+  • Generate unique linkId
+  • Store encrypted data
+  • Set expiration
+  • Return share URL
+
+- getShare(linkId)
+  • Lookup by linkId
+  • Check expiration & views
+  • Return encrypted data
+```
+
+#### 2.5 Models (Mongoose Schemas)
+
+**User Model** (`backend/src/models/user-model.ts`)
+```typescript
+{
+  email: String (unique, lowercase),
+  passwordHash: String (bcrypt),
+  createdAt: Date (auto),
+  updatedAt: Date (auto)
+}
+```
+
+**VaultItem Model** (`backend/src/models/vault-item-model.ts`)
+```typescript
+{
+  userId: ObjectId (ref User),
+  folderId: ObjectId (ref Folder, optional),
+  ciphertext: String (base64 AES-256-GCM),
+  timestamp: Date,
+  itemType: String (password|note|card|identity),
+  createdAt: Date (auto),
+  updatedAt: Date (auto)
+}
+```
+
+**Folder Model** (`backend/src/models/folder-model.ts`)
+```typescript
+{
+  userId: ObjectId (ref User),
+  name: String,
+  parent: ObjectId (self-ref, optional),
+  createdAt: Date (auto)
+}
+```
+
+**SecureShare Model** (`backend/src/models/secure-share-model.ts`)
+```typescript
+{
+  linkId: String (unique),
+  userId: ObjectId (ref User),
+  encData: String (base64),
+  accessKey: String (optional password hash),
+  expiresAt: Date,
+  maxViews: Number,
+  viewCount: Number (default 0),
+  createdAt: Date (auto)
+}
+```
+
+#### 2.6 Utilities
+
+**JWT Utils** (`backend/src/utils/jwt-utils.ts`)
+```typescript
+- generateToken(payload)
+  • Sign with JWT_SECRET
+  • Set TTL (15min for access, 7d for refresh)
+
+- verifyToken(token)
+  • Decode and verify signature
+  • Check expiration
+  • Return payload
+
+- hashPassword(password)
+  • Use bcrypt (salt rounds 10)
+
+- verifyPassword(password, hash)
+  • bcrypt.compare
+  • Constant-time check
+```
+
+**App Error** (`backend/src/utils/app-error.ts`)
+```typescript
+class AppError extends Error {
+  statusCode: number
+  code: string
+  context?: Record<string, any>
+}
+```
+
+**Validation** (`backend/src/utils/validate-request.ts`)
+```typescript
+- validateEmail(email)
+- validatePassword(password)
+- validateDeltas(deltas)
+- (Using Zod schemas)
+```
+
+### Layer 3: Database (MongoDB)
+
+**Connection:** External (standalone)
+**Collections:**
+- `users` — User accounts
+- `vaultitems` — Encrypted vault items
+- `folders` — Collections (nesting)
+- `secureshares` — Encrypted share links
+
+**Indexes:**
+- `users.email` (unique)
+- `vaultitems.userId` (query by user)
+- `secureshares.linkId` (unique)
+- `secureshares.expiresAt` (TTL index for auto-cleanup)
 
 ---
 
-### Layer 2: Server (Rust)
+## Data Flow Examples
 
-#### 2.1 API Server (`vaultic-server`)
+### Example 1: User Registration
 ```
-┌──────────────────────────────────────────────┐
-│         Axum HTTP Server                      │
-│         Port: 8080 (dev) / 443 (prod)        │
-├──────────────────────────────────────────────┤
-│                                               │
-│  Router                                      │
-│  ├── POST   /auth/register                   │
-│  ├── POST   /auth/login                      │
-│  ├── POST   /auth/refresh                    │
-│  ├── POST   /auth/logout                     │
-│  ├── GET    /auth/me (protected)             │
-│  │                                           │
-│  ├── POST   /sync/pull (protected)           │
-│  ├── POST   /sync/push (protected)           │
-│  ├── GET    /sync/status (protected)         │
-│  │                                           │
-│  ├── POST   /share/create (protected)        │
-│  ├── GET    /share/:link_id                  │
-│  └── DELETE /share/:link_id (protected)      │
-│                                               │
-│  Middleware                                  │
-│  ├── CORS (restrict to extension origin)    │
-│  ├── Auth (JWT token verification)          │
-│  ├── Logging (structured logs)              │
-│  ├── Error handling (JSON responses)        │
-│  └── Rate limiting (100 req/min on /auth)  │
-│                                               │
-└──────────────────────────────────────────────┘
+1. User enters email + password in popup
+2. Popup → Service Worker → API Client
+3. POST /api/v1/auth/register
+4. Backend:
+   - Validate email (unique)
+   - Hash password (bcrypt)
+   - Create user document in MongoDB
+   - Sign JWT token
+5. Response: { user, token }
+6. Service Worker stores token + caches user
+7. Popup displays vault (empty initially)
 ```
 
-**Responsibility:**
-- HTTP request routing
-- Request/response validation
-- Auth token verification
-- Rate limiting
-
-**Files:**
-- `crates/vaultic-server/src/main.rs` — Server setup
-- `crates/vaultic-server/src/routes/` — Handler functions
-- `crates/vaultic-server/src/middleware/` — Middleware
-- `crates/vaultic-server/src/error.rs` — Error types
-
-#### 2.2 Database Layer (`vaultic-migration` + SeaORM)
+### Example 2: Vault Item Creation
 ```
-┌──────────────────────────────────────────────┐
-│         PostgreSQL 16 Database                │
-├──────────────────────────────────────────────┤
-│                                               │
-│  Tables                                      │
-│  ├── users                                   │
-│  │   ├── id (UUID)                          │
-│  │   ├── email (unique)                     │
-│  │   ├── password_hash (Argon2id)           │
-│  │   ├── created_at                         │
-│  │   └── updated_at                         │
-│  │                                           │
-│  ├── sync_deltas                            │
-│  │   ├── id (UUID)                          │
-│  │   ├── user_id (FK)                       │
-│  │   ├── device_id (device identifier)      │
-│  │   ├── item_id (vault item ID)            │
-│  │   ├── encrypted_delta (ciphertext)       │
-│  │   ├── timestamp                          │
-│  │   └── synced_at (NULL until ACK)         │
-│  │                                           │
-│  ├── share_links                            │
-│  │   ├── id (UUID)                          │
-│  │   ├── user_id (FK)                       │
-│  │   ├── encrypted_item (ciphertext)        │
-│  │   ├── share_password (hashed)            │
-│  │   ├── expires_at                         │
-│  │   ├── view_count / view_limit            │
-│  │   └── created_at                         │
-│  │                                           │
-│  └── sessions                               │
-│      ├── id (UUID)                          │
-│      ├── user_id (FK)                       │
-│      ├── jwt_token (encrypted)              │
-│      ├── expires_at                         │
-│      └── created_at                         │
-│                                               │
-└──────────────────────────────────────────────┘
+1. User creates password item in popup
+2. Popup → Service Worker
+3. Service Worker:
+   - Generate random nonce
+   - Encrypt item (AES-256-GCM)
+   - Store encrypted blob locally (IndexedDB)
+   - Create delta (id, timestamp, ciphertext)
+   - Queue in SyncQueue
+4. User taps "Sync" or auto-sync triggers
+5. Service Worker:
+   - Read SyncQueue
+   - POST /api/v1/sync/push { deltas, deviceId }
+   - Backend persists encrypted blobs to MongoDB
+   - Returns ACK
+6. Service Worker clears SyncQueue
+7. Vault still encrypted locally (no plaintext)
 ```
 
-**Responsibility:**
-- User registration/login
-- Sync delta storage (encrypted)
-- Share link management
-- Session/token tracking
-
-**Files:**
-- `crates/vaultic-migration/src/lib.rs` — SeaORM migrations
-
-#### 2.3 Crypto (Rust) (`vaultic-crypto`)
+### Example 3: Auto-Fill on Login
 ```
-┌──────────────────────────────────────────────┐
-│    Rust Crypto Primitives                    │
-├──────────────────────────────────────────────┤
-│                                               │
-│  Key Derivation                              │
-│  ├── Argon2id (argon2 crate)                │
-│  │   ├── Memory: 64 MiB                     │
-│  │   ├── Time cost: 3 iterations            │
-│  │   ├── Parallelism: 4                     │
-│  │   └── Hash: 32 bytes (256-bit)           │
-│  └── HKDF-SHA256 (hkdf + sha2 crates)       │
-│      ├── Domain sep: "vaultic-enc"          │
-│      ├── Domain sep: "vaultic-auth"         │
-│      └── Expand: 32-byte output per key     │
-│                                               │
-│  Encryption                                  │
-│  ├── AES-256-GCM (aes-gcm crate)           │
-│  │   ├── 256-bit key                       │
-│  │   ├── 96-bit nonce (random per msg)     │
-│  │   ├── 128-bit auth tag                  │
-│  │   └── Format: nonce || ciphertext || tag│
-│  └── Random number gen (rand crate)        │
-│      └── Cryptographically secure CSPRNG   │
-│                                               │
-│  Password Generation                        │
-│  ├── CSPRNG: rand::thread_rng()             │
-│  ├── Configurable: 8–128 chars              │
-│  └── Options: upper, lower, digits, symbols│
-│                                               │
-│  Type Safety                                 │
-│  ├── MasterKey: Zeroize on drop             │
-│  ├── EncryptionKey: Zeroize on drop         │
-│  └── AuthHash: Zeroize on drop              │
-│                                               │
-└──────────────────────────────────────────────┘
+1. User visits example.com login page
+2. Content Script:
+   - Detects login form
+   - Sends message to Service Worker: "need password for example.com"
+3. Service Worker:
+   - Searches vault locally (IndexedDB)
+   - Finds matching item by domain
+   - Decrypts item (AES-256-GCM)
+   - Sends credentials to content script
+4. Content Script:
+   - Injects username + password into form
+   - Submits form
+5. No plaintext sent to server (only encrypted storage)
 ```
 
-**Responsibility:**
-- Argon2id key derivation (password → master key)
-- HKDF key expansion (master key → per-purpose keys)
-- AES-256-GCM encryption/decryption (individual vault items)
-- Secure password generation (configurable entropy)
-- Type-safe key handling with automatic memory zeroization
-- Used by both server (validation) and client (WebCrypto bridge)
-
-**Exports:**
-- `derive_master_key(password, email) → MasterKey`
-- `derive_encryption_key(master_key) → EncryptionKey`
-- `derive_auth_hash(master_key) → AuthHash`
-- `encrypt(key, plaintext) → Vec<u8>`
-- `decrypt(key, data) → Vec<u8>`
-- `generate_password(options) → String`
-- `generate_share_key() → ShareKey`
-
-**Files:**
-- `crates/vaultic-crypto/src/types.rs` — Key types (MasterKey, EncryptionKey, AuthHash)
-- `crates/vaultic-crypto/src/error.rs` — CryptoError enum
-- `crates/vaultic-crypto/src/kdf.rs` — Argon2id + HKDF
-- `crates/vaultic-crypto/src/cipher.rs` — AES-256-GCM
-- `crates/vaultic-crypto/src/password_gen.rs` — Secure password generation
-
-#### 2.4 Shared Types (`vaultic-types`)
+### Example 4: Multi-Device Sync
 ```
-┌──────────────────────────────────────────────┐
-│    Rust Type Definitions (serde-enabled)    │
-├──────────────────────────────────────────────┤
-│                                               │
-│  user.rs                                     │
-│  ├── User {id, email, created_at}          │
-│  ├── LoginRequest {email, password}         │
-│  └── LoginResponse {token, refresh_token}  │
-│                                               │
-│  vault.rs                                    │
-│  ├── VaultItem {id, type, title, ...}      │
-│  ├── VaultItemType (password, note, card)  │
-│  └── VaultItemEncrypted {ciphertext, ...}  │
-│                                               │
-│  sync.rs                                     │
-│  ├── Delta {id, timestamp, encrypted}      │
-│  ├── SyncRequest {deltas, device_id}       │
-│  └── SyncResponse {deltas, server_time}    │
-│                                               │
-│  share.rs                                    │
-│  ├── ShareLink {id, encrypted_item, ...}   │
-│  ├── ShareRequest {item, password, exp}    │
-│  └── ShareResponse {link_id, link_url}     │
-│                                               │
-└──────────────────────────────────────────────┘
-```
+Device A (Laptop):
+1. User modifies vault item
+2. Creates delta, queues locally
+3. Syncs: POST /sync/push { deltas, deviceId: "laptop" }
 
-**Responsibility:**
-- Type definitions (JSON serializable via serde)
-- Used in API contracts
-- Mirrored in TypeScript (`packages/types/`)
+Backend:
+1. Receives delta from Device A
+2. Stores in VaultItem collection
+3. Returns ACK
 
-**Files:**
-- `crates/vaultic-types/src/user.rs`
-- `crates/vaultic-types/src/vault.rs`
-- `crates/vaultic-types/src/sync.rs`
-- `crates/vaultic-types/src/share.rs`
+Device B (Desktop):
+1. Auto-sync timer triggers
+2. GET /sync/pull { since: lastSyncTime }
+3. Backend returns deltas from Device A
+4. Conflict resolver (if local change exists):
+   - Local timestamp: 14:00
+   - Remote timestamp: 14:05
+   - Remote wins (newer)
+5. Merges remote delta
+6. Updates IndexedDB locally
 
----
-
-### Layer 3: Infrastructure
-
-#### 3.1 Docker Deployment
-```
-┌───────────────────────────────────────────────┐
-│         Docker Compose (Production)           │
-├───────────────────────────────────────────────┤
-│                                                │
-│  Services                                     │
-│  ├── vaultic-server                          │
-│  │   ├── Image: vaultic:latest               │
-│  │   ├── Port: 8080 (exposed as 443 via nginx) │
-│  │   ├── Env: DB_URL, JWT_SECRET, etc.      │
-│  │   └── Healthcheck: GET /health           │
-│  │                                            │
-│  ├── postgres                                │
-│  │   ├── Image: postgres:16-alpine          │
-│  │   ├── Port: 5432 (local only)            │
-│  │   ├── Volume: /var/lib/postgresql/data  │
-│  │   └── Env: POSTGRES_PASSWORD, DB_NAME   │
-│  │                                            │
-│  └── nginx (future)                          │
-│      ├── TLS termination (rustls-capable)   │
-│      ├── Port: 443                          │
-│      └── Proxies to vaultic-server:8080    │
-│                                                │
-│  Networks                                    │
-│  └── internal (vaultic ↔ postgres)          │
-│      └── Not exposed to host                │
-│                                                │
-└───────────────────────────────────────────────┘
-```
-
-**Files:**
-- `docker/Dockerfile` — Multi-stage build
-- `docker/docker-compose.yml` — Service definitions
-
-#### 3.2 CI/CD Pipeline (GitLab CI)
-```
-┌───────────────────────────────────────────────┐
-│       GitLab CI Pipeline (.gitlab-ci.yml)    │
-├───────────────────────────────────────────────┤
-│                                                │
-│  1. Build Stage                               │
-│  ├── cargo build --release                   │
-│  ├── pnpm build                              │
-│  └── docker build (multi-stage)              │
-│                                                │
-│  2. Test Stage                                │
-│  ├── cargo test --workspace                  │
-│  ├── pnpm test                               │
-│  └── clippy + fmt checks                     │
-│                                                │
-│  3. Security Stage                            │
-│  ├── cargo audit (dependencies)              │
-│  ├── npm audit                               │
-│  └── SAST scanning (optional)                │
-│                                                │
-│  4. Deploy Stage (main branch only)          │
-│  └── Push to registry (gitlabs.inet.vn)     │
-│      Docker pull + compose restart           │
-│                                                │
-└───────────────────────────────────────────────┘
-```
-
-**Files:**
-- `.gitlab-ci.yml` — Pipeline configuration
-
----
-
-## Data Flow: User Registration → Sync
-
-```
-1. USER REGISTRATION
-┌────────────────────────────────────────────────────┐
-│ Client                          Server             │
-├────────────────────────────────────────────────────┤
-│ Input: email, master password                      │
-│  ↓                                                 │
-│ salt = random(16 bytes)                           │
-│ key = Argon2id(password, salt) → master key       │
-│  ↓                                                 │
-│ {Enc Key, Auth Key} = HKDF(key)                   │
-│  ↓                                                 │
-│ POST /auth/register                               │
-│ {email, password_hash, salt}  ──────────→         │
-│                               ← ────── {token}    │
-│                                                    │
-│                                    password_hash = │
-│                                    Argon2id(       │
-│                                    password,       │
-│                                    server_salt)    │
-│                                                    │
-│ Master Key encrypted in local storage             │
-│ (NOT sent to server)                              │
-└────────────────────────────────────────────────────┘
-
-2. VAULT ITEM CREATION (LOCAL)
-┌────────────────────────────────────────────────────┐
-│ Extension                       Storage            │
-├────────────────────────────────────────────────────┤
-│ User creates password item                        │
-│  ↓                                                 │
-│ plaintext = {                                     │
-│   "title": "Gmail",                              │
-│   "username": "user@gmail.com",                  │
-│   "password": "secure123"                        │
-│ }                                                 │
-│  ↓                                                 │
-│ ciphertext = AES-256-GCM(plaintext, enc_key)    │
-│  ↓                                                 │
-│ setItem({                                        │
-│   id: uuid(),                                    │
-│   ciphertext: "...",                             │
-│   timestamp: now()                               │
-│ })                                                │
-│  ↓                                                 │
-│ Queue delta in SyncQueue                         │
-│  ├── {item_id, encrypted_delta, timestamp}      │
-│  └── Persisted locally (IndexedDB)              │
-│                                                   │
-│ Vault accessible offline ✓                        │
-│ Server has zero knowledge ✓                       │
-└────────────────────────────────────────────────────┘
-
-3. SYNC PUSH (Device → Server)
-┌────────────────────────────────────────────────────┐
-│ Client                          Server             │
-├────────────────────────────────────────────────────┤
-│ Sync triggered (timer or manual)                  │
-│  ↓                                                 │
-│ Fetch SyncQueue (local deltas)                    │
-│  ↓                                                 │
-│ POST /sync/push                                   │
-│ {                    ──────────→                   │
-│   deltas: [                      INSERT INTO       │
-│     {id, encrypted, timestamp}   sync_deltas      │
-│   ],                                               │
-│   device_id: "device-uuid"       timestamp       │
-│ }                                check            │
-│                    ← ────────     {synced: true}  │
-│                                                    │
-│ Clear SyncQueue                                   │
-│ Update last_sync_time                            │
-│                                                    │
-│ Note: Server stores ciphertext only              │
-│ Server cannot decrypt (no master key)            │
-└────────────────────────────────────────────────────┘
-
-4. SYNC PULL (Server → Device 2)
-┌────────────────────────────────────────────────────┐
-│ Device 2                        Server             │
-├────────────────────────────────────────────────────┤
-│ GET /sync/pull                                     │
-│ {since: "2026-03-25T10:00Z"}  ──────────→         │
-│                    ← ────────  {                   │
-│                              deltas: [           │
-│                                {id, ciphertext,  │
-│                                timestamp, from:  │
-│                                "device-uuid"}    │
-│                              ]                    │
-│                            }                      │
-│  ↓                                                 │
-│ Apply deltas:                                    │
-│  1. Fetch local version (if exists)              │
-│  2. Compare timestamps (LWW logic)               │
-│  3. If remote newer: decrypt + merge             │
-│  4. Update local storage                         │
-│                                                    │
-│ Vault on Device 2 now in sync ✓                   │
-│ No decryption on server ✓                         │
-└────────────────────────────────────────────────────┘
+Result: Both devices have latest version
 ```
 
 ---
 
-## Encryption Guarantees
+## Security Model
 
-```
-┌─────────────────────────────────────────────────┐
-│         ENCRYPTION SECURITY MODEL               │
-├─────────────────────────────────────────────────┤
-│                                                  │
-│ Master Password (user secret, never sent)      │
-│   ↓                                             │
-│ Argon2id(password, email as salt)               │
-│   ├── Memory: 64 MiB (65536 KiB)                │
-│   ├── Time cost: 3 iterations                   │
-│   ├── Parallelism: 4                            │
-│   ├── Output: 256-bit master key                │
-│   └── Brute-force resistant (OWASP compliant)   │
-│   ↓                                             │
-│ Master Key (256-bit, Zeroize on drop)          │
-│   ├── Never stored                              │
-│   ├── Never sent to server                      │
-│   ├── Regenerated on each login                │
-│   ├── Automatically zeroed from memory          │
-│   └── Protected from memory dumps               │
-│   ↓                                             │
-│ HKDF-SHA256 Expansion (IKM = master key)       │
-│   ├── Enc key: HKDF(mk, info="vaultic-enc")    │
-│   ├── Auth hash: HKDF(mk, info="vaultic-auth") │
-│   ├── Domain separation prevents key reuse      │
-│   └── Each key: 256-bit output                  │
-│   ↓                                             │
-│ AES-256-GCM per item                           │
-│   ├── Key: 256-bit encryption key               │
-│   ├── Nonce: 96-bit random (per message)        │
-│   ├── Format: nonce || ciphertext || tag        │
-│   ├── Authentication: 128-bit auth tag          │
-│   └── Integrity verified on decrypt             │
-│                                                  │
-│ Authentication to Server:                       │
-│   ├── Client: Sends auth_hash (not password)    │
-│   ├── Server: Cannot derive encryption key      │
-│   ├── Auth hash: 2nd hash of HKDF output        │
-│   └── Original HKDF output never exposed        │
-│                                                  │
-│ Result: Server has ZERO plaintext ✓             │
-│         Only ciphertext + auth hash stored      │
-│         No server-side key = no decryption     │
-│         Memory safety: keys zeroized on drop    │
-│                                                  │
-└─────────────────────────────────────────────────┘
-```
+### Authentication
+- Simple password-based (SRP deferred to v0.3)
+- Password hashing: bcrypt (10 salt rounds)
+- JWT tokens (HS256, 15min access, 7d refresh)
+- Token stored in memory (service worker), not localStorage
+
+### Encryption (Client-Side)
+- Master password never sent to server
+- Argon2id KDF (memory-hard)
+- HKDF key derivation
+- AES-256-GCM for each item
+- Random nonce per encryption
+
+### Server Storage
+- Encrypted items only (ciphertext blobs)
+- No plaintext passwords
+- No decryption capability (server can't decrypt)
+
+### API Security
+- CORS restricted to extension origins
+- HTTPS required (nginx terminates TLS)
+- Rate limiting (100 req/min on auth)
+- Input validation (Zod schemas)
 
 ---
 
 ## Offline-First Design
 
-```
-┌──────────────────────────────────────────────────┐
-│        OFFLINE-FIRST VAULT ACCESS                │
-├──────────────────────────────────────────────────┤
-│                                                   │
-│ Scenario 1: First Login (Online)                │
-│   User enters master password                    │
-│   → Derive master key                            │
-│   → Load vault from local storage (encrypted)   │
-│   → Decrypt items on-demand                     │
-│   ✓ Works offline immediately after login       │
-│                                                   │
-│ Scenario 2: No Internet                         │
-│   Browser loses connection                       │
-│   → Vault remains accessible                     │
-│   → All operations local (no sync)              │
-│   → Changes queued for later push               │
-│   ✓ User can still view, edit, copy passwords  │
-│                                                   │
-│ Scenario 3: Sync Enabled (Optional)            │
-│   User toggles "Cloud Sync" in Settings        │
-│   → Background service worker syncs on timer    │
-│   → Delta protocol (only changes)               │
-│   → Multi-device sync via server relay          │
-│   ✓ Offline-first: sync is best-effort         │
-│                                                   │
-│ Scenario 4: Sync Disabled (Default)            │
-│   Cloud Sync OFF                                 │
-│   → No sync to server                           │
-│   → Vault local-only                            │
-│   → Share links work (independent)              │
-│   ✓ Zero data on server (except auth)          │
-│                                                   │
-└──────────────────────────────────────────────────┘
-```
+### Vault Modes
+
+#### 1. Offline Mode (No Account)
+**First-run experience (SetupPasswordForm):**
+- User enters master password only (no email)
+- Random salt generated → stored in VaultConfig
+- Master key derived locally (Argon2id + random salt)
+- No server registration needed
+- All operations local (IndexedDB) — fully offline
+- Can enable Cloud Sync later by upgrading account (Settings → Create Account)
+
+**Account Upgrade Flow:**
+1. User in offline vault opens Settings → "Create Account"
+2. User enters email + re-enters master password (for auth_hash derivation)
+3. POST /auth/register with new email
+4. Backend creates account using email as salt (standard flow)
+5. VaultConfig updated: mode='online', email set, userId set
+6. Sync becomes available
+
+#### 2. Online Mode (After Registration/Login)
+- Email-based account
+- Email used as Argon2id salt (deterministic)
+- Cloud Sync toggle in Settings
+- Can enable/disable sync per-device
+
+**Without Cloud Sync:**
+- All operations local (IndexedDB)
+- No server call required
+- Vault works 100% offline (even after login)
+- No sync queue created
+
+**With Cloud Sync (Enabled in Settings):**
+- Operations still local first (fast)
+- Sync queue tracks changes
+- Background sync on interval
+- Multi-device merge with LWW resolution
+
+**Sync Off → Purge:**
+- User can delete server data
+- Or keep frozen copy
+- Personal choice
+
+### Hybrid Share Architecture
+
+**Data Split (Security):**
+- **URL Fragment:** Encrypted vault item (never sent to server)
+  ```
+  https://vaultic.io/share#data=<base64-ciphertext>&nonce=<base64>
+  ```
+- **Server:** Only metadata (view count, expiry, max views)
+  ```
+  POST /api/v1/shares/metadata
+  Input: { linkId }
+  Output: { viewCount, maxViews, expiresAt }
+  ```
+
+**Recipient Flow:**
+1. Recipient opens share link
+2. Browser extracts encrypted data from URL fragment
+3. Frontend calls `/shares/:linkId/metadata` (via authOptional)
+4. Decrypts client-side using fragment data
+5. Server logs view count (if maxViews set)
+
+**Advantages:**
+- Encrypted data never touches server
+- Backward compatible (legacy shares still work)
+- Independent of Cloud Sync toggle
+- URL-safe encoding for special characters (url-share-codec.ts)
 
 ---
 
-## Scalability Considerations
-
-| Component | Current | Bottleneck | Solution |
-|-----------|---------|------------|----------|
-| **Storage (Client)** | IndexedDB | 50MB per browser | Desktop/mobile use SQLite |
-| **Crypto (Key Derivation)** | 1s (Argon2id) | Slow on weak CPU | Accept, offload to background |
-| **Sync (Delta Protocol)** | 100 items / pull | Large item count | Pagination, cursor-based sync |
-| **Server (Axum)** | Single instance | Concurrent users | Add load balancer + multiple instances |
-| **Database (PostgreSQL)** | Local dev | Disk I/O | Use managed DB (AWS RDS, etc.) |
-| **Share Links** | Single server | No caching | Add Redis for share metadata |
-
----
-
-## Security Checklist
-
-- [x] Master password never sent to server
-- [x] Master key never persisted (regenerated from password)
-- [x] Vault items encrypted individually (AES-256-GCM)
-- [x] Argon2id slow (resistant to brute-force)
-- [x] HKDF multi-purpose keys (isolation)
-- [x] CORS restricted (extension origin)
-- [x] JWT short-lived (24h, refresh rotation)
-- [x] HTTPS only (enforced in production)
-- [x] No plaintext logs
-- [x] Database encrypted at rest (optional)
-
----
-
-## Implementation Status (MVP Complete)
-
-| Phase | Component | Status |
-|-------|-----------|--------|
-| 1 | Monorepo setup | ✅ Complete |
-| 2 | Crypto (Rust) | ✅ Complete |
-| 3 | API server + DB | ✅ Complete |
-| 4 | Extension shell + Auth | ✅ Complete |
-| 5 | Vault CRUD + Sync | ✅ Complete |
-| 6 | Autofill + Content script | ✅ Complete |
-| 7 | Secure Share | ✅ Complete |
-| 8 | Polish + CI/CD | ✅ Complete |
-
-### Key Achievements (v0.1.0)
-- ✅ Zero-knowledge encryption (client-side only)
-- ✅ Offline-first by design (Cloud Sync optional)
-- ✅ Multi-device sync with LWW conflict resolution
-- ✅ Auto-fill on login forms
-- ✅ Secure share links (one-time, encrypted)
-- ✅ Settings & export/import with encryption
-- ✅ 13 shared UI components
-- ✅ 84+ tests (Vitest)
-- ✅ Code optimizations (refactoring, build performance)
-
-### Architecture Quality
-- **Modularity:** 7 TS packages, 4 Rust crates (clear separation of concerns)
-- **Type Safety:** Strict TypeScript, no `any` types (except 2 justified cases)
-- **Testing:** 70%+ coverage, integration tests for crypto & sync
-- **Security:** No plaintext on server, TLS 1.3+, CORS restricted
-- **Performance:** <200ms vault search, <2s sync, <1s auto-fill
-
----
-
-*Document updated: 2026-03-26*
-*MVP Status: ✅ Complete (All 8 phases implemented)*
-*Current Release: v0.1.0 — Production ready for individual users*
+**Last updated: 2026-03-28 | Offline-First MVP + Hybrid Share | Backend: Node.js/Express | Database: MongoDB**

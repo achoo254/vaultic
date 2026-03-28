@@ -60,12 +60,12 @@ Cài thủ công (Developer Mode):
    pnpm install && pnpm build
    ```
 2. Mở `chrome://extensions` → bật **Developer mode**
-3. Chọn **Load unpacked** → trỏ tới `packages/extension/.output/chrome-mv3`
+3. Chọn **Load unpacked** → trỏ tới `client/apps/extension/.output/chrome-mv3`
 
 ### Firefox
 > *Sắp có trên Firefox Add-ons*
 
-Build tương tự, chọn `packages/extension/.output/firefox-mv2`.
+Build tương tự, chọn `client/apps/extension/.output/firefox-mv2`.
 
 ---
 
@@ -145,9 +145,8 @@ Mật khẩu chính
 ## 🛠 Dành cho nhà phát triển
 
 ### Yêu cầu
-- Node.js 18+, pnpm 9+
-- Rust 1.82+, Cargo
-- PostgreSQL 16 (hoặc Docker)
+- Node.js 22+, pnpm 9+
+- MongoDB (external hoặc Docker)
 
 ### Khởi chạy nhanh
 
@@ -156,58 +155,70 @@ Mật khẩu chính
 git clone https://gitlabs.inet.vn/dattqh/vaultic.git && cd vaultic
 pnpm install
 
-# Khởi động database
-docker compose -f docker/docker-compose.yml up -d postgres
+# Đặt biến môi trường
+cp backend/.env.example backend/.env
+# Edit backend/.env: MONGODB_URI, JWT_SECRET
 
 # Chạy server API (port 8080)
-cargo run -p vaultic-server
+cd backend && pnpm dev
 
 # Chạy extension (hot reload)
-pnpm --filter extension dev
-# → Load unpacked từ packages/extension/.wxt/chrome-mv3
+cd .. && pnpm --filter @vaultic/extension dev
+# → Load unpacked từ client/apps/extension/.wxt/chrome-mv3
 ```
 
 ### Cấu trúc dự án
 
 ```
 vaultic/
-├── crates/                    # Rust
-│   ├── vaultic-crypto/        # Argon2id, AES-256-GCM, HKDF
-│   ├── vaultic-server/        # Axum API server
-│   ├── vaultic-types/         # Shared types
-│   └── vaultic-migration/     # Database migrations
-├── packages/                  # TypeScript
-│   ├── types/                 # Shared TS types
-│   ├── crypto/                # WebCrypto bridge
-│   ├── storage/               # IndexedDB vault store
-│   ├── sync/                  # Delta sync engine
-│   ├── api/                   # Server API client
-│   ├── ui/                    # Shared React components
-│   └── extension/             # WXT browser extension
+├── _archive/crates/           # Rust code (archived, reference only)
+├── backend/                   # Node.js/Express server
+│   ├── src/
+│   │   ├── server.ts          # Express app
+│   │   ├── config/            # Environment config
+│   │   ├── routes/            # API routes
+│   │   ├── models/            # Mongoose schemas
+│   │   ├── services/          # Business logic
+│   │   └── middleware/        # Auth, error handling
+│   └── package.json
+├── client/                    # Client-side code
+│   ├── apps/
+│   │   └── extension/         # WXT browser extension
+│   └── packages/
+│       ├── types/             # Shared TS types
+│       ├── crypto/            # WebCrypto bridge
+│       ├── storage/           # IndexedDB vault store
+│       ├── sync/              # Delta sync engine
+│       ├── api/               # Server API client
+│       └── ui/                # Shared React components
+├── shared/                    # Shared packages
+│   └── types/                 # TS types (shared)
 └── docker/                    # Docker configs
 ```
 
 ### Lệnh phổ biến
 
 ```bash
-# Rust
-cargo test                           # Chạy tất cả test
-cargo clippy --all-targets           # Lint
-cargo fmt --check                    # Kiểm tra format
+# Backend
+cd backend
+pnpm dev                            # Chạy dev server (port 8080)
+pnpm build                          # Compile TypeScript → dist/
+pnpm start                          # Chạy production server
 
-# TypeScript
-pnpm build                           # Build tất cả packages
-pnpm lint                            # Lint tất cả
-pnpm test                            # Test tất cả
-pnpm --filter @vaultic/crypto build  # Build 1 package
+# Client
+pnpm --filter @vaultic/extension dev # Dev extension (hot reload)
+pnpm build                          # Build tất cả packages
+pnpm lint                           # Lint tất cả
+pnpm test                           # Test tất cả
+pnpm --filter @vaultic/crypto build # Build 1 package
 ```
 
 ### Self-host server
 
 ```bash
 # Copy & chỉnh sửa biến môi trường
-cp .env.example .env
-# Sửa DATABASE_URL, JWT_SECRET trong .env
+cp backend/.env.example backend/.env
+# Sửa MONGODB_URI, JWT_SECRET trong backend/.env
 
 # Chạy với Docker Compose
 docker compose -f docker/docker-compose.yml up -d

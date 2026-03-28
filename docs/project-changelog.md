@@ -8,9 +8,171 @@ All notable changes to the Vaultic project are documented here. Format follows [
 
 ### In Progress
 - Mobile apps (iOS/Android) — architecture planning
-- SRP (Secure Remote Password) protocol — v1.1 phase
+- SRP (Secure Remote Password) protocol — v0.3 phase
 - WebAuthn/TOTP support — security enhancement
-- Team vault sharing — collaboration features
+- Team vault sharing — v1.0.0 collaboration features
+
+---
+
+## [0.3.0] - 2026-03-28
+
+### Offline-First Login & Hybrid Share Architecture
+
+#### Feature: Vault Creation Without Account
+- **SetupPasswordForm** — New first-run screen: enter master password only (no email)
+- **Random salt** — Each offline vault gets unique Argon2id salt (stored in VaultConfig)
+- **Offline vault mode** — All operations local (IndexedDB) — works 100% offline
+- **Account upgrade** — Users can later create account (Settings → "Create Account") to enable Cloud Sync
+
+#### Feature: Hybrid Share (Encrypted URL Fragment)
+- **URL-safe encoding** — New `url-share-codec.ts` for safe share link handling
+- **Data split:**
+  - Encrypted item data stays in URL fragment (never to server)
+  - Server stores only metadata: view count, expiry, max views
+- **New endpoint** — `GET /api/v1/shares/:id/metadata` (authOptional middleware)
+- **Backward compatible** — Legacy shares continue to work
+
+#### New Types & Architecture
+- **VaultConfig type** (`shared/types/vault-config.ts`):
+  ```typescript
+  mode: 'offline' | 'online'
+  salt: string                    // Argon2id salt
+  authHashVerifier: string        // SHA256(enc_key) for offline password check
+  email?: string                  // Online only
+  userId?: string                 // Online only
+  ```
+- **VaultMode union** — Type-safe mode tracking throughout app
+
+#### Crypto Updates
+- **deriveMasterKeyWithSalt()** — New function for offline vault with random salt
+- **Standard deriveMasterKey()** — Still used for online (email-based salt)
+- **HKDF domain separation** — Unchanged (vaultic-enc, vaultic-auth)
+
+#### Backend Changes
+- **authOptional middleware** — Optional JWT (sets req.userId if valid, continues if not)
+- **Share metadata endpoint** — Check view counts without sending encrypted data
+- **Backward compat** — All existing endpoints unchanged
+
+#### Router Changes
+- **vaultState instead of isLoggedIn** — Three states: no_vault, locked, unlocked
+- **SetupPasswordForm as entry point** — First-run UX for new users
+- **Offline vault flows** — Complete local vault creation/usage without server
+
+#### What Stayed the Same
+- ✅ Sync engine (delta sync + LWW)
+- ✅ Client-side encryption (WebCrypto)
+- ✅ IndexedDB storage
+- ✅ All existing API endpoints
+- ✅ Autofill & content script
+- ✅ Settings & export/import
+
+---
+
+## [0.2.0] - 2026-03-27
+
+### Backend Migration: Rust/PostgreSQL → Node.js/Express/MongoDB
+
+#### Migration Summary
+- **Completed:** 2026-03-27
+- **Status:** All core functionality migrated, production-ready
+
+#### What Changed
+- **Backend:** Migrated from Rust (Axum) + PostgreSQL to Node.js (Express) + MongoDB
+- **Server Location:** Old: `crates/vaultic-server/`, New: `backend/`
+- **Directory Restructure:**
+  - `packages/` → `client/packages/` (client packages)
+  - `packages/extension` → `client/apps/extension` (browser extension)
+  - `crates/` → `_archive/crates/` (archived Rust code, reference only)
+  - New: `shared/types/` (shared TypeScript types)
+
+#### Backend Changes
+- Express.js 4 + TypeScript for HTTP server
+- Mongoose 8 for MongoDB ORM
+- Same API endpoints (auth, sync, share) with Express routes
+- JWT authentication (15min access, 7d refresh tokens)
+- Pino logger for structured logging
+- Zod for input validation
+- bcrypt for password hashing
+- Rate limiting on auth endpoints (100 req/min per IP)
+
+#### Database Changes
+- MongoDB external (not containerized in docker-compose)
+- Same schema structure as PostgreSQL (users, vaultitems, folders, secureshares)
+- Collections use camelCase field naming
+- TTL indexes for auto-cleanup
+
+#### Docker Changes
+- **Old:** Dockerfile for Rust + PostgreSQL container
+- **New:** Dockerfile for Node.js 22 Alpine (multi-stage build)
+- Backend connects to external MongoDB via MONGODB_URI env var
+- Removed PostgreSQL service from docker-compose.yml
+
+#### File Structure Updates
+- `pnpm-workspace.yaml` — root workspace config (backend, client, shared)
+- `backend/package.json` — `@vaultic/backend` scoped package
+- `backend/src/server.ts` — Express app setup + MongoDB connection
+- `backend/src/routes/*.ts` — API endpoints (auth, sync, share, health)
+- `backend/src/models/*.ts` — Mongoose schemas
+- `backend/src/services/*.ts` — Business logic (auth, sync, share)
+- `backend/src/middleware/*.ts` — Middleware (auth, error, logging, rate limit)
+- `backend/src/utils/*.ts` — Utilities (JWT, validation, custom errors)
+
+#### Client Packages Moved
+- `packages/api/` → `client/packages/api/`
+- `packages/crypto/` → `client/packages/crypto/`
+- `packages/storage/` → `client/packages/storage/`
+- `packages/sync/` → `client/packages/sync/`
+- `packages/ui/` → `client/packages/ui/`
+- `packages/extension/` → `client/apps/extension/`
+- `packages/types/` → `shared/types/`
+
+#### Build & Development
+- **Backend dev:** `cd backend && pnpm dev` (tsx watch)
+- **Backend build:** `cd backend && pnpm build` (TypeScript → dist/)
+- **Client packages:** `pnpm build` (Turbo caching)
+- **Extension:** `pnpm --filter @vaultic/extension dev`
+
+#### Environment Variables
+**New (backend/.env):**
+- `MONGODB_URI` — MongoDB connection string (required)
+- `JWT_SECRET` — Secret for JWT signing (required)
+- `SERVER_PORT` — API port (default: 8080)
+- `ACCESS_TOKEN_TTL_MIN` — Access token TTL (default: 15)
+- `REFRESH_TOKEN_TTL_DAYS` — Refresh token TTL (default: 7)
+- `CORS_ORIGIN` — CORS whitelist (comma-separated)
+- `LOG_LEVEL` — Pino log level (default: info)
+- `NODE_ENV` — development|production
+
+#### Breaking Changes (Deployment Only)
+- **Removed:** `DATABASE_URL` (PostgreSQL)
+- **Removed:** `RUST_LOG` (Rust logging)
+- **Added:** `MONGODB_URI` (required)
+- **Added:** `JWT_SECRET` (required)
+- Self-hosting teams must provide external MongoDB
+
+#### CI/CD Updates (Pending)
+- `.gitlab-ci.yml` needs update:
+  - Remove `rust-test` job
+  - Remove CARGO_HOME variable
+  - Update `node-build` job paths (client/apps/extension)
+  - Update `deploy-staging` (MongoDB instead of PostgreSQL env vars)
+
+#### What Stayed the Same
+- ✅ All crypto primitives (Argon2id, AES-256-GCM, HKDF) still work
+- ✅ API endpoint signatures unchanged (same routes)
+- ✅ Client-side encryption (WebCrypto in browser)
+- ✅ Offline-first design (IndexedDB + delta sync)
+- ✅ Zero-knowledge architecture (server never sees plaintext)
+- ✅ Extension functionality (Chrome + Firefox)
+- ✅ Design system (shared tokens in @vaultic/ui)
+- ✅ Sync engine (delta sync + LWW conflict resolution)
+- ✅ Share functionality (encrypted links)
+
+#### Notes
+- Rust crypto crate still available in `_archive/crates/vaultic-crypto` for reference
+- TypeScript packages now handle all server logic (frontend + backend)
+- MongoDB provides more flexible schema than PostgreSQL
+- Node.js backend simpler to maintain for solo developer
 
 ---
 

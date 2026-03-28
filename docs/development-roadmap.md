@@ -4,16 +4,17 @@ Strategic roadmap for post-MVP feature development. Prioritized by user value an
 
 ---
 
-## Current Status: v0.1.0 (MVP Complete)
+## Current Status: v0.2.0 (Backend Migrated)
 
-**Release Date:** 2026-03-26
-**Completion:** All 8 phases delivered
+**Release Date:** 2026-03-27
+**Completion:** MVP complete (v0.1.0) + backend migration to Node.js/Express/MongoDB
 **User Base:** Beta — ready for individual users
 **Stability:** Production-ready (no known critical bugs)
+**Server:** Node.js 22 + Express 4 (migrated from Rust/Axum)
 
 ---
 
-## v0.2.0: Mobile Apps (Q2-Q3 2026)
+## v0.3.0: Mobile Apps (Q2-Q3 2026)
 
 **Goal:** Extend to iOS & Android while sharing crypto/sync engine.
 
@@ -45,7 +46,7 @@ Strategic roadmap for post-MVP feature development. Prioritized by user value an
 
 ---
 
-## v0.3.0: SRP & Advanced Auth (Q3 2026)
+## v0.4.0: SRP & Advanced Auth (Q3 2026)
 
 **Goal:** Implement Secure Remote Password protocol for stronger server interaction.
 
@@ -76,7 +77,7 @@ Strategic roadmap for post-MVP feature development. Prioritized by user value an
 
 ---
 
-## v1.0.0: Team Vaults & Collaboration (Q4 2026)
+## v1.0.0: Team Vaults & Collaboration (Q4 2026-Q1 2027)
 
 **Goal:** Enable small teams to share encrypted vaults with fine-grained access control.
 

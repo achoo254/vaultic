@@ -5,7 +5,7 @@ import { create } from 'zustand';
 import type { VaultItem, Folder, LoginCredential, ItemType } from '@vaultic/types';
 import { IndexedDBStore, IndexedDBSyncQueue } from '@vaultic/storage';
 import { getEncryptionKey } from '../lib/session-storage';
-import { encryptVaultItem, decryptVaultItem, decryptFolderName } from '../lib/vault-crypto';
+import { encryptVaultItem, decryptVaultItem, encryptFolderName, decryptFolderName } from '../lib/vault-crypto';
 
 const store = new IndexedDBStore();
 const syncQueue = new IndexedDBSyncQueue();

@@ -4,3 +4,4 @@ export * from './user';
 export * from './sync';
 export * from './share';
 export * from './crypto';
+export * from './vault-config';

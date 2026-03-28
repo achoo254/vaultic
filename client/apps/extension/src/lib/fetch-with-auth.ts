@@ -27,7 +27,7 @@ export async function fetchWithAuth(
 
   // Auto-refresh on 401 and retry once
   if (res.status === 401 && tokens.refreshToken) {
-    const refreshRes = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+    const refreshRes = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: tokens.refreshToken }),

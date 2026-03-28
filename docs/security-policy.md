@@ -57,7 +57,7 @@ MUST read this document before modifying any sensitive module listed in `docs/ag
 | API keys/tokens | Environment variables | Never committed to git |
 
 ### Infrastructure
-- **Docker:** Use `--env-file` or compose `env_file:` — NEVER bake secrets into image layers
+- **Server:** `.env` file on production server, managed via CI/CD injection — never committed to git
 - **CI/CD (GitLab):** Use masked CI/CD variables — never echo secrets in pipeline logs
 - **Production:** Environment variables on host or secrets manager
 
