@@ -1,7 +1,7 @@
-// Screen 10: Security Health — password strength analysis with SVG donut chart
+// Screen 10: Security Health — password strength analysis with score circle and issue cards
 import React from 'react';
-import { tokens, HStack, Card, useTheme } from '@vaultic/ui';
-import { ArrowLeft, ShieldAlert, RefreshCw, ShieldCheck } from 'lucide-react';
+import { tokens, useTheme } from '@vaultic/ui';
+import { ArrowLeft, ShieldAlert, Copy, Timer, ChevronRight } from 'lucide-react';
 import { useVaultStore } from '../../stores/vault-store';
 
 interface SecurityHealthProps { onBack: () => void; }
@@ -17,101 +17,109 @@ export function SecurityHealth({ onBack }: SecurityHealthProps) {
   const reused = total - new Set(passwords).size;
   const strong = total - weak;
   const score = total > 0 ? Math.round(((total - weak - reused) / total) * 100) : 100;
-
-  const scoreColor = score >= 80 ? colors.success : score >= 50 ? colors.warning : colors.error;
-
-  const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
-  const headerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: tokens.spacing.sm, padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`, borderBottom: `1px solid ${colors.border}` };
-  const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: colors.text, padding: 4, display: 'flex', alignItems: 'center' };
-  const titleStyle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family };
-  const contentStyle: React.CSSProperties = { flex: 1, padding: tokens.spacing.xxl, display: 'flex', flexDirection: 'column', gap: tokens.spacing.xxl };
-  const scoreSection: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: tokens.spacing.sm };
-  const scoreLabelStyle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.medium, color: colors.text, fontFamily: tokens.font.family };
-  const categoriesStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: tokens.spacing.md };
-  const catRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: tokens.spacing.md, padding: `${tokens.spacing.sm}px 0` };
-  const catIconBg: React.CSSProperties = { width: 32, height: 32, borderRadius: tokens.radius.md, display: 'flex', alignItems: 'center', justifyContent: 'center' };
-  const catLabel: React.CSSProperties = { flex: 1, fontSize: tokens.font.size.base, color: colors.text, fontFamily: tokens.font.family };
-  const catCount: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, fontFamily: tokens.font.family };
-  const summaryItem: React.CSSProperties = { textAlign: 'center' };
-  const summaryValue: React.CSSProperties = { fontSize: tokens.font.size.xl, fontWeight: tokens.font.weight.bold, color: colors.text, fontFamily: tokens.font.family };
-  const summaryLabel: React.CSSProperties = { fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family };
-
-  function DonutChart({ score: s, color }: { score: number; color: string }) {
-    const radius = 44;
-    const strokeWidth = 8;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (s / 100) * circumference;
-    return (
-      <svg width={110} height={110} viewBox="0 0 110 110">
-        <circle cx={55} cy={55} r={radius} fill="none" stroke={colors.border} strokeWidth={strokeWidth} />
-        <circle
-          cx={55} cy={55} r={radius} fill="none"
-          stroke={color} strokeWidth={strokeWidth}
-          strokeDasharray={circumference} strokeDashoffset={offset}
-          strokeLinecap="round"
-          transform="rotate(-90 55 55)"
-          style={{ transition: 'stroke-dashoffset 0.5s ease' }}
-        />
-        <text x={55} y={55} textAnchor="middle" dominantBaseline="central"
-          style={{ fontSize: 24, fontWeight: 700, fontFamily: tokens.font.family, fill: color }}>
-          {s}%
-        </text>
-      </svg>
-    );
-  }
-
-  function CategoryRow({ icon, label, count, color }: { icon: React.ReactNode; label: string; count: number; color: string }) {
-    return (
-      <div style={catRowStyle}>
-        <div style={{ ...catIconBg, backgroundColor: `${color}15`, color }}>{icon}</div>
-        <span style={catLabel}>{label}</span>
-        <span style={{ ...catCount, color }}>{count}</span>
-      </div>
-    );
-  }
-
-  function SummaryItem({ label, value }: { label: string; value: number }) {
-    return (
-      <div style={summaryItem}>
-        <div style={summaryValue}>{value}</div>
-        <div style={summaryLabel}>{label}</div>
-      </div>
-    );
-  }
+  const scoreColor = score >= 80 ? '#22C55E' : score >= 50 ? '#F59E0B' : '#EF4444';
 
   return (
-    <div style={containerStyle}>
-      <div style={headerStyle}>
-        <button onClick={onBack} style={backBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
-        <span style={titleStyle}>Security Health</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: tokens.spacing.sm,
+        height: 52, padding: `0 ${tokens.spacing.lg}px`, flexShrink: 0,
+      }}>
+        <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.text, padding: 4, display: 'flex' }}>
+          <ArrowLeft size={20} strokeWidth={1.5} />
+        </button>
+        <span style={{ fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family }}>
+          Security Health
+        </span>
       </div>
 
-      <div style={contentStyle}>
-        {/* SVG Donut chart */}
-        <div style={scoreSection}>
-          <DonutChart score={score} color={scoreColor} />
-          <div style={scoreLabelStyle}>
-            {score >= 80 ? 'Strong' : score >= 50 ? 'Fair' : 'Weak'}
-          </div>
+      {/* Body */}
+      <div style={{ flex: 1, padding: `${tokens.spacing.md}px ${tokens.spacing.xxl}px`, display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto' }}>
+        {/* Score circle */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+          <svg width={80} height={80} viewBox="0 0 80 80">
+            <circle cx={40} cy={40} r={33} fill="none" stroke={colors.border} strokeWidth={6} />
+            <circle cx={40} cy={40} r={33} fill="none" stroke={scoreColor} strokeWidth={6}
+              strokeDasharray={2 * Math.PI * 33} strokeDashoffset={2 * Math.PI * 33 * (1 - score / 100)}
+              strokeLinecap="round" transform="rotate(-90 40 40)"
+              style={{ transition: 'stroke-dashoffset 0.5s ease' }} />
+            <text x={40} y={40} textAnchor="middle" dominantBaseline="central"
+              style={{ fontSize: 22, fontWeight: 700, fontFamily: tokens.font.family, fill: colors.text }}>
+              {score}%
+            </text>
+          </svg>
+          <span style={{ fontSize: tokens.font.size.sm, fontWeight: tokens.font.weight.medium, color: colors.secondary, fontFamily: tokens.font.family }}>
+            Overall Score
+          </span>
         </div>
 
-        {/* Issue categories with Lucide icons */}
-        <div style={categoriesStyle}>
-          <CategoryRow icon={<ShieldAlert size={18} strokeWidth={1.5} color={colors.error} />} label="Weak passwords" count={weak} color={colors.error} />
-          <CategoryRow icon={<RefreshCw size={18} strokeWidth={1.5} color={colors.warning} />} label="Reused passwords" count={reused} color={colors.warning} />
-          <CategoryRow icon={<ShieldCheck size={18} strokeWidth={1.5} color={colors.success} />} label="Strong passwords" count={strong} color={colors.success} />
+        {/* Issue cards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <IssueCard
+            icon={<ShieldAlert size={20} strokeWidth={1.5} color="#EF4444" />}
+            label="Weak Passwords" desc={`${weak} passwords need strengthening`}
+            count={weak} countColor="#EF4444"
+            bg="#FEF2F2" borderColor="#FECACA" darkBg="#450A0A" darkBorder="#7F1D1D"
+          />
+          <IssueCard
+            icon={<Copy size={20} strokeWidth={1.5} color="#F59E0B" />}
+            label="Reused Passwords" desc={`${reused} passwords used more than once`}
+            count={reused} countColor="#F59E0B"
+            bg="#FFFBEB" borderColor="#FDE68A" darkBg="#422006" darkBorder="#78350F"
+          />
+          <IssueCard
+            icon={<Timer size={20} strokeWidth={1.5} color="#0EA5E9" />}
+            label="Old Passwords" desc="Not changed in 6+ months"
+            count={0} countColor="#0EA5E9"
+            bg="#F0F9FF" borderColor="#BAE6FD" darkBg="#0C4A6E" darkBorder="#075985"
+          />
         </div>
 
-        {/* Summary */}
-        <Card variant="filled" padding="lg">
-          <HStack justify="space-around">
-            <SummaryItem label="Total" value={total} />
-            <SummaryItem label="Strong" value={strong} />
-            <SummaryItem label="Weak" value={weak} />
-            <SummaryItem label="Reused" value={reused} />
-          </HStack>
-        </Card>
+        {/* Summary bar */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', padding: `${tokens.spacing.md}px 0`,
+          borderTop: `1px solid ${colors.border}`,
+        }}>
+          <SummaryItem label="Total" value={total} color={colors.text} />
+          <SummaryItem label="Strong" value={strong} color="#22C55E" />
+          <SummaryItem label="Medium" value={total - strong - weak} color="#F59E0B" />
+          <SummaryItem label="Weak" value={weak} color="#EF4444" />
+        </div>
       </div>
+    </div>
+  );
+}
+
+function IssueCard({ icon, label, desc, count, countColor, bg, borderColor, darkBg, darkBorder }: {
+  icon: React.ReactNode; label: string; desc: string; count: number; countColor: string;
+  bg: string; borderColor: string; darkBg: string; darkBorder: string;
+}) {
+  const { colors, resolved } = useTheme();
+  const isDark = resolved === 'dark';
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 12, height: 52,
+      padding: `0 14px`, borderRadius: 10,
+      backgroundColor: isDark ? darkBg : bg,
+      border: `1px solid ${isDark ? darkBorder : borderColor}`,
+    }}>
+      {icon}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{ fontSize: tokens.font.size.base, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family }}>{label}</span>
+        <span style={{ fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family }}>{desc}</span>
+      </div>
+      <span style={{ fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.bold, color: countColor, fontFamily: tokens.font.family }}>{count}</span>
+      <ChevronRight size={16} strokeWidth={1.5} color={colors.secondary} />
+    </div>
+  );
+}
+
+function SummaryItem({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ fontSize: tokens.font.size.xl, fontWeight: tokens.font.weight.bold, color, fontFamily: tokens.font.family }}>{value}</div>
+      <div style={{ fontSize: tokens.font.size.xs, color: '#71717A', fontFamily: tokens.font.family }}>{label}</div>
     </div>
   );
 }
