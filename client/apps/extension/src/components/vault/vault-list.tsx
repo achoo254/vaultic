@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
 import { Lock, Settings, Plus, FolderOpen } from 'lucide-react';
 import { AppHeader } from '../common/app-header';
+import { useAuthStore } from '../../stores/auth-store';
 import { useVaultStore, useFilteredItems } from '../../stores/vault-store';
 import { SearchBar } from './search-bar';
 import { EmptyVault } from './empty-vault';
@@ -19,6 +20,7 @@ interface VaultListProps {
 
 export function VaultList({ onItemClick, onAddItem, onManageFolders, onSettings }: VaultListProps) {
   const { colors } = useTheme();
+  const lockVault = useAuthStore((s) => s.lock);
   const { items, searchQuery, setSearchQuery, loadVault, loading } = useVaultStore();
   const filtered = useFilteredItems();
   const [currentHost, setCurrentHost] = useState('');
@@ -84,7 +86,7 @@ export function VaultList({ onItemClick, onAddItem, onManageFolders, onSettings 
   return (
     <div style={containerStyle}>
       <AppHeader>
-        <button onClick={() => {}} style={iconBtn} title="Lock vault">
+        <button onClick={lockVault} style={iconBtn} title="Lock vault">
           <Lock size={18} strokeWidth={1.5} color={colors.secondary} />
         </button>
         <button onClick={onManageFolders} style={iconBtn} title="Manage folders">
