@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "wxt",
+    "dev:dattqh": "wxt --mode dattqh",
     "build": "wxt build",
     "lint": "tsc --noEmit"
   },
