@@ -1,6 +1,6 @@
 // Background service worker — orchestrator for auto-lock, autofill, clipboard
 
-import { initAutoLock, listenAutoLockChanges } from './background/auto-lock-handler';
+import { initAutoLock, checkAutoLock, recordActivity, listenAutoLockChanges } from './background/auto-lock-handler';
 import { clearClipboardViaTab, scheduleClipboardClear } from './background/clipboard-handler';
 import { getMatchingCredentials, handleCapturedCredential, saveCredential } from './background/credential-handler';
 
@@ -8,8 +8,9 @@ export default defineBackground(() => {
   initAutoLock();
   listenAutoLockChanges();
 
-  // Clipboard clear alarm handler
+  // Alarm handler for auto-lock check + clipboard clear
   browser.alarms.onAlarm.addListener(async (alarm) => {
+    if (alarm.name === 'auto-lock-check') await checkAutoLock();
     if (alarm.name === 'clear-clipboard') await clearClipboardViaTab();
   });
 
@@ -29,6 +30,8 @@ async function handleMessage(msg: { type: string; [key: string]: unknown }) {
       await chrome.storage.session.remove('enc_key');
       return { ok: true };
     }
+    case 'record-activity':
+      return recordActivity();
     case 'schedule-clipboard-clear':
       return scheduleClipboardClear();
     case 'GET_MATCHES':

@@ -44,9 +44,10 @@ export function App() {
   const [view, setView] = useState<View>({ type: 'loading' });
   const [activeTab, setActiveTab] = useState<NavTab>('vault' as NavTab);
 
-  // Hydrate auth state on mount
+  // Hydrate auth state + record activity for auto-lock timer
   useEffect(() => {
     hydrate();
+    chrome.runtime?.sendMessage?.({ type: 'record-activity' }).catch(() => {});
   }, [hydrate]);
 
   // Route based on vaultState (replaces old isLoggedIn + isLocked logic)
