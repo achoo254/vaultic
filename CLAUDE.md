@@ -6,97 +6,139 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Vaultic — open-source, extension-first password manager with zero-knowledge encryption. Targets individuals and small teams as a simpler/cheaper alternative to 1Password/Bitwarden.
 
+## Agent Protocol
+
+**This project is 100% developed by AI agents. Follow these rules strictly.**
+
+### Mandatory Reading
+1. This file (`CLAUDE.md`) — always loaded at session start
+2. `docs/agent-rules.md` — MUST read before ANY code implementation
+3. `docs/security-policy.md` — MUST read before touching sensitive modules
+4. `docs/code-standards.md` — detailed patterns and examples
+
+### Sensitive Modules (require security-policy.md review)
+- `backend/src/services/auth-service.ts`, `backend/src/middleware/auth-middleware.ts`
+- `backend/src/routes/share-route.ts`, `backend/src/routes/sync-route.ts`
+- `client/packages/crypto/src/**` (all encryption/key derivation)
+- `client/apps/extension/src/stores/auth-store.ts`, `src/lib/share-crypto.ts`, `src/lib/fetch-with-auth.ts`
+
+### Top 10 Rules
+1. MUST read `docs/` before implementation — grep for existing patterns first
+2. NEVER create new files if existing file serves same purpose — edit existing
+3. NEVER hardcode secrets, URLs, credentials — use environment variables
+4. ALL UI must use design tokens from `@vaultic/ui` — never hardcode colors/fonts/spacing
+5. ALL icons must use `lucide-react` with `strokeWidth={1.5}` — never emoji
+6. File size limit: 200 lines — modularize if exceeding
+7. Cross-package imports: `@vaultic/*` — never relative paths
+8. Run `tsc --noEmit` after modifying TypeScript files
+9. Conventional commits only — no AI references in messages
+10. Security audit required after modifying any sensitive module
+
 ## Architecture
 
-Monorepo: Cargo workspace (Rust) + Turborepo (pnpm, Node.js). Production-ready modular structure.
+Monorepo: pnpm workspace + Turborepo. Backend: Node.js/Express/MongoDB.
 
 ```
 vaultic/
-├── crates/                       # ── RUST ──
+├── _archive/crates/              # ── ARCHIVED RUST CODE (reference only) ──
 │   ├── vaultic-crypto/           # Argon2id, AES-256-GCM, HKDF, password gen
-│   ├── vaultic-server/           # Axum API: auth + sync relay + share only
-│   ├── vaultic-types/            # Shared Rust types (serde)
-│   └── vaultic-migration/        # SeaORM migrations (separate crate)
-├── packages/                     # ── TYPESCRIPT ──
-│   ├── types/                    # Shared TS types (all platforms)
-│   ├── crypto/                   # WebCrypto bridge (all platforms)
-│   ├── storage/                  # VaultStore interface + IndexedDB impl
-│   ├── sync/                     # Sync engine + conflict resolver
-│   ├── api/                      # Server API client (ofetch)
-│   ├── ui/                       # Shared React components (shadcn/ui)
-│   └── extension/                # WXT browser extension (thin UI layer)
+│   ├── vaultic-server/           # OLD: Axum API server (replaced by Node.js backend)
+│   ├── vaultic-types/            # OLD: Shared Rust types
+│   └── vaultic-migration/        # OLD: SeaORM migrations (PostgreSQL)
+├── backend/                      # ── NODE.JS/EXPRESS/TYPESCRIPT ──
+│   ├── src/
+│   │   ├── server.ts             # Express app setup + MongoDB connection
+│   │   ├── config/               # Environment variables
+│   │   ├── routes/               # API routes (auth, sync, share, health)
+│   │   ├── models/               # Mongoose schemas (User, VaultItem, Folder, SecureShare)
+│   │   ├── services/             # Business logic (auth, sync, share)
+│   │   ├── middleware/           # Auth, error handling, rate limiting, logging
+│   │   ├── utils/                # Helpers (JWT, validation, errors)
+│   │   ├── types/                # TypeScript definitions
+│   │   └── static/               # Share page HTML
+│   ├── dist/                     # Compiled JavaScript
+│   ├── package.json
+│   └── tsconfig.json
+├── client/                       # ── CLIENT (TYPESCRIPT) ──
+│   ├── apps/
+│   │   └── extension/            # WXT browser extension (Chrome + Firefox)
+│   └── packages/
+│       ├── api/                  # Server API client (ofetch)
+│       ├── crypto/               # WebCrypto bridge (all platforms)
+│       ├── storage/              # VaultStore interface + IndexedDB impl
+│       ├── sync/                 # Sync engine + conflict resolver
+│       └── ui/                   # Shared React components (shadcn/ui)
+├── shared/                       # ── SHARED ──
+│   └── types/                    # Shared TS types (all platforms)
 ├── docker/
-│   ├── Dockerfile
-│   ├── docker-compose.dev.yml
-│   └── docker-compose.prod.yml
-├── Cargo.toml                    # Workspace root
-├── package.json                  # pnpm workspace root
-└── turbo.json                    # Turborepo config
-```
-
-### Package Dependency Graph
-```
-                types
-               ╱  │  ╲
-             ╱    │    ╲
-          crypto  api  storage
-             ╲    │    ╱
-              sync engine
-             ╱    │    ╲
-       extension desktop  web    ← Thin UI layers
+│   ├── Dockerfile                # Node.js 22 Alpine multi-stage build
+│   ├── docker-compose.yml        # Backend only (MongoDB external)
+│   ├── docker-compose.staging.yml
+│   └── nginx/
+├── pnpm-workspace.yaml           # Workspace root
+├── package.json                  # Root config
+├── turbo.json                    # Turborepo config
+├── Cargo.toml                    # ARCHIVED (workspace commented out)
+└── .gitlab-ci.yml               # CI/CD pipeline
 ```
 
 ## Tech Stack
 
 | Layer | Tech | Package |
 |-------|------|---------|
-| Server | Rust (Axum) + SeaORM + PostgreSQL 16 | `crates/vaultic-server/` |
-| Crypto (Rust) | Argon2id + AES-256-GCM + HKDF | `crates/vaultic-crypto/` |
-| Crypto (TS) | WebCrypto API + argon2-browser | `packages/crypto/` |
-| Storage | IndexedDB (ext) / SQLite (desktop) | `packages/storage/` |
-| Sync | Delta sync + LWW conflict resolver | `packages/sync/` |
-| API Client | ofetch | `packages/api/` |
-| Types (TS) | Shared TypeScript types | `packages/types/` |
-| UI | React + Tailwind + shadcn/ui | `packages/ui/` |
-| Extension | WXT framework (Chrome + Firefox) | `packages/extension/` |
-| TLS | rustls (not openssl-sys) | CentOS 7 compat |
+| Server | Node.js 22 + Express 4 + TypeScript + Mongoose 8 | `backend/` |
+| Database | MongoDB (external, connected via MONGODB_URI) | External |
+| Crypto (Client) | WebCrypto API + argon2-browser | `client/packages/crypto/` |
+| Storage | IndexedDB (ext) / SQLite (desktop) | `client/packages/storage/` |
+| Sync | Delta sync + LWW conflict resolver | `client/packages/sync/` |
+| API Client | ofetch | `client/packages/api/` |
+| Types (TS) | Shared TypeScript types | `shared/types/` |
+| UI | React + Tailwind + shadcn/ui | `client/packages/ui/` |
+| Extension | WXT framework (Chrome + Firefox) | `client/apps/extension/` |
 | CI/CD | GitLab CI on gitlabs.inet.vn | Self-hosted |
 | Container Registry | gitlabs.inet.vn:5050/dattqh/vaultic | |
-| Deploy | Docker on CentOS 7 | Isolate from EOL OS |
+| Deploy | Docker (Node.js 22 Alpine) on CentOS 7 | Production |
+| Auth | JWT tokens (access 15min, refresh 7d) | Backend |
 
 ## Build & Dev Commands
 
-### Rust (crates/)
+### Backend (Node.js/Express)
 ```bash
-cargo build                          # Build all crates
-cargo build -p vaultic-crypto        # Build single crate
-cargo test                           # Run all Rust tests
-cargo test -p vaultic-crypto         # Test single crate
-cargo clippy --all-targets           # Lint
-cargo fmt --check                    # Format check
-cargo run -p vaultic-server          # Run API server
+cd backend
+pnpm install                         # Install dependencies
+pnpm dev                             # Start dev server (tsx watch)
+pnpm build                           # Compile TypeScript → dist/
+pnpm start                           # Start production server
+pnpm start:pm2                       # Start with PM2 (production)
+pnpm test                            # Run tests
+pnpm lint                            # Run eslint (if configured)
 ```
 
-### Node.js (packages/)
+### Client (TypeScript)
 ```bash
-pnpm install                         # Install all JS dependencies
-pnpm dev                             # Dev all packages (turbo)
+pnpm install                         # Install all dependencies
+pnpm dev                             # Dev all client packages (turbo)
 pnpm build                           # Build all packages (turbo)
-pnpm --filter extension dev          # Dev extension only
+pnpm --filter @vaultic/extension dev # Dev extension only
 pnpm --filter @vaultic/crypto build  # Build single package
 pnpm --filter @vaultic/ui dev        # Dev shared UI only
 pnpm lint                            # Lint all packages
 pnpm test                            # Test all packages
 ```
 
-### Package naming: `@vaultic/*`
-All TS packages use `@vaultic/` scope: `@vaultic/types`, `@vaultic/crypto`, `@vaultic/storage`, `@vaultic/sync`, `@vaultic/api`, `@vaultic/ui`.
+### Package naming
+- Backend: `@vaultic/backend` (scoped in workspace)
+- Client: `@vaultic/types`, `@vaultic/crypto`, `@vaultic/storage`, `@vaultic/sync`, `@vaultic/api`, `@vaultic/ui`
+- Extension: `@vaultic/extension`
 
-### Docker (dev)
+### Docker
 ```bash
-docker compose -f docker/docker-compose.yml up -d postgres   # Start DB only
-docker compose -f docker/docker-compose.yml up               # Start all services
+docker compose -f docker/docker-compose.yml up           # Start backend (MongoDB external)
+docker build -f docker/Dockerfile -t vaultic:latest .   # Build image locally
 ```
+
+### Environment Variables
+Backend requires: `MONGODB_URI`, `JWT_SECRET`. See `backend/.env.example`.
 
 ## Key Design Decisions
 
@@ -132,36 +174,16 @@ Swiss Clean Minimal — stroke-based, single blue accent.
 - Font: Inter 400-700, Icons: Lucide (outlined, strokeWidth 1.5)
 - Extension size: 380x520px (fixed)
 - Design file: `system-design.pen` (25 screens, use Pencil MCP tools to read)
-- Design tokens: `packages/ui/src/styles/design-tokens.ts` — ALL UI must use these, never hardcode
+- Design tokens: `client/packages/ui/src/styles/design-tokens.ts` — ALL UI must use these, never hardcode
 
-## Design Verification Protocol (MANDATORY)
+## Design Verification
 
-For EACH screen implemented:
-1. **READ** design via `mcp__pencil__get_screenshot` + `mcp__pencil__batch_get`
-2. **IMPLEMENT** using `@vaultic/ui` design tokens
-3. **SCREENSHOT** result via browser preview
-4. **COMPARE** design vs implementation using vision analysis
-5. **FIX** all differences until ≥90% match
-6. **DO NOT** proceed to next screen until current passes
-
-Each screen has a verification checklist in its phase file. All checkboxes must be checked.
-
-## Implementation Plan
-
-Located at `plans/dattqh/260324-2044-vaultic-mvp-implementation/plan.md`. Eight phases:
-1. Project Setup & Monorepo
-2. Crypto Core (Rust)
-3. API Server & Database
-4. Extension Shell & Auth
-5. Vault CRUD & Sync
-6. Autofill & Content Script
-7. Secure Share
-8. Polish, CI/CD & Ship
+For each screen: read design (`system-design.pen` via Pencil MCP) → implement with design tokens → screenshot → compare → fix until ≥90% match. See `docs/agent-rules.md §7` for full design system compliance rules.
 
 ## Environment
 
-- **Dev**: Windows 11 — native Rust + Node.js toolchain, Docker for PostgreSQL
-- **Prod**: CentOS 7 — Docker Compose (server + postgres + nginx)
+- **Dev**: Windows 11 — Node.js 22 + pnpm, MongoDB (external or Docker)
+- **Prod**: CentOS 7 — Docker Compose (Node.js backend + nginx), MongoDB external
 - **CI/CD**: GitLab CI on gitlabs.inet.vn (self-hosted)
 - **Container Registry**: gitlabs.inet.vn:5050/dattqh/vaultic
 - **License**: AGPL-3.0
