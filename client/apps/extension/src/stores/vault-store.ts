@@ -38,7 +38,7 @@ interface VaultState {
 interface VaultActions {
   loadVault: () => Promise<void>;
   addItem: (credential: LoginCredential, folderId?: string) => Promise<void>;
-  updateItem: (id: string, credential: LoginCredential) => Promise<void>;
+  updateItem: (id: string, credential: LoginCredential, folderId?: string) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   setSearchQuery: (query: string) => void;
   setSelectedFolder: (folderId: string | null) => void;
@@ -135,7 +135,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     set({ items });
   },
 
-  updateItem: async (id, credential) => {
+  updateItem: async (id, credential, folderId?) => {
     const key = await getEncryptionKey();
     if (!key) throw new Error('Vault is locked');
 
@@ -148,6 +148,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const updated: VaultItem = {
       ...existing,
       encrypted_data: encrypted,
+      folder_id: folderId !== undefined ? (folderId || undefined) : existing.folder_id,
       version: existing.version + 1,
       updated_at: now,
     };

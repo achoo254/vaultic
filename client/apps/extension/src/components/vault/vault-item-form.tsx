@@ -51,7 +51,7 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
       };
 
       if (editId) {
-        await updateItem(editId, credential);
+        await updateItem(editId, credential, folderId);
       } else {
         await addItem(credential, folderId);
       }

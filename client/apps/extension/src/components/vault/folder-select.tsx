@@ -32,7 +32,7 @@ export function FolderSelect({ value, onChange }: FolderSelectProps) {
     fontSize: tokens.font.size.base,
     fontFamily: tokens.font.family,
     color: colors.text,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
     cursor: 'pointer',
     outline: 'none',
     appearance: 'auto',
