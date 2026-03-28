@@ -4,7 +4,7 @@ import type { SyncQueueEntry } from '@vaultic/types';
 
 export interface SyncQueue {
   enqueue(entry: SyncQueueEntry): Promise<void>;
-  dequeueAll(): Promise<SyncQueueEntry[]>;
+  dequeueAll(userId: string): Promise<SyncQueueEntry[]>;
   clear(ids: string[]): Promise<void>;
-  count(): Promise<number>;
+  count(userId?: string): Promise<number>;
 }

@@ -5,9 +5,12 @@ import { IndexedDBStore } from '../indexeddb-store';
 import { resetDBCache } from '../indexeddb-open';
 import { ItemType, type VaultItem } from '@vaultic/types';
 
+const TEST_USER = 'test-user';
+
 function makeItem(overrides: Partial<VaultItem> = {}): VaultItem {
   return {
     id: crypto.randomUUID(),
+    user_id: TEST_USER,
     item_type: ItemType.Login,
     encrypted_data: 'base64-encrypted-data',
     device_id: 'test-device',
@@ -31,21 +34,25 @@ describe('IndexedDBStore', () => {
   it('putItem stores and getItem retrieves it', async () => {
     const item = makeItem({ id: 'test-1' });
     await store.putItem(item);
-    const retrieved = await store.getItem('test-1');
+    const retrieved = await store.getItem(TEST_USER, 'test-1');
     expect(retrieved).toEqual(item);
   });
 
   it('getItem returns null for non-existent ID', async () => {
-    const result = await store.getItem('nonexistent');
+    const result = await store.getItem(TEST_USER, 'nonexistent');
     expect(result).toBeNull();
   });
 
-  it('getAllItems returns all stored items', async () => {
-    const item1 = makeItem({ id: 'a' });
-    const item2 = makeItem({ id: 'b' });
-    await store.putItem(item1);
-    await store.putItem(item2);
-    const all = await store.getAllItems();
+  it('getItem returns null for wrong userId', async () => {
+    await store.putItem(makeItem({ id: 'x' }));
+    expect(await store.getItem('other-user', 'x')).toBeNull();
+  });
+
+  it('getAllItems returns all stored items for userId', async () => {
+    await store.putItem(makeItem({ id: 'a' }));
+    await store.putItem(makeItem({ id: 'b' }));
+    await store.putItem(makeItem({ id: 'c', user_id: 'other' }));
+    const all = await store.getAllItems(TEST_USER);
     expect(all).toHaveLength(2);
   });
 
@@ -54,7 +61,7 @@ describe('IndexedDBStore', () => {
     const deleted = makeItem({ id: 'deleted', deleted_at: new Date().toISOString() });
     await store.putItem(active);
     await store.putItem(deleted);
-    const all = await store.getAllItems();
+    const all = await store.getAllItems(TEST_USER);
     expect(all).toHaveLength(1);
     expect(all[0].id).toBe('active');
   });
@@ -62,8 +69,8 @@ describe('IndexedDBStore', () => {
   it('deleteItem removes the item', async () => {
     const item = makeItem({ id: 'del-test' });
     await store.putItem(item);
-    await store.deleteItem('del-test');
-    const result = await store.getItem('del-test');
+    await store.deleteItem(TEST_USER, 'del-test');
+    const result = await store.getItem(TEST_USER, 'del-test');
     expect(result).toBeNull();
   });
 
@@ -71,7 +78,7 @@ describe('IndexedDBStore', () => {
     const item = makeItem({ id: 'update-test', encrypted_data: 'v1' });
     await store.putItem(item);
     await store.putItem({ ...item, encrypted_data: 'v2', version: 2 });
-    const result = await store.getItem('update-test');
+    const result = await store.getItem(TEST_USER, 'update-test');
     expect(result?.encrypted_data).toBe('v2');
     expect(result?.version).toBe(2);
   });

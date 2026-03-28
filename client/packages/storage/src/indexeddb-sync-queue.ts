@@ -16,11 +16,12 @@ export class IndexedDBSyncQueue implements SyncQueue {
     });
   }
 
-  async dequeueAll(): Promise<SyncQueueEntry[]> {
+  async dequeueAll(userId: string): Promise<SyncQueueEntry[]> {
     const db = await openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(QUEUE_STORE, 'readonly');
-      const request = tx.objectStore(QUEUE_STORE).getAll();
+      const index = tx.objectStore(QUEUE_STORE).index('user_id');
+      const request = index.getAll(userId);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
@@ -39,13 +40,20 @@ export class IndexedDBSyncQueue implements SyncQueue {
     });
   }
 
-  async count(): Promise<number> {
+  async count(userId?: string): Promise<number> {
     const db = await openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(QUEUE_STORE, 'readonly');
-      const request = tx.objectStore(QUEUE_STORE).count();
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      if (userId) {
+        const index = tx.objectStore(QUEUE_STORE).index('user_id');
+        const request = index.count(userId);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      } else {
+        const request = tx.objectStore(QUEUE_STORE).count();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      }
     });
   }
 }

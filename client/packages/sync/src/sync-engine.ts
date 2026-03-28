@@ -35,6 +35,7 @@ export class SyncEngine {
     private queue: SyncQueue,
     private api: SyncApiAdapter,
     private resolver: ConflictResolver,
+    private userId: string,
   ) {}
 
   async sync(): Promise<SyncResult> {
@@ -47,14 +48,14 @@ export class SyncEngine {
     let pulled = 0;
     let conflicts = 0;
 
-    // 1. Push pending local changes
-    const pending = await this.queue.dequeueAll();
+    // 1. Push pending local changes (scoped to userId)
+    const pending = await this.queue.dequeueAll(this.userId);
     if (pending.length > 0) {
       const itemIds = new Set(pending.map((p) => p.item_id));
       const items: VaultItem[] = [];
 
       for (const id of itemIds) {
-        const item = await this.store.getItem(id);
+        const item = await this.store.getItem(this.userId, id);
         if (item) items.push(item);
       }
 
@@ -73,33 +74,36 @@ export class SyncEngine {
       conflicts = result.conflicts.length;
     }
 
-    // 2. Pull remote changes since last sync
-    const lastSync = await this.store.getMetadata('last_sync');
+    // 2. Pull remote changes since last sync (per-user cursor)
+    const lastSyncKey = `last_sync_${this.userId}`;
+    const lastSync = await this.store.getMetadata(lastSyncKey);
     const delta = await this.api.pull(lastSync, deviceId);
 
     for (const remoteItem of delta.items) {
-      const local = await this.store.getItem(remoteItem.id);
+      // Tag pulled items with current userId
+      const tagged = { ...remoteItem, user_id: this.userId } as VaultItem;
+      const local = await this.store.getItem(this.userId, remoteItem.id);
       if (local) {
         // Resolve conflict with LWW
         const winner = this.resolver.resolve(
           { id: local.id, encrypted_data: local.encrypted_data, version: local.version, updated_at: local.updated_at },
-          { id: remoteItem.id, encrypted_data: remoteItem.encrypted_data, version: remoteItem.version, updated_at: remoteItem.updated_at },
+          { id: tagged.id, encrypted_data: tagged.encrypted_data, version: tagged.version, updated_at: tagged.updated_at },
         );
-        if (winner.updated_at === remoteItem.updated_at) {
-          await this.store.putItem(remoteItem);
+        if (winner.updated_at === tagged.updated_at) {
+          await this.store.putItem(tagged);
         }
       } else {
-        await this.store.putItem(remoteItem);
+        await this.store.putItem(tagged);
       }
     }
 
     // Handle deletions
     for (const id of delta.deleted_ids) {
-      await this.store.deleteItem(id);
+      await this.store.deleteItem(this.userId, id);
     }
 
     pulled = delta.items.length + delta.deleted_ids.length;
-    await this.store.setMetadata('last_sync', delta.server_time);
+    await this.store.setMetadata(lastSyncKey, delta.server_time);
 
     return { status: 'idle', pushed, pulled, conflicts };
   }

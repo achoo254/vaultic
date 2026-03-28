@@ -47,6 +47,7 @@ export interface SyncPullResponse {
 
 export interface SyncQueueEntry {
   id: string;
+  user_id: string;
   item_id: string;
   action: 'create' | 'update' | 'delete';
   timestamp: number;

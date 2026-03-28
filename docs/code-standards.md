@@ -365,27 +365,34 @@ if (!config.jwt.secret || config.jwt.secret === 'dev-secret-not-for-prod') {
 ### Type Definitions
 
 ```typescript
-// types/index.ts — Always explicit types, no 'any'
-export interface User {
-  id: string;
-  email: string;
-  createdAt: Date;
+// types/vault.ts — Always explicit types, no 'any'
+export enum ItemType {
+  Login = 'login',
+  SecureNote = 'secure_note',
+  Card = 'card',
+  Identity = 'identity',
 }
 
 export interface VaultItem {
   id: string;
-  userId: string;
-  type: 'password' | 'note' | 'card' | 'identity';
-  title: string;
-  ciphertext: string; // base64 AES-256-GCM
-  timestamp: Date;
+  user_id: string;           // Profile isolation
+  folder_id?: string;        // Optional folder reference
+  item_type: ItemType;       // See enum above
+  encrypted_data: string;    // Base64 nonce + ciphertext (AES-256-GCM)
+  device_id: string;         // Device that created this item
+  version: number;           // For conflict resolution (LWW)
+  created_at: string;        // ISO timestamp
+  updated_at: string;        // ISO timestamp
+  deleted_at?: string;       // ISO timestamp (soft delete)
 }
 
-export interface SyncDelta {
+export interface Folder {
   id: string;
-  itemId: string;
-  encrypted: string;
-  timestamp: Date;
+  user_id: string;                 // Profile isolation
+  encrypted_name: string;           // AES-256-GCM encrypted folder name
+  parent_id?: string;               // Optional parent folder (nesting)
+  created_at: string;               // ISO timestamp
+  updated_at: string;               // ISO timestamp
 }
 ```
 
@@ -600,15 +607,17 @@ const schema = new Schema({
 });
 ```
 
-### Query Patterns
+### Query Patterns (User-Scoped Data)
 ```typescript
-// ✅ Use async/await
-const user = await User.findById(userId);
-const items = await VaultItem.find({ userId });
+// ✅ Always scope queries to userId for data isolation
+const userItems = await VaultItem.find({ userId });
+const userFolders = await Folder.find({ userId });
 
 // ✅ Use indexes for frequently queried fields
 userSchema.index({ email: 1 });
+vaultItemSchema.index({ userId: 1, deviceId: 1, updatedAt: 1 }); // Sync queries
 
+// ❌ Never query across users in same operation
 // ❌ Avoid raw MongoDB commands in service layer
 ```
 
@@ -801,6 +810,6 @@ pnpm lint && pnpm test && pnpm build
 
 ---
 
-**Last updated: 2026-03-27**
+**Last updated: 2026-03-29**
 **Backend: Node.js/Express/MongoDB | Client: TypeScript/React**
-**Testing: Vitest 84+ tests across 4 packages**
+**Storage: IndexedDB v3 (user-scoped) | Testing: Vitest 84+ tests across 4 packages**

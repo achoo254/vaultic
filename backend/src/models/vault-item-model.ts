@@ -4,7 +4,7 @@ export interface IVaultItem {
   _id: string;
   userId: string;
   folderId: string | null;
-  itemType: number;
+  itemType: string;
   encryptedData: string;
   deviceId: string;
   version: number;
@@ -18,7 +18,7 @@ const vaultItemSchema = new Schema<IVaultItem>(
     _id: { type: String },
     userId: { type: String, required: true, index: true },
     folderId: { type: String, default: null },
-    itemType: { type: Number, default: 1 },
+    itemType: { type: String, default: 'login' },
     encryptedData: { type: String, required: true },
     deviceId: { type: String, required: true },
     version: { type: Number, default: 1 },

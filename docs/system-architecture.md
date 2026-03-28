@@ -157,15 +157,30 @@ Ciphertext (base64 + random nonce)
 - `client/packages/crypto/src/password-gen.ts` — Secure generation
 
 #### 1.5 Storage Abstraction (`@vaultic/storage`)
-**Interface:**
+**Interface (User-Scoped):**
 ```typescript
 interface VaultStore {
-  getItem(id: string): Promise<VaultItem>
-  setItem(item: VaultItem): Promise<void>
-  deleteItem(id: string): Promise<void>
-  getAll(): Promise<VaultItem[]>
+  // Vault items (all methods require userId for profile isolation)
+  getItem(userId: string, id: string): Promise<VaultItem | null>
+  putItem(item: VaultItem): Promise<void>
+  deleteItem(userId: string, id: string): Promise<void>
+  getAllItems(userId: string): Promise<VaultItem[]>
+  getAllItemsUnfiltered(): Promise<VaultItem[]>
+  getChangedSince(userId: string, timestamp: number): Promise<VaultItem[]>
+
+  // Folders (user-scoped)
+  getFolder(userId: string, id: string): Promise<Folder | null>
+  putFolder(folder: Folder): Promise<void>
+  deleteFolder(userId: string, id: string): Promise<void>
+  getAllFolders(userId: string): Promise<Folder[]>
+  getAllFoldersUnfiltered(): Promise<Folder[]>
+
+  // Bulk operations
+  clear(userId?: string): Promise<void>
 }
 ```
+
+**Note:** All methods except `putItem`, `putFolder`, and `clear(undefined)` require `userId` for data isolation. Each user's vault is completely isolated at the storage layer.
 
 **Implementations:**
 - **IndexedDB Store** (Production) — Persistent, survives reload
@@ -181,13 +196,24 @@ interface VaultStore {
 - `client/packages/storage/src/indexeddb-store.ts` — IndexedDB impl
 
 #### 1.6 Sync Engine (`@vaultic/sync`)
+**Constructor (User-Aware):**
+```typescript
+new SyncEngine(
+  store: VaultStore,
+  queue: SyncQueue,
+  api: SyncApiAdapter,
+  resolver: ConflictResolver,
+  userId: string  // 5th parameter for user isolation
+)
+```
+
 **Delta Sync Flow:**
 1. User modifies item locally
-2. Service worker creates delta (id, timestamp, encrypted)
-3. Delta queued in SyncQueue
+2. Service worker creates delta (id, timestamp, encrypted, user_id)
+3. Delta queued in SyncQueue (per-user)
 4. On interval or manually:
-   - **Push:** Send queued deltas to `/sync/push`
-   - **Pull:** Fetch remote deltas from `/sync/pull`
+   - **Push:** Send queued deltas to `/sync/push` (includes user_id)
+   - **Pull:** Fetch remote deltas from `/sync/pull` (user_id from auth)
    - **Merge:** Apply remote with LWW resolution
    - **ACK:** Clear queue on success
 
@@ -388,23 +414,31 @@ GET /api/v1
 **VaultItem Model** (`backend/src/models/vault-item-model.ts`)
 ```typescript
 {
-  userId: ObjectId (ref User),
-  folderId: ObjectId (ref Folder, optional),
-  ciphertext: String (base64 AES-256-GCM),
-  timestamp: Date,
-  itemType: String (password|note|card|identity),
+  _id: String,
+  userId: String (indexed, required) — User ownership (profile isolation),
+  folderId: String | null (optional),
+  itemType: String (login|secure_note|card|identity),
+  encryptedData: String (base64 AES-256-GCM),
+  deviceId: String (required) — Device that created this item,
+  version: Number (default 1) — For conflict resolution,
+  deletedAt: Date | null (soft delete),
   createdAt: Date (auto),
   updatedAt: Date (auto)
 }
 ```
 
+**Indexes:**
+- `{ userId: 1, deviceId: 1, updatedAt: 1 }` — Fast sync queries per user
+
 **Folder Model** (`backend/src/models/folder-model.ts`)
 ```typescript
 {
-  userId: ObjectId (ref User),
-  name: String,
-  parent: ObjectId (self-ref, optional),
-  createdAt: Date (auto)
+  _id: String,
+  userId: String (indexed, required) — User ownership (profile isolation),
+  encrypted_name: String (AES-256-GCM encrypted),
+  parent_id: String | null (self-ref, optional for nesting),
+  created_at: String (ISO),
+  updated_at: String (ISO)
 }
 ```
 
@@ -471,7 +505,9 @@ class AppError extends Error {
 
 **Indexes:**
 - `users.email` (unique)
-- `vaultitems.userId` (query by user)
+- `vaultitems.userId` (query by user, primary isolation)
+- `vaultitems.userId,deviceId,updatedAt` (composite for sync queries)
+- `folders.userId` (query by user)
 - `secureshares.linkId` (unique)
 - `secureshares.expiresAt` (TTL index for auto-cleanup)
 
@@ -660,4 +696,4 @@ Result: Both devices have latest version
 
 ---
 
-**Last updated: 2026-03-28 | Offline-First MVP + Hybrid Share | Backend: Node.js/Express | Database: MongoDB**
+**Last updated: 2026-03-29 | User-ID-Based Profile Isolation | Backend: Node.js/Express | Database: MongoDB | IndexedDB v3**

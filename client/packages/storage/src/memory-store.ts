@@ -8,46 +8,69 @@ export class MemoryStore implements VaultStore {
   private items = new Map<string, VaultItem>();
   private folders = new Map<string, Folder>();
 
-  async getItem(id: string): Promise<VaultItem | null> {
-    return this.items.get(id) ?? null;
+  async getItem(userId: string, id: string): Promise<VaultItem | null> {
+    const item = this.items.get(id);
+    if (!item) return null;
+    return (!item.user_id || item.user_id === userId) ? item : null;
   }
 
   async putItem(item: VaultItem): Promise<void> {
     this.items.set(item.id, item);
   }
 
-  async deleteItem(id: string): Promise<void> {
-    this.items.delete(id);
+  async deleteItem(userId: string, id: string): Promise<void> {
+    const item = await this.getItem(userId, id);
+    if (item) this.items.delete(id);
   }
 
-  async getAllItems(): Promise<VaultItem[]> {
+  async getAllItems(userId: string): Promise<VaultItem[]> {
+    return Array.from(this.items.values()).filter((i) => i.user_id === userId && !i.deleted_at);
+  }
+
+  async getAllItemsUnfiltered(): Promise<VaultItem[]> {
     return Array.from(this.items.values());
   }
 
-  async getChangedSince(timestamp: number): Promise<VaultItem[]> {
+  async getChangedSince(userId: string, timestamp: number): Promise<VaultItem[]> {
     return Array.from(this.items.values()).filter(
-      (item) => new Date(item.updated_at).getTime() > timestamp,
+      (item) => item.user_id === userId && new Date(item.updated_at).getTime() > timestamp,
     );
   }
 
-  async getFolder(id: string): Promise<Folder | null> {
-    return this.folders.get(id) ?? null;
+  async getFolder(userId: string, id: string): Promise<Folder | null> {
+    const folder = this.folders.get(id);
+    if (!folder) return null;
+    return (!folder.user_id || folder.user_id === userId) ? folder : null;
   }
 
   async putFolder(folder: Folder): Promise<void> {
     this.folders.set(folder.id, folder);
   }
 
-  async deleteFolder(id: string): Promise<void> {
-    this.folders.delete(id);
+  async deleteFolder(userId: string, id: string): Promise<void> {
+    const folder = await this.getFolder(userId, id);
+    if (folder) this.folders.delete(id);
   }
 
-  async getAllFolders(): Promise<Folder[]> {
+  async getAllFolders(userId: string): Promise<Folder[]> {
+    return Array.from(this.folders.values()).filter((f) => f.user_id === userId);
+  }
+
+  async getAllFoldersUnfiltered(): Promise<Folder[]> {
     return Array.from(this.folders.values());
   }
 
-  async clear(): Promise<void> {
-    this.items.clear();
-    this.folders.clear();
+  async clear(userId?: string): Promise<void> {
+    if (userId) {
+      for (const [id, item] of this.items) {
+        if (item.user_id === userId) this.items.delete(id);
+      }
+      for (const [id, folder] of this.folders) {
+        if (folder.user_id === userId) this.folders.delete(id);
+      }
+    } else {
+      this.items.clear();
+      this.folders.clear();
+    }
   }
 }

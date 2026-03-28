@@ -1,6 +1,6 @@
 # Vaultic: Codebase Summary
 
-**Last updated: 2026-03-28 | Offline-First Login + Hybrid Share complete**
+**Last updated: 2026-03-29 | User-ID-Based Profile Isolation + IndexedDB v3**
 
 ---
 
@@ -152,8 +152,8 @@ vaultic/
 | Database | MongoDB (external, MONGODB_URI) | External |
 | Auth | JWT (15min access, 7d refresh) | `backend/services/auth-service.ts` |
 | Crypto (Client) | WebCrypto API + argon2-browser | `client/packages/crypto/` |
-| Storage | IndexedDB (browser) / SQLite (desktop) | `client/packages/storage/` |
-| Sync | Delta sync + LWW conflict resolver | `client/packages/sync/` |
+| Storage | IndexedDB v3 (browser) / SQLite (desktop) — user-scoped | `client/packages/storage/` |
+| Sync | Delta sync + LWW conflict resolver — user-scoped | `client/packages/sync/` |
 | API Client | ofetch (lightweight) | `client/packages/api/` |
 | Types | Shared TypeScript interfaces | `shared/types/` |
 | UI | React 18 + Tailwind + shadcn/ui | `client/packages/ui/` |
@@ -196,9 +196,11 @@ vaultic/
 
 ### Database Models
 - **User** — email (unique), passwordHash, createdAt, updatedAt
-- **VaultItem** — userId, folderId, ciphertext, timestamp, itemType
-- **Folder** — userId, name, parent (collections/nesting)
-- **SecureShare** — encData, expiresAt, maxViews, viewCount, accessKey
+- **VaultItem** — userId (indexed), folderId, encryptedData, itemType, version, deviceId, deletedAt (soft delete), timestamps
+- **Folder** — userId (indexed), encrypted_name, parent_id (self-ref), timestamps
+- **SecureShare** — encData, expiresAt, maxViews, viewCount, accessKey, linkId (unique)
+
+**Profile Isolation:** All vault items and folders indexed by `userId` for complete data separation per user.
 
 ---
 
@@ -257,11 +259,12 @@ NODE_ENV=development|production
 - AES-256-GCM encrypts each item individually
 - Server stores only ciphertext blobs (never has plaintext)
 
-### Delta Sync (when enabled)
-- Client queues changes locally
-- Push: send encrypted deltas with timestamp
-- Pull: receive deltas, merge with LWW resolution
-- Sync state persisted in IndexedDB
+### Delta Sync (when enabled, user-scoped)
+- Client queues changes locally (per userId)
+- Push: send encrypted deltas with userId, timestamp, version
+- Pull: receive deltas filtered by userId, merge with LWW resolution
+- Sync state persisted in IndexedDB (separate per user)
+- SyncQueue requires userId parameter for all operations
 
 ### JWT Token Flow
 1. Register: hash password, return tokens
