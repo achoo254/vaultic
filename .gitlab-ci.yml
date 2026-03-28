@@ -57,7 +57,32 @@ extension-build:
     paths:
       - node_modules/
 
-# --- Deploy Staging (PM2 via SSH) ---
+# --- Backend Build (produces dist/ artifact) ---
+
+backend-build:
+  stage: build
+  image: node:22-alpine
+  only:
+    - main
+  before_script:
+    - corepack enable
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm --filter @vaultic/types build
+    - pnpm --filter @vaultic/backend build
+  artifacts:
+    paths:
+      - backend/dist/
+      - backend/package.json
+      - backend/ecosystem.config.cjs
+      - shared/
+    expire_in: 1 day
+  cache:
+    key: node-deps
+    paths:
+      - node_modules/
+
+# --- Deploy Staging (rsync built artifacts + PM2 restart) ---
 
 deploy-staging:
   stage: deploy
@@ -65,20 +90,30 @@ deploy-staging:
   only:
     - main
   before_script:
-    - apk add --no-cache openssh-client curl
+    - apk add --no-cache openssh-client rsync curl
     - mkdir -p ~/.ssh
     - cp "$DEPLOY_SSH_KEY" ~/.ssh/id_ed25519
     - chmod 600 ~/.ssh/id_ed25519
     - ssh-keyscan -p "$DEPLOY_PORT" "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
   script:
     - SSH_CMD="ssh -p $DEPLOY_PORT $DEPLOY_USER@$DEPLOY_HOST"
+    - SCP_CMD="scp -P $DEPLOY_PORT"
+    - RSYNC_CMD="rsync -avz --delete -e 'ssh -p $DEPLOY_PORT'"
 
-    # Pull latest code
-    - $SSH_CMD "cd $DEPLOY_PATH && git fetch origin main && git reset --hard origin/main"
+    # Ensure deploy directory exists
+    - $SSH_CMD "mkdir -p $DEPLOY_PATH/backend $DEPLOY_PATH/extension"
+
+    # Upload built backend artifacts (dist/, package.json, ecosystem config)
+    - $RSYNC_CMD backend/dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/backend/dist/"
+    - $SCP_CMD backend/package.json "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/backend/package.json"
+    - $SCP_CMD backend/ecosystem.config.cjs "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/backend/ecosystem.config.cjs"
+
+    # Upload extension artifact
+    - $SCP_CMD vaultic-extension.zip "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/extension/vaultic-extension.zip"
 
     # Write .env from CI variables
     - |
-      $SSH_CMD "cat > $DEPLOY_PATH/backend/.env << ENVEOF
+      $SSH_CMD "cat > $DEPLOY_PATH/backend/.env << 'ENVEOF'
       NODE_ENV=production
       SERVER_PORT=8080
       MONGODB_URI=$MONGODB_URI
@@ -87,13 +122,9 @@ deploy-staging:
       LOG_LEVEL=info
       ENVEOF"
 
-    # Install deps + build + restart PM2
-    - $SSH_CMD "cd $DEPLOY_PATH && pnpm install --frozen-lockfile"
-    - $SSH_CMD "cd $DEPLOY_PATH && pnpm --filter @vaultic/types build && pnpm --filter @vaultic/backend build"
+    # Install production deps + restart PM2
+    - $SSH_CMD "cd $DEPLOY_PATH/backend && npm install --omit=dev"
     - $SSH_CMD "cd $DEPLOY_PATH/backend && pm2 reload ecosystem.config.cjs --update-env || pm2 start ecosystem.config.cjs"
-
-    # Upload extension artifact
-    - scp -P "$DEPLOY_PORT" vaultic-extension.zip "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/extension/vaultic-extension.zip"
 
     # Health check
     - $SSH_CMD "sleep 2 && curl -sf http://127.0.0.1:8080/api/v1/health || echo 'WARNING: Health check failed'"
@@ -101,4 +132,5 @@ deploy-staging:
     name: staging
     url: https://vaultic.inetdev.io.vn
   needs:
+    - backend-build
     - extension-build
