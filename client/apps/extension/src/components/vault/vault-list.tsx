@@ -1,7 +1,7 @@
 // Screen 05: Vault List — main popup view with search, suggested, recent, all items
 import React, { useEffect, useState } from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
-import { Lock, Settings, Plus } from 'lucide-react';
+import { Lock, Settings, Plus, FolderOpen } from 'lucide-react';
 import { AppHeader } from '../common/app-header';
 import { useVaultStore, useFilteredItems } from '../../stores/vault-store';
 import { SearchBar } from './search-bar';
@@ -86,6 +86,9 @@ export function VaultList({ onItemClick, onAddItem, onManageFolders, onSettings 
       <AppHeader>
         <button onClick={() => {}} style={iconBtn} title="Lock vault">
           <Lock size={18} strokeWidth={1.5} color={colors.secondary} />
+        </button>
+        <button onClick={onManageFolders} style={iconBtn} title="Manage folders">
+          <FolderOpen size={18} strokeWidth={1.5} color={colors.secondary} />
         </button>
         {onSettings && (
           <button onClick={onSettings} style={iconBtn} title="Settings">
