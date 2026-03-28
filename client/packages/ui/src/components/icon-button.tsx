@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { tokens } from '../styles/design-tokens';
+import { useTheme } from '../styles/theme-provider';
 
 export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'sm' | 'md';
@@ -10,6 +11,7 @@ export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEl
 
 export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
   ({ size = 'md', variant = 'ghost', style, disabled, ...props }, ref) => {
+    const { colors } = useTheme();
     const dimension = size === 'sm' ? 28 : 36;
 
     const buttonStyle: React.CSSProperties = {
@@ -19,10 +21,10 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
       width: dimension,
       height: dimension,
       padding: 0,
-      border: variant === 'outlined' ? `1px solid ${tokens.colors.border}` : 'none',
+      border: variant === 'outlined' ? `1px solid ${colors.border}` : 'none',
       borderRadius: tokens.radius.sm,
       backgroundColor: 'transparent',
-      color: tokens.colors.secondary,
+      color: colors.secondary,
       cursor: disabled ? 'not-allowed' : 'pointer',
       opacity: disabled ? 0.5 : 1,
       transition: 'background-color 0.15s ease, color 0.15s ease',

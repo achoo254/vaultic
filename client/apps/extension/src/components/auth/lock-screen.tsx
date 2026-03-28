@@ -1,11 +1,11 @@
 // Screen 03: Lock Screen — re-enter master password to unlock vault (offline + online)
 import React, { useState } from 'react';
-import { Button, Input } from '@vaultic/ui';
-import { tokens } from '@vaultic/ui';
+import { Button, Input, tokens, useTheme } from '@vaultic/ui';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 
 export function LockScreen() {
+  const { colors } = useTheme();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,11 +28,73 @@ export function LockScreen() {
     }
   };
 
+  const formStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    padding: tokens.spacing.xxl,
+    gap: tokens.spacing.xl,
+    height: '100%',
+    justifyContent: 'center',
+  };
+
+  const topSection: React.CSSProperties = {
+    textAlign: 'center',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: tokens.spacing.md,
+  };
+
+  const lockIcon: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+
+  const emailStyle: React.CSSProperties = {
+    fontSize: tokens.font.size.base,
+    color: colors.secondary,
+    fontFamily: tokens.font.family,
+  };
+
+  const fieldSection: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacing.lg,
+  };
+
+  const actionsSection: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacing.md,
+    alignItems: 'center',
+  };
+
+  const logoutLink: React.CSSProperties = {
+    background: 'none',
+    border: 'none',
+    color: colors.secondary,
+    cursor: 'pointer',
+    fontSize: tokens.font.size.sm,
+    fontFamily: tokens.font.family,
+  };
+
+  const eyeToggleStyle: React.CSSProperties = {
+    position: 'absolute',
+    right: 12,
+    top: 30,
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: 14,
+    padding: 4,
+  };
+
   return (
     <form onSubmit={handleSubmit} style={formStyle}>
       <div style={topSection}>
         <div style={lockIcon}>
-          <Lock size={48} strokeWidth={1.5} color={tokens.colors.primary} />
+          <Lock size={48} strokeWidth={1.5} color={colors.primary} />
         </div>
         <div style={emailStyle}>
           {mode === 'online' && email ? email : 'Offline Vault'}
@@ -80,65 +142,3 @@ export function LockScreen() {
     </form>
   );
 }
-
-const formStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  padding: tokens.spacing.xxl,
-  gap: tokens.spacing.xl,
-  height: '100%',
-  justifyContent: 'center',
-};
-
-const topSection: React.CSSProperties = {
-  textAlign: 'center',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: tokens.spacing.md,
-};
-
-const lockIcon: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-};
-
-const emailStyle: React.CSSProperties = {
-  fontSize: tokens.font.size.base,
-  color: tokens.colors.secondary,
-  fontFamily: tokens.font.family,
-};
-
-const fieldSection: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: tokens.spacing.lg,
-};
-
-const actionsSection: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: tokens.spacing.md,
-  alignItems: 'center',
-};
-
-const logoutLink: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  color: tokens.colors.secondary,
-  cursor: 'pointer',
-  fontSize: tokens.font.size.sm,
-  fontFamily: tokens.font.family,
-};
-
-const eyeToggleStyle: React.CSSProperties = {
-  position: 'absolute',
-  right: 12,
-  top: 30,
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  fontSize: 14,
-  padding: 4,
-};

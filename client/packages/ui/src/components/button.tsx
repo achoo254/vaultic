@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { tokens } from '../styles/design-tokens';
+import { useTheme } from '../styles/theme-provider';
+import type { ThemeColors } from '../styles/design-tokens';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost';
@@ -11,6 +13,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = 'primary', size = 'md', loading, children, style, disabled, ...props }, ref) => {
+    const { colors } = useTheme();
     const baseStyle: React.CSSProperties = {
       fontFamily: tokens.font.family,
       fontWeight: tokens.font.weight.medium,
@@ -23,7 +26,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       gap: tokens.spacing.sm,
       transition: 'background-color 0.15s ease',
       opacity: disabled || loading ? 0.6 : 1,
-      ...getVariantStyle(variant),
+      ...getVariantStyle(variant, colors),
       ...getSizeStyle(size),
       ...style,
     };
@@ -39,18 +42,18 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
 Button.displayName = 'Button';
 
-function getVariantStyle(variant: string): React.CSSProperties {
+function getVariantStyle(variant: string, colors: ThemeColors): React.CSSProperties {
   switch (variant) {
     case 'primary':
-      return { backgroundColor: tokens.colors.primary, color: '#FFFFFF' };
+      return { backgroundColor: colors.primary, color: '#FFFFFF' };
     case 'secondary':
       return {
         backgroundColor: 'transparent',
-        color: tokens.colors.text,
-        border: `1px solid ${tokens.colors.border}`,
+        color: colors.text,
+        border: `1px solid ${colors.border}`,
       };
     case 'ghost':
-      return { backgroundColor: 'transparent', color: tokens.colors.secondary };
+      return { backgroundColor: 'transparent', color: colors.secondary };
     default:
       return {};
   }

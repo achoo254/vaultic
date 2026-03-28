@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { tokens } from '../styles/design-tokens';
+import { useTheme } from '../styles/theme-provider';
 
 export interface ToggleGroupOption<T extends string> {
   value: T;
@@ -21,9 +22,10 @@ export function ToggleGroup<T extends string>({
   onChange,
   style,
 }: ToggleGroupProps<T>) {
+  const { colors } = useTheme();
   const containerStyle: React.CSSProperties = {
     display: 'flex',
-    backgroundColor: tokens.colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: tokens.radius.md,
     padding: 2,
     gap: 2,
@@ -40,8 +42,8 @@ export function ToggleGroup<T extends string>({
           fontSize: tokens.font.size.sm,
           fontWeight: isActive ? tokens.font.weight.medium : tokens.font.weight.regular,
           fontFamily: tokens.font.family,
-          color: isActive ? tokens.colors.text : tokens.colors.secondary,
-          backgroundColor: isActive ? tokens.colors.background : 'transparent',
+          color: isActive ? colors.text : colors.secondary,
+          backgroundColor: isActive ? colors.background : 'transparent',
           border: 'none',
           borderRadius: tokens.radius.sm,
           cursor: 'pointer',

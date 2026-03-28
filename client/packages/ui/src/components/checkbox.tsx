@@ -2,6 +2,7 @@
 
 import React, { useId } from 'react';
 import { tokens } from '../styles/design-tokens';
+import { useTheme } from '../styles/theme-provider';
 
 export interface CheckboxProps {
   checked: boolean;
@@ -13,6 +14,7 @@ export interface CheckboxProps {
 
 export const Checkbox: React.FC<CheckboxProps> = ({ checked, onChange, label, disabled, style }) => {
   const id = useId();
+  const { colors } = useTheme();
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
@@ -28,13 +30,13 @@ export const Checkbox: React.FC<CheckboxProps> = ({ checked, onChange, label, di
     height: 16,
     margin: 0,
     cursor: disabled ? 'not-allowed' : 'pointer',
-    accentColor: tokens.colors.primary,
+    accentColor: colors.primary,
   };
 
   const labelStyle: React.CSSProperties = {
     fontSize: tokens.font.size.base,
     fontFamily: tokens.font.family,
-    color: tokens.colors.text,
+    color: colors.text,
     userSelect: 'none',
   };
 

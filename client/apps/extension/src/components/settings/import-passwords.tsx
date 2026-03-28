@@ -1,6 +1,6 @@
 // Screen 24: Import Passwords — support Chrome CSV, 1Password, Bitwarden
 import React, { useState, useRef } from 'react';
-import { Button, VStack, tokens } from '@vaultic/ui';
+import { Button, VStack, tokens, useTheme } from '@vaultic/ui';
 import { ArrowLeft, Upload } from 'lucide-react';
 import { useVaultStore } from '../../stores/vault-store';
 import type { LoginCredential } from '@vaultic/types';
@@ -15,6 +15,7 @@ const SOURCES = [
 ];
 
 export function ImportPasswords({ onBack }: ImportPasswordsProps) {
+  const { colors } = useTheme();
   const [source, setSource] = useState('chrome');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -39,6 +40,17 @@ export function ImportPasswords({ onBack }: ImportPasswordsProps) {
     }
   };
 
+  const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
+  const headerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: tokens.spacing.sm, padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`, borderBottom: `1px solid ${colors.border}` };
+  const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: colors.text, padding: 4, display: 'flex', alignItems: 'center' };
+  const titleStyle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family };
+  const descStyle: React.CSSProperties = { fontSize: tokens.font.size.base, color: colors.secondary, fontFamily: tokens.font.family, textAlign: 'center' };
+  const sourceGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: tokens.spacing.sm };
+  const sourceBtn: React.CSSProperties = { padding: tokens.spacing.md, border: `1px solid ${colors.border}`, borderRadius: tokens.radius.md, cursor: 'pointer', fontSize: tokens.font.size.sm, fontFamily: tokens.font.family, color: colors.text, backgroundColor: 'transparent', textAlign: 'center' };
+  const sourceActive: React.CSSProperties = { ...sourceBtn, borderColor: colors.primary, backgroundColor: 'rgba(37,99,235,0.05)', fontWeight: tokens.font.weight.medium };
+  const uploadArea: React.CSSProperties = { border: `2px dashed ${colors.border}`, borderRadius: tokens.radius.md, padding: tokens.spacing.xxl, textAlign: 'center', cursor: 'pointer', fontSize: tokens.font.size.base, color: colors.secondary, fontFamily: tokens.font.family };
+  const resultStyle: React.CSSProperties = { fontSize: tokens.font.size.sm, color: colors.success, fontFamily: tokens.font.family, textAlign: 'center' };
+
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
@@ -46,7 +58,7 @@ export function ImportPasswords({ onBack }: ImportPasswordsProps) {
         <span style={titleStyle}>Import Passwords</span>
       </div>
       <VStack gap="lg" style={{ padding: tokens.spacing.xxl, flex: 1 }}>
-        <div style={{ textAlign: 'center' }}><Upload size={36} strokeWidth={1.5} color={tokens.colors.primary} /></div>
+        <div style={{ textAlign: 'center' }}><Upload size={36} strokeWidth={1.5} color={colors.primary} /></div>
         <div style={descStyle}>Import passwords from another manager</div>
 
         <div style={sourceGrid}>
@@ -115,14 +127,3 @@ function parseCSVLine(line: string): string[] {
   result.push(current.trim());
   return result;
 }
-
-const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
-const headerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: tokens.spacing.sm, padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`, borderBottom: `1px solid ${tokens.colors.border}` };
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: tokens.colors.text, padding: 4, display: 'flex', alignItems: 'center' };
-const titleStyle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: tokens.colors.text, fontFamily: tokens.font.family };
-const descStyle: React.CSSProperties = { fontSize: tokens.font.size.base, color: tokens.colors.secondary, fontFamily: tokens.font.family, textAlign: 'center' };
-const sourceGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: tokens.spacing.sm };
-const sourceBtn: React.CSSProperties = { padding: tokens.spacing.md, border: `1px solid ${tokens.colors.border}`, borderRadius: tokens.radius.md, cursor: 'pointer', fontSize: tokens.font.size.sm, fontFamily: tokens.font.family, color: tokens.colors.text, backgroundColor: 'transparent', textAlign: 'center' };
-const sourceActive: React.CSSProperties = { ...sourceBtn, borderColor: tokens.colors.primary, backgroundColor: 'rgba(37,99,235,0.05)', fontWeight: tokens.font.weight.medium };
-const uploadArea: React.CSSProperties = { border: `2px dashed ${tokens.colors.border}`, borderRadius: tokens.radius.md, padding: tokens.spacing.xxl, textAlign: 'center', cursor: 'pointer', fontSize: tokens.font.size.base, color: tokens.colors.secondary, fontFamily: tokens.font.family };
-const resultStyle: React.CSSProperties = { fontSize: tokens.font.size.sm, color: tokens.colors.success, fontFamily: tokens.font.family, textAlign: 'center' };

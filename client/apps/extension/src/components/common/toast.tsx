@@ -1,6 +1,6 @@
 // Toast notification component — success/error messages
 import React, { useEffect, useState, useCallback } from 'react';
-import { tokens } from '@vaultic/ui';
+import { tokens, useTheme } from '@vaultic/ui';
 
 interface Toast {
   id: string;
@@ -17,6 +17,7 @@ export function showToast(message: string, type: Toast['type'] = 'info') {
 
 /** Toast container — mount once at app root. */
 export function ToastContainer() {
+  const { colors } = useTheme();
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = useCallback((message: string, type: Toast['type']) => {
@@ -32,8 +33,8 @@ export function ToastContainer() {
   return (
     <div style={containerStyle}>
       {toasts.map((t) => (
-        <div key={t.id} style={{ ...toastStyle, backgroundColor: t.type === 'error' ? tokens.colors.error : t.type === 'success' ? tokens.colors.success : '#18181b' }}>
-          <span>{t.type === 'success' ? '✓' : t.type === 'error' ? '✕' : 'ℹ'}</span>
+        <div key={t.id} style={{ ...toastStyle, backgroundColor: t.type === 'error' ? colors.error : t.type === 'success' ? colors.success : colors.surface }}>
+          <span>{t.type === 'success' ? '\u2713' : t.type === 'error' ? '\u2715' : '\u2139'}</span>
           <span style={msgStyle}>{t.message}</span>
         </div>
       ))}

@@ -1,5 +1,8 @@
 // Shared React UI components for Vaultic
-export { tokens } from './styles/design-tokens';
+export { tokens, lightColors, darkColors } from './styles/design-tokens';
+export type { ThemeColors } from './styles/design-tokens';
+export { ThemeProvider, useTheme } from './styles/theme-provider';
+export type { ThemeMode } from './styles/theme-provider';
 
 // Existing components
 export { Button } from './components/button';

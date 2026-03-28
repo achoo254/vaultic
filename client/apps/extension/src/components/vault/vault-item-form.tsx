@@ -1,6 +1,6 @@
 // Screen 07: Add/Edit Credential form
 import React, { useState } from 'react';
-import { Button, Input, VStack, Textarea, tokens } from '@vaultic/ui';
+import { Button, Input, VStack, Textarea, tokens, useTheme } from '@vaultic/ui';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { generatePassword } from '@vaultic/crypto';
 import { useVaultStore } from '../../stores/vault-store';
@@ -15,6 +15,7 @@ interface VaultItemFormProps {
 }
 
 export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
+  const { colors } = useTheme();
   const { items, addItem, updateItem } = useVaultStore();
   const existing = editId ? items.find((i) => i.id === editId) : null;
 
@@ -62,6 +63,27 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
     }
   };
 
+  const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
+  const headerStyle: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: tokens.spacing.sm,
+    padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
+    borderBottom: `1px solid ${colors.border}`,
+  };
+  const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: colors.text, padding: 4, display: 'flex', alignItems: 'center' };
+  const titleStyle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family };
+  const formStyle: React.CSSProperties = {
+    display: 'flex', flexDirection: 'column', gap: tokens.spacing.md,
+    padding: tokens.spacing.lg, flex: 1, overflowY: 'auto',
+  };
+  const passwordRow: React.CSSProperties = { display: 'flex', alignItems: 'flex-end', gap: tokens.spacing.sm };
+  const generateBtn: React.CSSProperties = {
+    background: 'none', border: `1px solid ${colors.primary}`, color: colors.primary,
+    borderRadius: tokens.radius.md, padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
+    cursor: 'pointer', fontSize: tokens.font.size.sm, fontFamily: tokens.font.family,
+    whiteSpace: 'nowrap', height: 40, display: 'flex', alignItems: 'center', gap: 4,
+  };
+  const errorStyle: React.CSSProperties = { color: colors.error, fontSize: tokens.font.size.sm, fontFamily: tokens.font.family };
+
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
@@ -103,24 +125,3 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
     </div>
   );
 }
-
-const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
-const headerStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: tokens.spacing.sm,
-  padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
-  borderBottom: `1px solid ${tokens.colors.border}`,
-};
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: tokens.colors.text, padding: 4, display: 'flex', alignItems: 'center' };
-const titleStyle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: tokens.colors.text, fontFamily: tokens.font.family };
-const formStyle: React.CSSProperties = {
-  display: 'flex', flexDirection: 'column', gap: tokens.spacing.md,
-  padding: tokens.spacing.lg, flex: 1, overflowY: 'auto',
-};
-const passwordRow: React.CSSProperties = { display: 'flex', alignItems: 'flex-end', gap: tokens.spacing.sm };
-const generateBtn: React.CSSProperties = {
-  background: 'none', border: `1px solid ${tokens.colors.primary}`, color: tokens.colors.primary,
-  borderRadius: tokens.radius.md, padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
-  cursor: 'pointer', fontSize: tokens.font.size.sm, fontFamily: tokens.font.family,
-  whiteSpace: 'nowrap', height: 40, display: 'flex', alignItems: 'center', gap: 4,
-};
-const errorStyle: React.CSSProperties = { color: tokens.colors.error, fontSize: tokens.font.size.sm, fontFamily: tokens.font.family };

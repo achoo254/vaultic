@@ -1,6 +1,6 @@
 // Copy to clipboard with auto-clear via background alarm (survives popup close)
 import React, { useState } from 'react';
-import { tokens } from '@vaultic/ui';
+import { tokens, useTheme } from '@vaultic/ui';
 import { Copy, Check } from 'lucide-react';
 
 interface CopyButtonProps {
@@ -9,6 +9,7 @@ interface CopyButtonProps {
 }
 
 export function CopyButton({ text, size = 16 }: CopyButtonProps) {
+  const { colors } = useTheme();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async (e: React.MouseEvent) => {
@@ -20,18 +21,18 @@ export function CopyButton({ text, size = 16 }: CopyButtonProps) {
     chrome.runtime?.sendMessage?.({ type: 'schedule-clipboard-clear' }).catch(() => {});
   };
 
+  const btnStyle: React.CSSProperties = {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: 14,
+    padding: 4,
+    color: colors.secondary,
+  };
+
   return (
     <button onClick={handleCopy} style={btnStyle} title="Copy">
       {copied ? <Check size={size} strokeWidth={1.5} /> : <Copy size={size} strokeWidth={1.5} />}
     </button>
   );
 }
-
-const btnStyle: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  fontSize: 14,
-  padding: 4,
-  color: tokens.colors.secondary,
-};

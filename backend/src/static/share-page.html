@@ -28,6 +28,27 @@
     .footer a { color: #2563eb; text-decoration: none; }
     #loading { color: #71717a; font-size: 14px; }
     .hidden { display: none !important; }
+
+    @media (prefers-color-scheme: dark) {
+      body { background: #09090b; }
+      .container { background: #18181b; box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+      .logo { color: #3b82f6; }
+      .subtitle { color: #a1a1aa; }
+      .warning { background: #422006; color: #fbbf24; }
+      .btn { background: #3b82f6; }
+      .btn:hover { background: #2563eb; }
+      .btn-copy { background: #27272a; color: #fafafa; border-color: #3f3f46; }
+      .btn-copy:hover { background: #3f3f46; }
+      .field-label { color: #a1a1aa; }
+      .field-value { color: #fafafa; background: #27272a; }
+      .raw-text { background: #27272a; color: #fafafa; }
+      .disappear-warning { background: #422006; color: #fbbf24; }
+      .error-title { color: #fafafa; }
+      .error-text { color: #a1a1aa; }
+      .footer { color: #71717a; }
+      .footer a { color: #3b82f6; }
+      #loading { color: #a1a1aa; }
+    }
   </style>
 </head>
 <body>

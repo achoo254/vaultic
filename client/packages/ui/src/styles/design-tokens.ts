@@ -1,19 +1,45 @@
 // Source of truth for all Vaultic design values — extracted from system-design.pen
 // ALL UI components MUST use these tokens. Never hardcode colors/fonts/spacing.
 
+/** Theme-specific color palettes — Zinc scale for neutral tones */
+export const lightColors = {
+  primary: '#2563EB',
+  primaryHover: '#1D4ED8',
+  text: '#18181B',
+  secondary: '#71717A',
+  border: '#E4E4E7',
+  background: '#FFFFFF',
+  surface: '#F4F4F5',
+  error: '#EF4444',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  // Badge semantic backgrounds
+  badgeSuccessBg: '#DCFCE7', badgeSuccessText: '#166534',
+  badgeWarningBg: '#FEF9C3', badgeWarningText: '#854D0E',
+  badgeErrorBg: '#FEE2E2', badgeErrorText: '#991B1B',
+} as const;
+
+export const darkColors = {
+  primary: '#3B82F6',
+  primaryHover: '#2563EB',
+  text: '#FAFAFA',
+  secondary: '#A1A1AA',
+  border: '#27272A',
+  background: '#09090B',
+  surface: '#18181B',
+  error: '#F87171',
+  success: '#4ADE80',
+  warning: '#FBBF24',
+  // Badge semantic backgrounds
+  badgeSuccessBg: '#052E16', badgeSuccessText: '#4ADE80',
+  badgeWarningBg: '#422006', badgeWarningText: '#FBBF24',
+  badgeErrorBg: '#450A0A', badgeErrorText: '#F87171',
+} as const;
+
+export type ThemeColors = typeof lightColors;
+
 export const tokens = {
-  colors: {
-    primary: '#2563EB',
-    primaryHover: '#1D4ED8',
-    text: '#18181B',
-    secondary: '#71717A',
-    border: '#E4E4E7',
-    background: '#FFFFFF',
-    surface: '#F4F4F5',
-    error: '#EF4444',
-    success: '#22C55E',
-    warning: '#F59E0B',
-  },
+  colors: lightColors,
   font: {
     family: "'Inter', sans-serif",
     size: { xs: 11, sm: 13, base: 14, lg: 16, xl: 18, xxl: 24 },

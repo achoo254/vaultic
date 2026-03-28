@@ -1,6 +1,6 @@
 // Screen 06: Credential Detail — view username, password, notes, folder
 import React, { useState } from 'react';
-import { tokens, VStack, HStack, Modal, Button } from '@vaultic/ui';
+import { tokens, VStack, HStack, Modal, Button, useTheme } from '@vaultic/ui';
 import { ArrowLeft, Pencil, Trash2, Globe } from 'lucide-react';
 import { PasswordField } from '../common/password-field';
 import { CopyButton } from '../common/copy-button';
@@ -14,12 +14,48 @@ interface VaultItemDetailProps {
 }
 
 export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemDetailProps) {
+  const { colors } = useTheme();
   const item = useVaultStore((s) => s.items.find((i) => i.id === itemId));
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const centerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: colors.secondary };
 
   if (!item) return <div style={centerStyle}>Item not found</div>;
 
   const { credential } = item;
+
+  const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
+  const headerStyle: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: tokens.spacing.sm,
+    padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
+    borderBottom: `1px solid ${colors.border}`,
+  };
+  const headerTitle: React.CSSProperties = {
+    flex: 1, fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold,
+    color: colors.text, fontFamily: tokens.font.family,
+    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+  };
+  const headerActions: React.CSSProperties = { display: 'flex', gap: 4 };
+  const iconBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: colors.secondary, display: 'flex', alignItems: 'center' };
+  const badgeSection: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: tokens.spacing.md,
+    padding: `${tokens.spacing.lg}px ${tokens.spacing.xxl}px`,
+  };
+  const avatarLg: React.CSSProperties = {
+    width: 48, height: 48, borderRadius: tokens.radius.lg,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+  };
+  const nameStyle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family };
+  const urlStyle: React.CSSProperties = { fontSize: tokens.font.size.sm, color: colors.secondary, fontFamily: tokens.font.family };
+  const fieldsStyle: React.CSSProperties = { padding: `0 ${tokens.spacing.xxl}px`, flex: 1, display: 'flex', flexDirection: 'column', gap: tokens.spacing.lg };
+  const fieldRow: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 2 };
+  const fieldLabel: React.CSSProperties = { fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family };
+  const fieldValueRow: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
+  const fieldValue: React.CSSProperties = { fontSize: tokens.font.size.base, color: colors.text, fontFamily: tokens.font.family };
+  const notesStyle: React.CSSProperties = { fontSize: tokens.font.size.base, color: colors.text, fontFamily: tokens.font.family, whiteSpace: 'pre-wrap' };
+  const metaStyle: React.CSSProperties = { fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family, marginTop: 'auto', paddingBottom: tokens.spacing.lg };
+  const modalText: React.CSSProperties = { fontSize: tokens.font.size.base, color: colors.secondary, fontFamily: tokens.font.family, textAlign: 'center' };
 
   return (
     <div style={containerStyle}>
@@ -36,7 +72,7 @@ export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemD
       {/* Item badge */}
       <div style={badgeSection}>
         <div style={avatarLg}>
-          <Globe size={24} strokeWidth={1.5} color={tokens.colors.primary} />
+          <Globe size={24} strokeWidth={1.5} color={colors.primary} />
         </div>
         <div>
           <div style={nameStyle}>{credential.name}</div>
@@ -73,50 +109,14 @@ export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemD
       {/* Delete confirmation */}
       <Modal open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title="Delete Credential?">
         <VStack gap="md" align="center">
-          <Trash2 size={32} strokeWidth={1.5} color={tokens.colors.error} />
+          <Trash2 size={32} strokeWidth={1.5} color={colors.error} />
           <div style={modalText}>This will permanently delete "{credential.name}". This action cannot be undone.</div>
           <HStack gap="md" style={{ width: '100%' }}>
             <Button variant="secondary" size="md" onClick={() => setShowDeleteConfirm(false)} style={{ flex: 1 }}>Cancel</Button>
-            <Button variant="primary" size="md" onClick={onDelete} style={{ flex: 1, backgroundColor: tokens.colors.error }}>Delete</Button>
+            <Button variant="primary" size="md" onClick={onDelete} style={{ flex: 1, backgroundColor: colors.error }}>Delete</Button>
           </HStack>
         </VStack>
       </Modal>
     </div>
   );
 }
-
-
-const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
-const headerStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: tokens.spacing.sm,
-  padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
-  borderBottom: `1px solid ${tokens.colors.border}`,
-};
-const headerTitle: React.CSSProperties = {
-  flex: 1, fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold,
-  color: tokens.colors.text, fontFamily: tokens.font.family,
-  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-};
-const headerActions: React.CSSProperties = { display: 'flex', gap: 4 };
-const iconBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: tokens.colors.secondary, display: 'flex', alignItems: 'center' };
-const badgeSection: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: tokens.spacing.md,
-  padding: `${tokens.spacing.lg}px ${tokens.spacing.xxl}px`,
-};
-const avatarLg: React.CSSProperties = {
-  width: 48, height: 48, borderRadius: tokens.radius.lg,
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  backgroundColor: 'rgba(37, 99, 235, 0.1)',
-};
-const nameStyle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: tokens.colors.text, fontFamily: tokens.font.family };
-const urlStyle: React.CSSProperties = { fontSize: tokens.font.size.sm, color: tokens.colors.secondary, fontFamily: tokens.font.family };
-const fieldsStyle: React.CSSProperties = { padding: `0 ${tokens.spacing.xxl}px`, flex: 1, display: 'flex', flexDirection: 'column', gap: tokens.spacing.lg };
-const fieldRow: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 2 };
-const fieldLabel: React.CSSProperties = { fontSize: tokens.font.size.xs, color: tokens.colors.secondary, fontFamily: tokens.font.family };
-const fieldValueRow: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
-const fieldValue: React.CSSProperties = { fontSize: tokens.font.size.base, color: tokens.colors.text, fontFamily: tokens.font.family };
-const notesStyle: React.CSSProperties = { fontSize: tokens.font.size.base, color: tokens.colors.text, fontFamily: tokens.font.family, whiteSpace: 'pre-wrap' };
-const metaStyle: React.CSSProperties = { fontSize: tokens.font.size.xs, color: tokens.colors.secondary, fontFamily: tokens.font.family, marginTop: 'auto', paddingBottom: tokens.spacing.lg };
-const centerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: tokens.colors.secondary };
-
-const modalText: React.CSSProperties = { fontSize: tokens.font.size.base, color: tokens.colors.secondary, fontFamily: tokens.font.family, textAlign: 'center' };
