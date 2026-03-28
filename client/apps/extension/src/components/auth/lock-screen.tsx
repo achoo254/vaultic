@@ -1,6 +1,6 @@
 // Screen 03: Lock Screen — re-enter master password to unlock vault (offline + online)
 import React, { useState } from 'react';
-import { Button, Input, tokens, useTheme } from '@vaultic/ui';
+import { Button, Input, Modal, tokens, useTheme } from '@vaultic/ui';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 
@@ -10,6 +10,7 @@ export function LockScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const email = useAuthStore((s) => s.email);
   const mode = useAuthStore((s) => s.mode);
   const unlock = useAuthStore((s) => s.unlock);
@@ -135,10 +136,20 @@ export function LockScreen() {
           Unlock
         </Button>
 
-        <button type="button" onClick={() => logout()} style={logoutLink}>
+        <button type="button" onClick={() => mode === 'online' ? logout() : setShowResetConfirm(true)} style={logoutLink}>
           {mode === 'online' ? 'Log out' : 'Reset vault'}
         </button>
       </div>
+
+      <Modal open={showResetConfirm} onClose={() => setShowResetConfirm(false)} title="Reset Vault">
+        <p style={{ fontSize: tokens.font.size.base, color: colors.secondary, fontFamily: tokens.font.family, marginBottom: tokens.spacing.lg, lineHeight: 1.5 }}>
+          This will permanently delete all your vault data. This action cannot be undone.
+        </p>
+        <div style={{ display: 'flex', gap: tokens.spacing.sm }}>
+          <Button variant="secondary" size="md" onClick={() => setShowResetConfirm(false)} style={{ flex: 1 }}>Cancel</Button>
+          <Button variant="primary" size="md" onClick={() => logout()} style={{ flex: 1, backgroundColor: colors.error }}>Reset</Button>
+        </div>
+      </Modal>
     </form>
   );
 }
