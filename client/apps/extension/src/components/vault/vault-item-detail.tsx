@@ -1,7 +1,7 @@
 // Screen 06: Credential Detail — view username, password, notes, folder
 import React, { useState } from 'react';
 import { tokens, VStack, HStack, Modal, Button, useTheme } from '@vaultic/ui';
-import { ArrowLeft, Pencil, Trash2, Globe } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Globe, Folder } from 'lucide-react';
 import { PasswordField } from '../common/password-field';
 import { CopyButton } from '../common/copy-button';
 import { useVaultStore } from '../../stores/vault-store';
@@ -16,6 +16,7 @@ interface VaultItemDetailProps {
 export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemDetailProps) {
   const { colors } = useTheme();
   const item = useVaultStore((s) => s.items.find((i) => i.id === itemId));
+  const folders = useVaultStore((s) => s.folders);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const centerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: colors.secondary };
@@ -102,6 +103,19 @@ export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemD
             <div style={notesStyle}>{credential.notes}</div>
           </div>
         )}
+
+        {item.folder_id && (() => {
+          const folder = folders.find((f) => f.id === item.folder_id);
+          return folder ? (
+            <>
+              <div style={{ height: 1, backgroundColor: colors.border }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.sm }}>
+                <Folder size={16} strokeWidth={1.5} color={colors.secondary} />
+                <span style={{ fontSize: tokens.font.size.base, color: colors.text, fontFamily: tokens.font.family }}>{folder.name}</span>
+              </div>
+            </>
+          ) : null;
+        })()}
 
         <div style={metaStyle}>Last modified: {new Date(item.updated_at).toLocaleDateString()}</div>
       </div>
