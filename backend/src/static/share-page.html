@@ -24,8 +24,6 @@
     .error-icon { font-size: 48px; margin-bottom: 16px; }
     .error-title { font-size: 20px; font-weight: 600; color: #18181b; margin-bottom: 8px; }
     .error-text { font-size: 14px; color: #71717a; margin-bottom: 24px; }
-    .footer { margin-top: 32px; font-size: 12px; color: #a1a1aa; }
-    .footer a { color: #2563eb; text-decoration: none; }
     #loading { color: #71717a; font-size: 14px; }
     .hidden { display: none !important; }
 
@@ -45,8 +43,6 @@
       .disappear-warning { background: #422006; color: #fbbf24; }
       .error-title { color: #fafafa; }
       .error-text { color: #a1a1aa; }
-      .footer { color: #71717a; }
-      .footer a { color: #3b82f6; }
       #loading { color: #a1a1aa; }
     }
   </style>
@@ -65,7 +61,6 @@
       <div class="subtitle">Someone shared a secret with you</div>
       <div class="warning" id="warning-text">This link can only be viewed 1 time</div>
       <button class="btn" id="btn-view">View Credential</button>
-      <div class="footer">Powered by <a href="https://vaultic.app">Vaultic</a></div>
     </div>
 
     <!-- Revealed content -->
@@ -76,7 +71,6 @@
       <div id="content-raw" class="hidden"></div>
       <button class="btn btn-copy" id="btn-copy-all">📋 Copy to Clipboard</button>
       <div class="disappear-warning">⚠ This will disappear when you close this page</div>
-      <div class="footer">Powered by <a href="https://vaultic.app">Vaultic</a></div>
     </div>
 
     <!-- Error / Expired -->
@@ -84,7 +78,6 @@
       <div class="error-icon">🚫</div>
       <div class="error-title" id="error-title">Link Expired</div>
       <div class="error-text" id="error-text">This share link is no longer available.</div>
-      <div class="footer">Powered by <a href="https://vaultic.app">Vaultic</a></div>
     </div>
   </div>
 
