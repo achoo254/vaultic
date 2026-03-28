@@ -1,6 +1,6 @@
 // Screen 19: Settings — security, cloud sync, data, account
 import React, { useState, useEffect } from 'react';
-import { tokens, VStack, SectionHeader as SharedSectionHeader, useTheme } from '@vaultic/ui';
+import { tokens, VStack, SectionHeader as SharedSectionHeader, Modal, Button, useTheme } from '@vaultic/ui';
 import type { ThemeMode } from '@vaultic/ui';
 import { ArrowLeft, Timer, Clipboard, Cloud, Download, Upload, User, LogOut, Sun, Moon, Monitor } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
@@ -27,6 +27,7 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
   const [clipboardClearSec, setClipboardClearSec] = useState(30);
   const [syncEnabled, setSyncEnabled] = useState(false);
   const [syncStatus, setSyncStatus] = useState('Local only');
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const isOnline = mode === 'online';
 
@@ -203,12 +204,22 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
         ) : (
           <>
             <UpgradeAccountForm />
-            <button onClick={() => logout()} style={logoutBtn}>
+            <button onClick={() => setShowResetConfirm(true)} style={logoutBtn}>
               <LogOut size={16} strokeWidth={1.5} /> Reset vault
             </button>
           </>
         )}
       </div>
+
+      <Modal open={showResetConfirm} onClose={() => setShowResetConfirm(false)} title="Reset Vault">
+        <p style={{ fontSize: tokens.font.size.base, color: colors.secondary, fontFamily: tokens.font.family, marginBottom: tokens.spacing.lg, lineHeight: 1.5 }}>
+          This will permanently delete all your vault data. This action cannot be undone.
+        </p>
+        <div style={{ display: 'flex', gap: tokens.spacing.sm }}>
+          <Button variant="secondary" size="md" onClick={() => setShowResetConfirm(false)} style={{ flex: 1 }}>Cancel</Button>
+          <Button variant="primary" size="md" onClick={() => logout()} style={{ flex: 1, backgroundColor: colors.error }}>Reset</Button>
+        </div>
+      </Modal>
     </div>
   );
 }
