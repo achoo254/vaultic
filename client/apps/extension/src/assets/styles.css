@@ -35,3 +35,30 @@ input:-webkit-autofill {
   -webkit-text-fill-color: inherit;
   transition: background-color 9999s ease-in-out 0s;
 }
+
+/* Thin scrollbar — applied globally to all scrollable areas */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D4D4D8;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A1A1AA;
+}
+
+/* Firefox thin scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #D4D4D8 transparent;
+}
+
+/* Spin animation for sync icon */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

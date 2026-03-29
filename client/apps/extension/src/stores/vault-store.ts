@@ -6,9 +6,12 @@ import type { VaultItem, Folder, LoginCredential, ItemType } from '@vaultic/type
 import { IndexedDBStore, IndexedDBSyncQueue } from '@vaultic/storage';
 import { getEncryptionKey } from '../lib/session-storage';
 import { encryptVaultItem, decryptVaultItem, encryptFolderName, decryptFolderName } from '../lib/vault-crypto';
+import { useAuthStore } from './auth-store';
 
 const store = new IndexedDBStore();
 const syncQueue = new IndexedDBSyncQueue();
+
+const getUserId = () => useAuthStore.getState().getCurrentUserId();
 
 /** Cached decrypted item for UI display. */
 export interface DecryptedVaultItem {
@@ -46,9 +49,9 @@ interface VaultActions {
   deleteFolder: (id: string) => Promise<void>;
 }
 
-type VaultStore = VaultState & VaultActions;
+type VaultStoreType = VaultState & VaultActions;
 
-export const useVaultStore = create<VaultStore>((set, get) => ({
+export const useVaultStore = create<VaultStoreType>((set, get) => ({
   items: [],
   folders: [],
   searchQuery: '',
@@ -61,8 +64,28 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       const key = await getEncryptionKey();
       if (!key) { set({ loading: false }); return; }
 
-      const encItems = await store.getAllItems();
-      const encFolders = await store.getAllFolders();
+      const userId = getUserId();
+
+      // One-time migration: backfill untagged items (pre-v3 IDB) with current userId
+      const migrated = await (store as import('@vaultic/storage').IndexedDBStore).getMetadata('user_id_migrated');
+      if (!migrated) {
+        const allRaw = await store.getAllItemsUnfiltered();
+        const untaggedItems = allRaw.filter((i) => !i.user_id);
+        for (const item of untaggedItems) {
+          await store.putItem({ ...item, user_id: userId });
+        }
+
+        const allRawFolders = await store.getAllFoldersUnfiltered();
+        const untaggedFolders = allRawFolders.filter((f) => !f.user_id);
+        for (const folder of untaggedFolders) {
+          await store.putFolder({ ...folder, user_id: userId });
+        }
+
+        await (store as import('@vaultic/storage').IndexedDBStore).setMetadata('user_id_migrated', 'true');
+      }
+
+      const encItems = await store.getAllItems(userId);
+      const encFolders = await store.getAllFolders(userId);
 
       // Decrypt all items
       const decrypted: DecryptedVaultItem[] = [];
@@ -104,12 +127,14 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const key = await getEncryptionKey();
     if (!key) throw new Error('Vault is locked');
 
+    const userId = getUserId();
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
     const encrypted = await encryptVaultItem(key, credential);
 
     const item: VaultItem = {
       id,
+      user_id: userId,
       folder_id: folderId,
       item_type: 'login' as ItemType,
       encrypted_data: encrypted,
@@ -122,6 +147,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     await store.putItem(item);
     await syncQueue.enqueue({
       id: crypto.randomUUID(),
+      user_id: userId,
       item_id: id,
       action: 'create',
       timestamp: Date.now(),
@@ -139,7 +165,8 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const key = await getEncryptionKey();
     if (!key) throw new Error('Vault is locked');
 
-    const existing = await store.getItem(id);
+    const userId = getUserId();
+    const existing = await store.getItem(userId, id);
     if (!existing) throw new Error('Item not found');
 
     const now = new Date().toISOString();
@@ -156,6 +183,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     await store.putItem(updated);
     await syncQueue.enqueue({
       id: crypto.randomUUID(),
+      user_id: userId,
       item_id: id,
       action: 'update',
       timestamp: Date.now(),
@@ -169,7 +197,8 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   },
 
   deleteItem: async (id) => {
-    const existing = await store.getItem(id);
+    const userId = getUserId();
+    const existing = await store.getItem(userId, id);
     if (!existing) return;
 
     // Soft delete — mark deleted_at for sync, then remove from IDB
@@ -177,6 +206,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     await store.putItem({ ...existing, deleted_at: now, updated_at: now });
     await syncQueue.enqueue({
       id: crypto.randomUUID(),
+      user_id: userId,
       item_id: id,
       action: 'delete',
       timestamp: Date.now(),
@@ -192,16 +222,18 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const key = await getEncryptionKey();
     if (!key) throw new Error('Vault is locked');
 
+    const userId = getUserId();
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     const encryptedName = await encryptFolderName(key, name);
 
     const folder: Folder = {
-      id, encrypted_name: encryptedName, created_at: now, updated_at: now,
+      id, user_id: userId, encrypted_name: encryptedName, created_at: now, updated_at: now,
     };
     await store.putFolder(folder);
     await syncQueue.enqueue({
       id: crypto.randomUUID(),
+      user_id: userId,
       item_id: id,
       action: 'create',
       timestamp: Date.now(),
@@ -211,9 +243,11 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   },
 
   deleteFolder: async (id) => {
-    await store.deleteFolder(id);
+    const userId = getUserId();
+    await store.deleteFolder(userId, id);
     await syncQueue.enqueue({
       id: crypto.randomUUID(),
+      user_id: userId,
       item_id: id,
       action: 'delete',
       timestamp: Date.now(),
@@ -221,7 +255,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     // Move items from this folder to no folder — update both state and IDB
     const itemsToUpdate = get().items.filter((i) => i.folder_id === id);
     for (const item of itemsToUpdate) {
-      const existing = await store.getItem(item.id);
+      const existing = await store.getItem(userId, item.id);
       if (existing) {
         await store.putItem({ ...existing, folder_id: undefined });
       }

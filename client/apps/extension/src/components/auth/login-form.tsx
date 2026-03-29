@@ -16,6 +16,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToSetup }: LoginFormProp
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [errorField, setErrorField] = useState<'email' | 'password' | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const login = useAuthStore((s) => s.login);
@@ -23,11 +24,15 @@ export function LoginForm({ onSwitchToRegister, onSwitchToSetup }: LoginFormProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setErrorField(null);
     setLoading(true);
     try {
       await login(email, password, API_BASE_URL);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      const msg = err instanceof Error ? err.message : 'Login failed';
+      setError(msg);
+      const lower = msg.toLowerCase();
+      setErrorField(lower.includes('email') || lower.includes('not found') || lower.includes('user') ? 'email' : 'password');
     } finally {
       setLoading(false);
     }
@@ -111,7 +116,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToSetup }: LoginFormProp
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          error={error && !password ? error : undefined}
+          error={errorField === 'email' ? error : undefined}
           required
         />
 
@@ -122,7 +127,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToSetup }: LoginFormProp
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter master password"
-            error={error || undefined}
+            error={errorField === 'password' ? error : undefined}
             required
           />
           <button

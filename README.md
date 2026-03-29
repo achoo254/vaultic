@@ -1,8 +1,10 @@
 # 🔐 Vaultic
 
+> **[🇬🇧 English](README.en.md)**
+
 **Trình quản lý mật khẩu mã nguồn mở, mã hóa đầu-cuối, ưu tiên offline.**
 
-Vaultic là giải pháp thay thế đơn giản và miễn phí cho 1Password/Bitwarden — toàn bộ dữ liệu được mã hóa ngay trên thiết bị, server không bao giờ nhìn thấy mật khẩu của bạn.
+Vaultic là giải pháp thay thế đơn giản và miễn phí cho 1Password/Bitwarden — toàn bộ dữ liệu được mã hóa ngay trên thiết bị của bạn. Server không bao giờ nhìn thấy mật khẩu gốc.
 
 ---
 
@@ -10,38 +12,51 @@ Vaultic là giải pháp thay thế đơn giản và miễn phí cho 1Password/B
 
 | 🔒 Zero-Knowledge | 📴 Offline-First | 🔓 Mã nguồn mở |
 |:---:|:---:|:---:|
-| Mã hóa AES-256 trên thiết bị. Server chỉ lưu dữ liệu đã mã hóa — không thể giải mã. | Hoạt động 100% offline sau đăng nhập. Đồng bộ cloud là **tùy chọn**. | AGPL-3.0. Tự host, tự kiểm tra, tự kiểm soát. |
+| Mã hóa AES-256-GCM trên thiết bị. Server chỉ lưu dữ liệu đã mã hóa — không thể giải mã. | Hoạt động 100% offline sau đăng nhập. Đồng bộ cloud là **tùy chọn**. | Tự host, tự kiểm tra, tự kiểm soát. |
+
+---
+
+## 📊 So sánh với các trình quản lý mật khẩu khác
+
+| Tính năng | Vaultic | Bitwarden | LastPass | Proton Pass |
+|-----------|:-------:|:---------:|:--------:|:-----------:|
+| Mật khẩu | Không giới hạn | Không giới hạn | Không giới hạn | Không giới hạn |
+| Thiết bị | Không giới hạn | Không giới hạn | **1 loại** · *mobile HOẶC desktop* | Không giới hạn |
+| Offline | **Mặc định** | Có | Có | **Trả phí** |
+| Cloud sync | Tùy chọn (opt-in) | Bắt buộc | Bắt buộc | Bắt buộc |
+| Chia sẻ mã hóa | Link 1 lần | **Trả phí** · *Send* | **Trả phí** | **Trả phí** |
+| Kiểm tra mật khẩu yếu | Có | **Trả phí** · *Vault Health* | Cơ bản | Cơ bản |
+| Tự host | Có | Có | Không | Không |
+| Mã nguồn mở | Có | Có (GPLv2) | Không | Có (GPLv3) |
+| Nhập CSV | Có · *Chrome, Bitwarden, 1Password* | Có | Có | Có |
+| Xuất vault | Có · *JSON mã hóa + CSV* | Có | Có | Có |
+| Tạo mật khẩu | Có · *8–64 ký tự, tùy chỉnh* | Có | Có | Có |
+| Tự động điền | Có | Có | Có | Có |
+| Tự khóa | Có · *15 phút mặc định* | Có | Có | Có |
+| Giá | **Miễn phí** | Free / $10/năm | Free / $36/năm | Free / $36/năm |
+
+> **Ghi chú:** 1Password và Dashlane không có gói miễn phí (chỉ dùng thử). So sánh dựa trên gói miễn phí của từng sản phẩm.
+>
+> Nguồn: [Bitwarden Pricing](https://bitwarden.com/pricing/) · [Proton Pass Pricing](https://proton.me/pass/pricing) · [LastPass Pricing](https://www.lastpass.com/pricing) · [1Password Sign-up](https://1password.com/sign-up/)
 
 ---
 
 ## ✨ Tính năng chính
 
 ### 🗄️ Kho mật khẩu
-Lưu trữ và quản lý tất cả thông tin đăng nhập, ghi chú bảo mật, thẻ ngân hàng — được mã hóa và tìm kiếm nhanh.
-
-<!-- TODO: Thêm screenshot vault list -->
-<!-- ![Vault List](docs/images/vault-list.png) -->
+Lưu trữ và quản lý thông tin đăng nhập, ghi chú bảo mật — được mã hóa và tìm kiếm nhanh.
 
 ### ⚡ Tự động điền
-Extension phát hiện form đăng nhập và tự động gợi ý điền mật khẩu phù hợp theo tên miền.
-
-<!-- TODO: Thêm screenshot autofill -->
-<!-- ![Autofill](docs/images/autofill.png) -->
+Extension phát hiện form đăng nhập và gợi ý điền mật khẩu phù hợp theo tên miền.
 
 ### 🔗 Chia sẻ an toàn
-Tạo link chia sẻ mã hóa 1 lần — khóa giải mã nằm trong URL fragment, server không bao giờ nhận được.
-
-<!-- TODO: Thêm screenshot share -->
-<!-- ![Share](docs/images/share.png) -->
+Tạo link chia sẻ mã hóa — tùy chỉnh số lần xem và thời hạn. Khóa giải mã nằm trong URL fragment, server không bao giờ nhận được.
 
 ### 🔄 Đồng bộ tùy chọn
-Bật/tắt đồng bộ cloud trong Cài đặt. Khi tắt, dữ liệu chỉ ở trên thiết bị. Khi bật, đồng bộ delta (chỉ gửi thay đổi).
+Bật/tắt đồng bộ cloud trong Cài đặt. Khi tắt, dữ liệu chỉ ở trên thiết bị. Khi bật, đồng bộ delta — chỉ gửi thay đổi.
 
 ### 🛡️ Kiểm tra sức khỏe bảo mật
 Phát hiện mật khẩu yếu, trùng lặp và đề xuất cải thiện.
-
-<!-- TODO: Thêm screenshot security health -->
-<!-- ![Security Health](docs/images/security-health.png) -->
 
 ### 📦 Xuất / Nhập
 Nhập từ file CSV (tương thích các trình quản lý khác). Xuất vault dưới dạng JSON mã hóa.
@@ -56,33 +71,23 @@ Nhập từ file CSV (tương thích các trình quản lý khác). Xuất vault
 Cài thủ công (Developer Mode):
 1. Build extension:
    ```bash
-   git clone https://gitlabs.inet.vn/dattqh/vaultic.git && cd vaultic
+   git clone https://github.com/achoo254/vaultic.git && cd vaultic
    pnpm install && pnpm build
    ```
 2. Mở `chrome://extensions` → bật **Developer mode**
 3. Chọn **Load unpacked** → trỏ tới `client/apps/extension/.output/chrome-mv3`
 
-### Firefox
-> *Sắp có trên Firefox Add-ons*
-
-Build tương tự, chọn `client/apps/extension/.output/firefox-mv2`.
-
 ---
 
 ## 🚀 Bắt đầu sử dụng
 
-### Bước 1: Đăng ký tài khoản
+### Bước 1: Tạo mật khẩu chính
 
-Click icon Vaultic trên thanh công cụ → nhập email và **mật khẩu chính** (master password).
+Click icon Vaultic trên thanh công cụ → đặt **mật khẩu chính** (master password). Vault hoạt động ngay trên thiết bị, không cần tài khoản hay kết nối mạng.
 
-> ⚠️ **Quan trọng:** Mật khẩu chính là chìa khóa giải mã vault. Nếu quên, không ai có thể khôi phục dữ liệu — kể cả server.
-
-<!-- TODO: Thêm screenshot register -->
-<!-- ![Register](docs/images/register.png) -->
+> ⚠️ **Quan trọng:** Mật khẩu chính là chìa khóa duy nhất để giải mã vault. Nếu quên, không ai có thể khôi phục dữ liệu — kể cả server.
 
 ### Bước 2: Thêm mật khẩu đầu tiên
-
-Có 2 cách:
 
 **Cách 1 — Thêm thủ công:**
 Click ➕ trong vault → nhập tên, URL, username, password → Lưu.
@@ -96,7 +101,7 @@ Truy cập website đã lưu → click icon 🔑 bên cạnh ô mật khẩu →
 
 ### Bước 4: Chia sẻ (tùy chọn)
 
-Vào tab **Share** → chọn mật khẩu → tạo link → gửi cho người nhận. Link chỉ dùng được 1 lần.
+Vào tab **Share** → chọn mật khẩu → tùy chỉnh số lần xem và thời hạn → tạo link → gửi cho người nhận.
 
 ---
 
@@ -107,14 +112,14 @@ Mật khẩu chính
       │
       ▼
   ┌─────────┐
-  │ Argon2id │  ← Hàm băm chống brute-force (19MB RAM, 2 lần lặp)
+  │ Argon2id │  ← Hàm băm chống brute-force (64MB RAM, 3 lần lặp)
   └────┬─────┘
        │
        ▼
   Master Key (32 bytes)
        │
    ┌───┴───┐
-   │ HKDF  │  ← Tách khóa cho từng mục đích
+   │ HKDF  │  ← Tách khóa cho từng mục đích (mã hóa, xác thực)
    └───┬───┘
        │
        ▼
@@ -138,7 +143,7 @@ Mật khẩu chính
 | Tự khóa | 15 phút | Tự động khóa vault sau thời gian không hoạt động |
 | Xóa clipboard | 30 giây | Tự xóa mật khẩu đã copy khỏi clipboard |
 | Đồng bộ cloud | Tắt | Bật để đồng bộ vault giữa các thiết bị |
-| Tạo mật khẩu | 16 ký tự | Tùy chỉnh độ dài và độ phức tạp |
+| Tạo mật khẩu | 20 ký tự | Tùy chỉnh độ dài và độ phức tạp |
 
 ---
 
@@ -146,54 +151,51 @@ Mật khẩu chính
 
 ### Yêu cầu
 - Node.js 22+, pnpm 9+
-- MongoDB (external hoặc Docker)
+- MongoDB
 
 ### Khởi chạy nhanh
 
 ```bash
 # Clone & cài đặt
-git clone https://gitlabs.inet.vn/dattqh/vaultic.git && cd vaultic
+git clone https://github.com/achoo254/vaultic.git && cd vaultic
 pnpm install
 
 # Đặt biến môi trường
 cp backend/.env.example backend/.env
-# Edit backend/.env: MONGODB_URI, JWT_SECRET
+# Sửa backend/.env: MONGODB_URI, JWT_SECRET
 
 # Chạy server API (port 8080)
 cd backend && pnpm dev
 
-# Chạy extension (hot reload)
+# Chạy extension (hot reload) — terminal khác
 cd .. && pnpm --filter @vaultic/extension dev
-# → Load unpacked từ client/apps/extension/.wxt/chrome-mv3
+# → Load unpacked từ client/apps/extension/.output/chrome-mv3
 ```
 
 ### Cấu trúc dự án
 
 ```
 vaultic/
-├── _archive/crates/           # Rust code (archived, reference only)
 ├── backend/                   # Node.js/Express server
 │   ├── src/
-│   │   ├── server.ts          # Express app
-│   │   ├── config/            # Environment config
-│   │   ├── routes/            # API routes
+│   │   ├── server.ts          # Express app + MongoDB connection
+│   │   ├── config/            # Biến môi trường
+│   │   ├── routes/            # API routes (auth, sync, share)
 │   │   ├── models/            # Mongoose schemas
 │   │   ├── services/          # Business logic
-│   │   └── middleware/        # Auth, error handling
+│   │   └── middleware/        # Auth, error handling, rate limiting
 │   └── package.json
-├── client/                    # Client-side code
+├── client/
 │   ├── apps/
-│   │   └── extension/         # WXT browser extension
+│   │   └── extension/         # WXT browser extension (Chrome MV3)
 │   └── packages/
-│       ├── types/             # Shared TS types
-│       ├── crypto/            # WebCrypto bridge
+│       ├── crypto/            # WebCrypto bridge (AES-256-GCM, Argon2id)
 │       ├── storage/           # IndexedDB vault store
 │       ├── sync/              # Delta sync engine
-│       ├── api/               # Server API client
-│       └── ui/                # Shared React components
-├── shared/                    # Shared packages
-│   └── types/                 # TS types (shared)
-└── docker/                    # Docker configs
+│       ├── api/               # Server API client (ofetch)
+│       └── ui/                # Shared React components (shadcn/ui)
+└── shared/
+    └── types/                 # Shared TypeScript types
 ```
 
 ### Lệnh phổ biến
@@ -210,25 +212,7 @@ pnpm --filter @vaultic/extension dev # Dev extension (hot reload)
 pnpm build                          # Build tất cả packages
 pnpm lint                           # Lint tất cả
 pnpm test                           # Test tất cả
-pnpm --filter @vaultic/crypto build # Build 1 package
 ```
-
-### Self-host server
-
-```bash
-# Copy & chỉnh sửa biến môi trường
-cp backend/.env.example backend/.env
-# Sửa MONGODB_URI, JWT_SECRET trong backend/.env
-
-# Chạy với Docker Compose
-docker compose -f docker/docker-compose.yml up -d
-```
-
----
-
-## 📄 Giấy phép
-
-[AGPL-3.0](LICENSE) — Mã nguồn mở, tự do sử dụng và phân phối.
 
 ---
 
@@ -239,4 +223,4 @@ Mọi đóng góp đều được hoan nghênh! Xem [docs/](docs/) để hiểu 
 1. Fork repo
 2. Tạo branch: `git checkout -b feat/tinh-nang-moi`
 3. Commit: `git commit -m "feat: thêm tính năng mới"`
-4. Push & tạo Merge Request
+4. Push & tạo Pull Request

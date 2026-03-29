@@ -1,9 +1,11 @@
 // Screen 01: Register — email + master password + confirm → create account
+// If user already has offline vault data, shows Upgrade Account modal (screen 19c) instead
 import React, { useState } from 'react';
 import { Button, Input, tokens, useTheme } from '@vaultic/ui';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 import { getStyles } from './register-form.styles';
+import { UpgradeAccountModal } from './upgrade-account-modal';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -22,22 +24,35 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [errorField, setErrorField] = useState<'email' | 'password' | 'confirm' | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const register = useAuthStore((s) => s.register);
+  const mode = useAuthStore((s) => s.mode);
+  const hasVault = useAuthStore((s) => s.hasVault);
 
   const passwordStrength = getPasswordStrength(password, colors);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setErrorField(null);
+
+    // If user has existing offline vault, show upgrade modal instead of registering
+    if (hasVault && mode === 'offline') {
+      setShowUpgradeModal(true);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
+      setErrorField('confirm');
       return;
     }
     if (password.length < 8) {
       setError('Password must be at least 8 characters');
+      setErrorField('password');
       return;
     }
 
@@ -45,7 +60,9 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     try {
       await register(email, password, API_BASE_URL);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      const msg = err instanceof Error ? err.message : 'Registration failed';
+      setError(msg);
+      setErrorField(msg.toLowerCase().includes('email') ? 'email' : 'password');
     } finally {
       setLoading(false);
     }
@@ -65,6 +82,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
+          error={errorField === 'email' ? error : undefined}
           required
         />
 
@@ -76,6 +94,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Choose a strong password"
+              error={errorField === 'password' ? error : undefined}
               required
             />
             <button
@@ -106,7 +125,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder="Confirm master password"
-          error={error || undefined}
+          error={errorField === 'confirm' ? error : undefined}
           required
         />
       </div>
@@ -126,6 +145,9 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           Already have an account? Log in
         </button>
       </div>
+
+      {/* Upgrade modal — shown when offline user with existing vault tries to register */}
+      <UpgradeAccountModal open={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
     </form>
   );
 }

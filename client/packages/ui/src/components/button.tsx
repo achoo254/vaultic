@@ -33,7 +33,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <button ref={ref} style={baseStyle} disabled={disabled || loading} {...props}>
-        {loading && <span style={{ width: 16, height: 16 }}>...</span>}
+        {loading && <LoadingSpinner />}
         {children}
       </button>
     );
@@ -57,6 +57,17 @@ function getVariantStyle(variant: string, colors: ThemeColors): React.CSSPropert
     default:
       return {};
   }
+}
+
+/** Animated SVG spinner for button loading state */
+function LoadingSpinner() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 16 16" fill="none" style={{ animation: 'spin 0.8s linear infinite' }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+      <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
 }
 
 function getSizeStyle(size: string): React.CSSProperties {
