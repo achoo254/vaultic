@@ -9,6 +9,7 @@ import { SearchBar } from './search-bar';
 import { EmptyVault } from './empty-vault';
 import { VaultItemCard } from './vault-item-card';
 import { FolderBar } from './folder-bar';
+import { VaultListSkeleton } from '../common/skeleton-loader';
 import type { DecryptedVaultItem } from '../../stores/vault-store';
 
 interface VaultListProps {
@@ -54,7 +55,16 @@ export function VaultList({ onItemClick, onAddItem, onManageFolders, onSettings 
   };
 
   if (loading) {
-    return <div style={centerStyle}>Loading vault...</div>;
+    return (
+      <div style={containerStyle}>
+        <AppHeader>
+          <button onClick={lockVault} style={iconBtn} title="Lock vault">
+            <Lock size={18} strokeWidth={1.5} color={colors.secondary} />
+          </button>
+        </AppHeader>
+        <VaultListSkeleton rows={4} />
+      </div>
+    );
   }
 
   if (items.length === 0 && !searchQuery) {

@@ -2,11 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { tokens, VStack, SectionHeader as SharedSectionHeader, Modal, Button, useTheme } from '@vaultic/ui';
 import type { ThemeMode } from '@vaultic/ui';
-import { ArrowLeft, Timer, Clipboard, Cloud, Download, Upload, User, LogOut, Sun, Moon, Monitor } from 'lucide-react';
+import { ArrowLeft, Timer, Clipboard, Cloud, Download, Upload, User, LogOut, Sun, Moon, Monitor, RefreshCw, Clock } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 import { fetchWithAuth } from '../../lib/fetch-with-auth';
-import { IndexedDBStore } from '@vaultic/storage';
-import { UpgradeAccountForm } from './upgrade-account-form';
+import { IndexedDBStore, IndexedDBSyncQueue } from '@vaultic/storage';
+import { SyncEngine, LWWResolver, getDeviceId } from '@vaultic/sync';
+import { toApiItem, toApiFolder, fromApiItem, fromApiFolder } from '../../lib/sync-api-transforms';
+import { UpgradeAccountModal } from '../auth/upgrade-account-modal';
+import { EnableSyncModal } from './enable-sync-modal';
+import { DisableSyncModal } from './disable-sync-modal';
 
 interface SettingsPageProps {
   onBack: () => void;
@@ -28,6 +32,11 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
   const [syncEnabled, setSyncEnabled] = useState(false);
   const [syncStatus, setSyncStatus] = useState('Local only');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showEnableSyncModal, setShowEnableSyncModal] = useState(false);
+  const [showDisableSyncModal, setShowDisableSyncModal] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
   const isOnline = mode === 'online';
 
@@ -38,42 +47,108 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
       if (r.clipboard_clear_sec) setClipboardClearSec(r.clipboard_clear_sec);
       if (r.sync_enabled) { setSyncEnabled(true); setSyncStatus('Synced'); }
     });
+    // Load last sync timestamp from IDB metadata
+    const userId = useAuthStore.getState().getCurrentUserId();
+    const idbStore = new IndexedDBStore();
+    idbStore.getMetadata(`last_sync_${userId}`).then((ts) => {
+      if (ts) setLastSyncedAt(ts);
+    });
   }, []);
+
 
   const saveSetting = (key: string, value: number | boolean) => {
     chrome.storage.local.set({ [key]: value });
   };
 
-  const handleSyncToggle = async () => {
+  const handleSyncToggle = () => {
     if (!syncEnabled) {
-      if (confirm('Your encrypted vault will be stored on the server. Only you can decrypt it. Enable Cloud Sync?')) {
-        setSyncEnabled(true);
-        setSyncStatus('Syncing...');
-        saveSetting('sync_enabled', true);
-        try {
-          const store = new IndexedDBStore();
-          const items = await store.getAllItems();
-          await fetchWithAuth('/api/v1/sync/push', {
-            method: 'POST',
-            body: JSON.stringify({ device_id: '', items }),
-          });
-          setSyncStatus('Synced');
-        } catch {
-          setSyncStatus('Sync failed');
-        }
-      }
+      setShowEnableSyncModal(true);
     } else {
-      const deleteData = confirm('Delete your vault data from the server? (Cancel to keep a frozen copy)');
-      setSyncEnabled(false);
-      setSyncStatus('Local only');
-      saveSetting('sync_enabled', false);
-      if (deleteData) {
-        try {
-          await fetchWithAuth('/api/v1/sync/data', { method: 'DELETE' });
-        } catch {
-          // Best-effort purge — vault already local-only
-        }
-      }
+      setShowDisableSyncModal(true);
+    }
+  };
+
+  const handleDisableSync = (deleteData: boolean) => {
+    setShowDisableSyncModal(false);
+    setSyncEnabled(false);
+    setSyncStatus('Local only');
+    setLastSyncedAt(null);
+    saveSetting('sync_enabled', false);
+    if (deleteData) {
+      fetchWithAuth('/api/v1/sync/data', { method: 'DELETE' }).catch(() => {
+        // Best-effort purge — vault already local-only
+      });
+    }
+  };
+
+  const handleSyncNow = async () => {
+    if (isSyncing || !syncEnabled) return;
+    setIsSyncing(true);
+    setSyncStatus('Syncing...');
+    try {
+      const store = new IndexedDBStore();
+      const queue = new IndexedDBSyncQueue();
+      const userId = useAuthStore.getState().getCurrentUserId();
+      const engine = new SyncEngine(store, queue, {
+        async push(data) {
+          // Transform snake_case (client) → camelCase (backend API)
+          const payload = {
+            deviceId: data.device_id,
+            items: data.items.map(toApiItem),
+            folders: data.folders.map(toApiFolder),
+          };
+          const res = await fetchWithAuth('/api/v1/sync/push', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          });
+          return res.json();
+        },
+        async pull(since, deviceId) {
+          const params = new URLSearchParams({ deviceId });
+          if (since) params.set('since', since);
+          const res = await fetchWithAuth(`/api/v1/sync/pull?${params}`);
+          const data = await res.json();
+          // Transform camelCase (backend) → snake_case (client)
+          return {
+            ...data,
+            items: (data.items || []).map(fromApiItem),
+            folders: (data.folders || []).map(fromApiFolder),
+          };
+        },
+      }, new LWWResolver(), userId);
+      const result = await engine.sync();
+      setSyncStatus(`Synced (↑${result.pushed} ↓${result.pulled})`);
+      setLastSyncedAt(new Date().toISOString());
+    } catch (err) {
+      console.error('[SyncNow] error:', err);
+      setSyncStatus(err instanceof Error ? `Failed: ${err.message}` : 'Sync failed');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleEnableSyncConfirm = async () => {
+    setShowEnableSyncModal(false);
+    setSyncEnabled(true);
+    setSyncStatus('Syncing...');
+    saveSetting('sync_enabled', true);
+    try {
+      const store = new IndexedDBStore();
+      const userId = useAuthStore.getState().getCurrentUserId();
+      const items = await store.getAllItems(userId);
+      await fetchWithAuth('/api/v1/sync/push', {
+        method: 'POST',
+        body: JSON.stringify({
+          deviceId: getDeviceId(),
+          items: items.map(toApiItem),
+          folders: [],
+        }),
+      });
+      setSyncStatus('Synced');
+      setLastSyncedAt(new Date().toISOString());
+    } catch (err) {
+      console.error('[EnableSync] error:', err);
+      setSyncStatus(err instanceof Error ? `Failed: ${err.message}` : 'Sync failed');
     }
   };
 
@@ -163,18 +238,42 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
         {isOnline && (
           <>
             <SectionHeader title="Cloud Sync" />
-            <div style={rowStyle}>
+            <div style={{ ...rowStyle, borderBottom: syncEnabled && lastSyncedAt ? 'none' : `1px solid ${colors.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.sm }}>
                 <Cloud size={18} strokeWidth={1.5} color={colors.secondary} />
                 <div>
                   <div style={rowLabel}>Enable Cloud Sync</div>
-                  <div style={rowHint}>{syncStatus}</div>
+                  <div style={rowHint}>{syncEnabled ? 'Synced — vault data is encrypted and backed up' : syncStatus}</div>
                 </div>
               </div>
               <button type="button" onClick={handleSyncToggle} style={{ ...syncToggleTrack, backgroundColor: syncEnabled ? colors.primary : colors.border }}>
                 <div style={{ ...syncToggleThumb, transform: syncEnabled ? 'translateX(16px)' : 'translateX(0)' }} />
               </button>
             </div>
+            {syncEnabled && lastSyncedAt && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: tokens.spacing.sm,
+                padding: `${tokens.spacing.xs}px ${tokens.spacing.lg}px ${tokens.spacing.md}px`,
+                paddingLeft: `${tokens.spacing.lg + 18 + tokens.spacing.sm}px`,
+                borderBottom: `1px solid ${colors.border}`,
+              }}>
+                <Clock size={14} strokeWidth={1.5} color={colors.secondary} />
+                <span style={{ fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family }}>
+                  Last synced: {formatSyncDate(lastSyncedAt)}
+                </span>
+              </div>
+            )}
+            {syncEnabled && (
+              <button onClick={handleSyncNow} disabled={isSyncing} style={{
+                ...linkRow, color: isSyncing ? colors.secondary : colors.primary,
+                opacity: isSyncing ? 0.6 : 1, cursor: isSyncing ? 'not-allowed' : 'pointer',
+              }}>
+                <RefreshCw size={18} strokeWidth={1.5} style={{
+                  animation: isSyncing ? 'spin 1s linear infinite' : 'none',
+                }} />
+                {isSyncing ? 'Syncing...' : 'Sync Now'}
+              </button>
+            )}
           </>
         )}
 
@@ -203,13 +302,20 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
           </>
         ) : (
           <>
-            <UpgradeAccountForm />
+            <button onClick={() => setShowUpgradeModal(true)} style={linkRow}>
+              <User size={18} strokeWidth={1.5} color={colors.primary} /> Create Account
+            </button>
             <button onClick={() => setShowResetConfirm(true)} style={logoutBtn}>
               <LogOut size={16} strokeWidth={1.5} /> Reset vault
             </button>
           </>
         )}
       </div>
+
+      <UpgradeAccountModal open={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
+      <EnableSyncModal open={showEnableSyncModal} onClose={() => setShowEnableSyncModal(false)} onConfirm={handleEnableSyncConfirm} />
+
+      <DisableSyncModal open={showDisableSyncModal} onClose={() => setShowDisableSyncModal(false)} onConfirm={handleDisableSync} />
 
       <Modal open={showResetConfirm} onClose={() => setShowResetConfirm(false)} title="Reset Vault">
         <p style={{ fontSize: tokens.font.size.base, color: colors.secondary, fontFamily: tokens.font.family, marginBottom: tokens.spacing.lg, lineHeight: 1.5 }}>
@@ -247,6 +353,13 @@ function SettingRow({ icon, label, children }: { icon?: React.ReactNode; label: 
       {children}
     </div>
   );
+}
+
+/** Format ISO timestamp to "DD/MM/YYYY HH:mm:ss" for last synced display. */
+function formatSyncDate(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
 const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };

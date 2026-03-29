@@ -17,5 +17,9 @@ export default defineConfig({
   },
   vite: () => ({
     plugins: [wasm(), topLevelAwait()],
+    server: {
+      port: 3000,
+      allowedHosts: true,
+    },
   }),
 });

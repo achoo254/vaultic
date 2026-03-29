@@ -6,15 +6,17 @@ import { tokens, useTheme } from '@vaultic/ui';
 export function VaultListSkeleton({ rows = 3 }: { rows?: number }) {
   const { colors } = useTheme();
 
-  const shimmer = `linear-gradient(90deg, ${colors.surface} 25%, #e8e8eb 50%, ${colors.surface} 75%)`;
+  const shimmerBg = `linear-gradient(90deg, ${colors.surface} 25%, ${colors.border} 50%, ${colors.surface} 75%)`;
+  const shimmerStyle: React.CSSProperties = { background: shimmerBg, backgroundSize: '200% 100%', animation: 'shimmer 1.5s ease-in-out infinite' };
   const containerStyle: React.CSSProperties = { padding: tokens.spacing.md, display: 'flex', flexDirection: 'column', gap: tokens.spacing.md };
   const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: tokens.spacing.md };
-  const circle: React.CSSProperties = { width: 36, height: 36, borderRadius: tokens.radius.md, background: shimmer, backgroundSize: '200% 100%', flexShrink: 0 };
+  const circle: React.CSSProperties = { width: 36, height: 36, borderRadius: tokens.radius.md, flexShrink: 0, ...shimmerStyle };
   const linesStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', gap: 6 };
-  const line: React.CSSProperties = { height: 12, borderRadius: 4, background: shimmer, backgroundSize: '200% 100%' };
+  const line: React.CSSProperties = { height: 12, borderRadius: 4, ...shimmerStyle };
 
   return (
     <div style={containerStyle}>
+      <style>{`@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} style={rowStyle}>
           <div style={circle} />

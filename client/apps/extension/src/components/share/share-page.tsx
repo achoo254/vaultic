@@ -1,7 +1,8 @@
 // Screen 13/14: Share Page — unified hybrid share (data in URL, metadata on server)
 import React, { useState } from 'react';
-import { Button, VStack, Checkbox, Textarea, ToggleGroup, Card, tokens, useTheme } from '@vaultic/ui';
-import { isWithinUrlLimit, estimateFragmentSize, MAX_FRAGMENT_LENGTH } from '@vaultic/crypto';
+import { Button, VStack, Checkbox, Textarea, ToggleGroup, tokens, useTheme } from '@vaultic/ui';
+import { ArrowLeft, Globe } from 'lucide-react';
+import { estimateFragmentSize, MAX_FRAGMENT_LENGTH } from '@vaultic/crypto';
 import { ShareOptions } from './share-options';
 import { ShareLinkResult } from './share-link-result';
 import { encryptShareToUrl } from '../../lib/share-crypto';
@@ -18,7 +19,11 @@ const MODE_OPTIONS = [
   { value: 'quick' as const, label: 'Quick Share' },
 ];
 
-export function SharePage() {
+interface SharePageProps {
+  onBack?: () => void;
+}
+
+export function SharePage({ onBack }: SharePageProps) {
   const { colors } = useTheme();
   const [mode, setMode] = useState<'vault' | 'quick'>('vault');
   const [ttlHours, setTtlHours] = useState<number | null>(24);
@@ -113,6 +118,27 @@ export function SharePage() {
     }
   };
 
+  const headerStyle: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: tokens.spacing.sm, height: 52,
+    padding: `0 ${tokens.spacing.lg}px`, borderBottom: `1px solid ${colors.border}`,
+  };
+  const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: colors.text, padding: 4, display: 'flex', alignItems: 'center' };
+  const headerTitle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family };
+  // Source card with avatar icon matching design screen 13
+  const sourceCard: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+    border: `1px solid ${colors.border}`, borderRadius: 10, height: 56,
+  };
+  const sourceAvatar: React.CSSProperties = {
+    width: 36, height: 36, borderRadius: 8, backgroundColor: colors.primary,
+    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  };
+  const sourceName: React.CSSProperties = { fontSize: tokens.font.size.base, color: colors.text, fontWeight: tokens.font.weight.medium };
+  const sourceUser: React.CSSProperties = { fontSize: tokens.font.size.sm, color: colors.secondary };
+  const changeBtn: React.CSSProperties = {
+    background: 'none', border: 'none', color: colors.primary, cursor: 'pointer',
+    fontSize: tokens.font.size.sm, fontFamily: tokens.font.family, marginLeft: 'auto', flexShrink: 0,
+  };
   const itemBtn: React.CSSProperties = {
     display: 'flex', justifyContent: 'space-between', padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
     border: `1px solid ${colors.border}`, borderRadius: tokens.radius.sm,
@@ -120,9 +146,9 @@ export function SharePage() {
   };
   const itemName: React.CSSProperties = { fontSize: tokens.font.size.base, color: colors.text, fontWeight: tokens.font.weight.medium };
   const itemUser: React.CSSProperties = { fontSize: tokens.font.size.sm, color: colors.secondary };
-  const changeBtn: React.CSSProperties = {
-    background: 'none', border: 'none', color: colors.primary, cursor: 'pointer',
-    fontSize: tokens.font.size.sm, fontFamily: tokens.font.family,
+  const sectionLabel: React.CSSProperties = {
+    fontSize: 11, fontWeight: tokens.font.weight.semibold, color: '#A1A1AA',
+    letterSpacing: 1, textTransform: 'uppercase', fontFamily: tokens.font.family,
   };
   const errorStyle: React.CSSProperties = { color: colors.error, fontSize: tokens.font.size.sm, fontFamily: tokens.font.family };
   const emptyStyle: React.CSSProperties = { color: colors.secondary, fontSize: tokens.font.size.sm, fontFamily: tokens.font.family, textAlign: 'center', padding: tokens.spacing.lg };
@@ -140,10 +166,16 @@ export function SharePage() {
   }
 
   return (
-    <VStack gap="lg" style={{ height: '100%', padding: tokens.spacing.lg }}>
-      <ToggleGroup options={MODE_OPTIONS} value={mode} onChange={(v) => setMode(v)} />
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Header — design screen 13: arrow-left + "Secure Share" */}
+      <div style={headerStyle}>
+        <button onClick={onBack} style={backBtn}><ArrowLeft size={20} strokeWidth={1.5} /></button>
+        <span style={headerTitle}>Secure Share</span>
+      </div>
 
-      <VStack gap="lg" style={{ flex: 1, overflowY: 'auto' }}>
+      <VStack gap="lg" style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+        <ToggleGroup options={MODE_OPTIONS} value={mode} onChange={(v) => setMode(v)} />
+
         {mode === 'vault' ? (
           <VStack gap="sm">
             {!selectedItem ? (
@@ -157,23 +189,38 @@ export function SharePage() {
                 ))}
               </VStack>
             ) : (
-              <VStack gap="xs">
-                <Card variant="filled" padding="md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={itemName}>{selectedItem.credential.name}</span>
+              <VStack gap="sm">
+                {/* Source card with avatar — design screen 13 */}
+                <div style={sourceCard}>
+                  <div style={sourceAvatar}>
+                    <Globe size={18} strokeWidth={1.5} color="#fff" />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
+                    <span style={sourceName}>{selectedItem.credential.name}</span>
+                    <span style={sourceUser}>{selectedItem.credential.username}</span>
+                  </div>
                   <button onClick={() => setSelectedItem(null)} style={changeBtn}>Change</button>
-                </Card>
+                </div>
+                {/* Checkboxes with SHARE label */}
+                <div style={sectionLabel}>SHARE</div>
                 <Checkbox checked={shareUsername} onChange={setShareUsername} label="Username" />
                 <Checkbox checked={sharePassword} onChange={setSharePassword} label="Password" />
               </VStack>
             )}
           </VStack>
         ) : (
-          <Textarea
-            value={quickText}
-            onChange={(e) => setQuickText(e.target.value)}
-            placeholder="Paste any secret here..."
-            rows={5}
-          />
+          <VStack gap="sm">
+            <div style={{ fontSize: 13, color: colors.secondary, fontFamily: tokens.font.family, lineHeight: 1.4 }}>
+              Share any secret securely. Not saved to vault.
+            </div>
+            <div style={sectionLabel}>SECRET CONTENT</div>
+            <Textarea
+              value={quickText}
+              onChange={(e) => setQuickText(e.target.value)}
+              placeholder={'Paste any secret here...\ne.g. API keys, credentials'}
+              rows={5}
+            />
+          </VStack>
         )}
 
         <ShareOptions ttlHours={ttlHours} maxViews={maxViews} onTtlChange={setTtlHours} onMaxViewsChange={setMaxViews} />
@@ -188,10 +235,10 @@ export function SharePage() {
 
         {error && <div style={errorStyle}>{error}</div>}
 
-        <Button variant="primary" size="lg" loading={loading} onClick={handleGenerate} disabled={overLimit} style={{ width: '100%' }}>
+        <Button variant="primary" size="lg" loading={loading} onClick={handleGenerate} disabled={overLimit} style={{ width: '100%', height: 44 }}>
           Generate Secure Link
         </Button>
       </VStack>
-    </VStack>
+    </div>
   );
 }

@@ -19,6 +19,7 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [errorField, setErrorField] = useState<'password' | 'confirm' | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const setupOfflineVault = useAuthStore((s) => s.setupOfflineVault);
@@ -28,13 +29,16 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setErrorField(null);
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
+      setErrorField('confirm');
       return;
     }
     if (password.length < 8) {
       setError('Password must be at least 8 characters');
+      setErrorField('password');
       return;
     }
 
@@ -43,6 +47,7 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
       await setupOfflineVault(password);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Setup failed');
+      setErrorField('password');
     } finally {
       setLoading(false);
     }
@@ -78,6 +83,7 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Choose a strong password"
+              error={errorField === 'password' ? error : undefined}
               required
               autoFocus
             />
@@ -109,7 +115,7 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder="Confirm master password"
-          error={error || undefined}
+          error={errorField === 'confirm' ? error : undefined}
           required
         />
       </div>

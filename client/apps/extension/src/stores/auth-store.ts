@@ -2,7 +2,8 @@
 // Supports both offline (local-only) and online (server-backed) vault modes
 
 import { create } from 'zustand';
-import { deriveKeys, deriveMasterKeyWithSalt, deriveEncryptionKey } from '@vaultic/crypto';
+import { deriveKeys, deriveMasterKeyWithSalt, deriveEncryptionKey, encrypt, decrypt } from '@vaultic/crypto';
+import { IndexedDBStore } from '@vaultic/storage';
 import type { AuthState } from '@vaultic/types';
 import type { VaultMode, VaultConfig } from '@vaultic/types';
 import {
@@ -47,6 +48,8 @@ interface AuthActions {
   upgradeToOnline: (email: string, password: string, apiBaseUrl: string) => Promise<void>;
   /** Initialize state from stored session on popup open */
   hydrate: () => Promise<void>;
+  /** Returns current userId for IndexedDB scoping: JWT userId or "local" */
+  getCurrentUserId: () => string;
   /** Computed: has an active vault (offline or online) */
   readonly hasVault: boolean;
 }
@@ -63,6 +66,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   get hasVault() {
     return get().vaultState !== 'no_vault';
+  },
+
+  getCurrentUserId: () => {
+    const { mode, userId } = get();
+    return mode === 'online' && userId ? userId : 'local';
   },
 
   register: async (email, password, apiBaseUrl) => {
@@ -270,10 +278,28 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     const currentExported = await crypto.subtle.exportKey('raw', currentKey);
     const currentVerifier = await computeVerifier(currentExported);
 
-    // The offline key (salt=random) differs from online key (salt=email).
-    // After upgrade, we'll use the new online-derived key for future unlock.
-    // Existing vault items are encrypted with the OLD key — they stay readable
-    // because we store the new key in session and update VaultConfig verifier.
+    // Re-encrypt all vault items + folders from old key to new key.
+    // Offline key (salt=random) differs from online key (salt=email),
+    // so existing ciphertext must be re-encrypted before switching keys.
+    const store = new IndexedDBStore();
+    const [items, folders] = await Promise.all([
+      store.getAllItems('local'),
+      store.getAllFolders('local'),
+    ]);
+
+    // Re-encrypt items with new key (re-tag user_id after register/login)
+    for (const item of items) {
+      const plaintext = await decrypt(currentKey, item.encrypted_data);
+      item.encrypted_data = await encrypt(encryption_key, plaintext);
+      await store.putItem(item);
+    }
+
+    // Re-encrypt folders with new key
+    for (const folder of folders) {
+      const plainName = await decrypt(currentKey, folder.encrypted_name);
+      folder.encrypted_name = await encrypt(encryption_key, plainName);
+      await store.putFolder(folder);
+    }
 
     // Register with server
     let res: Response;
@@ -311,6 +337,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     if (!loginRes.ok) throw new Error('Registration succeeded but auto-login failed');
 
     const data = await loginRes.json();
+
+    // Re-tag all items/folders from "local" to new server userId
+    for (const item of items) {
+      item.user_id = data.user_id;
+      await store.putItem(item);
+    }
+    for (const folder of folders) {
+      folder.user_id = data.user_id;
+      await store.putFolder(folder);
+    }
 
     // Store new online-derived encryption key (replaces offline key)
     await storeEncryptionKey(encryption_key);

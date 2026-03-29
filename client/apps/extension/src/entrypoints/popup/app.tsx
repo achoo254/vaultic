@@ -157,7 +157,7 @@ function AppShell({ view, setView, activeTab, setActiveTab, showBottomNav, handl
           />
         )}
         {view.type === 'generator' && <PasswordGeneratorView />}
-        {view.type === 'share' && <SharePage />}
+        {view.type === 'share' && <SharePage onBack={() => { setActiveTab('vault' as NavTab); setView({ type: 'vault-list' }); }} />}
         {view.type === 'settings' && (
           <SettingsPage
             onBack={() => setView({ type: 'vault-list' })}
