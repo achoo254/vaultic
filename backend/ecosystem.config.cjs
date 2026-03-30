@@ -2,13 +2,12 @@
 module.exports = {
   apps: [{
     name: 'vaultic',
-    script: 'dist/server.js',
+    script: 'server.js',
     cwd: __dirname,
     instances: 1,
     exec_mode: 'fork',
-    env_file: '.env',
     max_memory_restart: '256M',
-    log_date_format: 'YYYY-MM-DD HH:mm:ss',
+    log_date_format: 'DD-MM-YYYY HH:mm:ss',
     merge_logs: true,
   }],
 };
