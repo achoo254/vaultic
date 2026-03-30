@@ -49,6 +49,8 @@ export interface SyncQueueEntry {
   id: string;
   user_id: string;
   item_id: string;
+  /** Distinguishes vault items from folders in the sync queue */
+  type: 'item' | 'folder';
   action: 'create' | 'update' | 'delete';
   timestamp: number;
 }

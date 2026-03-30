@@ -149,6 +149,7 @@ export const useVaultStore = create<VaultStoreType>((set, get) => ({
       id: crypto.randomUUID(),
       user_id: userId,
       item_id: id,
+      type: 'item',
       action: 'create',
       timestamp: Date.now(),
     });
@@ -185,6 +186,7 @@ export const useVaultStore = create<VaultStoreType>((set, get) => ({
       id: crypto.randomUUID(),
       user_id: userId,
       item_id: id,
+      type: 'item',
       action: 'update',
       timestamp: Date.now(),
     });
@@ -208,6 +210,7 @@ export const useVaultStore = create<VaultStoreType>((set, get) => ({
       id: crypto.randomUUID(),
       user_id: userId,
       item_id: id,
+      type: 'item',
       action: 'delete',
       timestamp: Date.now(),
     });
@@ -235,6 +238,7 @@ export const useVaultStore = create<VaultStoreType>((set, get) => ({
       id: crypto.randomUUID(),
       user_id: userId,
       item_id: id,
+      type: 'folder',
       action: 'create',
       timestamp: Date.now(),
     });
@@ -249,6 +253,7 @@ export const useVaultStore = create<VaultStoreType>((set, get) => ({
       id: crypto.randomUUID(),
       user_id: userId,
       item_id: id,
+      type: 'folder',
       action: 'delete',
       timestamp: Date.now(),
     });
