@@ -20,16 +20,20 @@ export interface SyncApiAdapter {
     folders: Array<{ id: string; encrypted_name: string; parent_id?: string; updated_at: string; deleted_at?: string }>;
   }): Promise<{ accepted_items: string[]; accepted_folders: string[]; conflicts: Array<{ id: string }> }>;
 
-  pull(since: string | null, deviceId: string): Promise<{
+  pull(since: string | null, deviceId: string, cursor?: string | null): Promise<{
     items: VaultItem[];
     folders: Array<{ id: string; encrypted_name: string; parent_id?: string; updated_at: string; deleted_at?: string }>;
     deleted_ids: string[];
     server_time: string;
+    has_more?: boolean;
+    next_cursor?: string;
   }>;
 }
 
 /** Delta sync engine — opt-in cloud sync with LWW conflict resolution. */
 export class SyncEngine {
+  private _isSyncing = false;
+
   constructor(
     private store: VaultStore & { getMetadata(key: string): Promise<string | null>; setMetadata(key: string, value: string): Promise<void> },
     private queue: SyncQueue,
@@ -39,11 +43,23 @@ export class SyncEngine {
   ) {}
 
   async sync(): Promise<SyncResult> {
+    if (this._isSyncing) {
+      return { status: 'idle', pushed: 0, pulled: 0, conflicts: 0 };
+    }
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       return { status: 'idle', pushed: 0, pulled: 0, conflicts: 0 };
     }
+    this._isSyncing = true;
+    try {
+      return await this._doSync();
+    } finally {
+      this._isSyncing = false;
+    }
+  }
 
-    const deviceId = getDeviceId();
+  private async _doSync(): Promise<SyncResult> {
+
+    const deviceId = await getDeviceId();
     let pushed = 0;
     let pulled = 0;
     let conflicts = 0;
@@ -95,18 +111,38 @@ export class SyncEngine {
       return { status: 'error', pushed: 0, pulled: 0, conflicts: 0 };
     }
 
-    // 2. Pull remote changes since last sync (per-user cursor)
+    // 2. Pull remote changes since last sync (per-user cursor) with pagination
     try {
       const lastSyncKey = `last_sync_${this.userId}`;
       const lastSync = await this.store.getMetadata(lastSyncKey);
-      const delta = await this.api.pull(lastSync, deviceId);
 
-      for (const remoteItem of delta.items) {
+      // Paginate pull until server says no more pages
+      const allItems: VaultItem[] = [];
+      const folderMap = new Map<string, { id: string; encrypted_name: string; parent_id?: string; updated_at: string; deleted_at?: string }>();
+      const deletedIdSet = new Set<string>();
+      let cursor: string | null = null;
+      let serverTime = '';
+      const MAX_PAGES = 50; // safety cap
+
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const delta = await this.api.pull(lastSync, deviceId, cursor);
+        allItems.push(...delta.items);
+        // Deduplicate folders (server may return all folders on each page)
+        for (const f of delta.folders) folderMap.set(f.id, f);
+        for (const id of delta.deleted_ids) deletedIdSet.add(id);
+        serverTime = delta.server_time;
+        if (!delta.has_more || !delta.next_cursor) break;
+        cursor = delta.next_cursor;
+      }
+
+      const allFolders = Array.from(folderMap.values());
+      const allDeletedIds = Array.from(deletedIdSet);
+
+      for (const remoteItem of allItems) {
         // Tag pulled items with current userId
         const tagged = { ...remoteItem, user_id: this.userId } as VaultItem;
         const local = await this.store.getItem(this.userId, remoteItem.id);
         if (local) {
-          // Resolve conflict with LWW
           const winner = this.resolver.resolve(
             { id: local.id, encrypted_data: local.encrypted_data, version: local.version, updated_at: local.updated_at },
             { id: tagged.id, encrypted_data: tagged.encrypted_data, version: tagged.version, updated_at: tagged.updated_at },
@@ -119,8 +155,8 @@ export class SyncEngine {
         }
       }
 
-      // Pull remote folders and apply LWW
-      for (const remoteFolder of delta.folders) {
+      // Apply remote folders with LWW
+      for (const remoteFolder of allFolders) {
         const tagged: Folder = { ...remoteFolder, user_id: this.userId, created_at: remoteFolder.updated_at };
         const localFolder = await this.store.getFolder(this.userId, remoteFolder.id);
         if (localFolder) {
@@ -135,13 +171,15 @@ export class SyncEngine {
       }
 
       // Handle deletions (items + folders)
-      for (const id of delta.deleted_ids) {
+      for (const id of allDeletedIds) {
         await this.store.deleteItem(this.userId, id);
         await this.store.deleteFolder(this.userId, id);
       }
 
-      pulled = delta.items.length + delta.folders.length + delta.deleted_ids.length;
-      await this.store.setMetadata(lastSyncKey, delta.server_time);
+      pulled = allItems.length + allFolders.length + allDeletedIds.length;
+      if (serverTime) {
+        await this.store.setMetadata(lastSyncKey, serverTime);
+      }
     } catch (err) {
       console.error('[SyncEngine] pull failed', err);
       return { status: 'error', pushed, pulled: 0, conflicts };

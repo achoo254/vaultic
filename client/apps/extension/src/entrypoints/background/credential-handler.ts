@@ -2,9 +2,11 @@
 
 import { IndexedDBStore, IndexedDBSyncQueue } from '@vaultic/storage';
 import { decrypt } from '@vaultic/crypto';
+import { getDeviceId } from '@vaultic/sync';
 import { ItemType } from '@vaultic/types';
 import { getEncKey, extractDomain } from './crypto-helpers';
 import { getVaultConfig } from '../../lib/session-storage';
+import { handleSyncAlarm } from './sync-alarm-handler';
 
 const syncQueue = new IndexedDBSyncQueue();
 
@@ -148,6 +150,7 @@ export async function saveCredential(data: {
         const encrypted = await encrypt(key, JSON.stringify(cred));
         await store.putItem({ ...item, encrypted_data: encrypted, version: item.version + 1, updated_at: new Date().toISOString() });
         await syncQueue.enqueue({ id: crypto.randomUUID(), user_id: userId, item_id: item.id, type: 'item', action: 'update', timestamp: Date.now() });
+        handleSyncAlarm().catch(() => {});
         return;
       }
     } catch {
@@ -166,10 +169,11 @@ export async function saveCredential(data: {
     user_id: userId,
     item_type: ItemType.Login,
     encrypted_data: encrypted,
-    device_id: '',
+    device_id: await getDeviceId(),
     version: 1,
     created_at: now,
     updated_at: now,
   });
   await syncQueue.enqueue({ id: crypto.randomUUID(), user_id: userId, item_id: id, type: 'item', action: 'create', timestamp: Date.now() });
+  handleSyncAlarm().catch(() => {});
 }

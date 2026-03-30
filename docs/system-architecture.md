@@ -103,7 +103,7 @@ type VaultState = 'no_vault' | 'locked' | 'unlocked'
 - Route messages (popup ↔ content script)
 - Manage encryption/decryption
 - Cache vault in memory
-- Trigger sync periodically
+- Trigger auto-sync via chrome.alarms (3-min periodic, exponential backoff on failure)
 - Handle token refresh
 - No plaintext on disk
 
@@ -211,11 +211,16 @@ new SyncEngine(
 1. User modifies item locally
 2. Service worker creates delta (id, timestamp, encrypted, user_id)
 3. Delta queued in SyncQueue (per-user)
-4. On interval or manually:
+4. Auto-sync triggers via:
+   - Periodic alarm every 3 minutes (base)
+   - CRUD operations (real-time push)
+   - Vault unlock (pull + merge)
+5. On sync:
    - **Push:** Send queued deltas to `/sync/push` (includes user_id)
-   - **Pull:** Fetch remote deltas from `/sync/pull` (user_id from auth)
+   - **Pull:** Fetch remote deltas from `/sync/pull` (user_id from auth), with pagination support (cursor-based)
    - **Merge:** Apply remote with LWW resolution
    - **ACK:** Clear queue on success
+6. Exponential backoff on failure (3→6→12→24→30 min, capped at 30 min)
 
 **Conflict Resolution (Last-Write-Wins):**
 - Local item timestamp: 10:00
@@ -224,8 +229,11 @@ new SyncEngine(
 - Strategy: Timestamp comparison
 
 **Files:**
-- `client/packages/sync/src/sync-engine.ts` — Main logic
+- `client/packages/sync/src/sync-engine.ts` — Main logic with pagination loop and mutex
 - `client/packages/sync/src/conflict-resolver.ts` — LWW strategy
+- `client/packages/sync/src/device.ts` — Async device ID generation
+- `client/apps/extension/src/lib/create-sync-engine.ts` — Sync engine factory
+- `client/apps/extension/src/entrypoints/background/sync-alarm-handler.ts` — Periodic sync via chrome.alarms
 
 #### 1.7 API Client (`@vaultic/api`)
 **Transport:** ofetch (lightweight HTTP client)
