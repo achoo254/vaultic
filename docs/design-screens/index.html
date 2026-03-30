@@ -73,11 +73,11 @@
 <!-- ═══════ PHASE 1 ═══════ -->
 <div class="section" id="phase1">
   <div class="section-header"><h2>Phase 1 — Project Setup & Monorepo</h2><span class="badge badge-blue">Critical</span><span class="badge badge-gray">No screens</span></div>
-  <p class="section-desc">Cargo workspace (4 crates) + Turborepo (7 pnpm packages). Docker PostgreSQL. GitLab CI skeleton. Design tokens extraction.</p>
+  <p class="section-desc">Cargo workspace (4 crates) + Turborepo (7 pnpm packages). MongoDB. GitLab CI skeleton. Design tokens extraction.</p>
   <div class="tokens">
     <div class="token-card"><h4>Rust (4 crates)</h4><p class="tk">vaultic-crypto, vaultic-server, vaultic-types, vaultic-migration</p></div>
     <div class="token-card"><h4>TypeScript (7 packages)</h4><p class="tk">@vaultic/types, crypto, storage, sync, api, ui, extension</p></div>
-    <div class="token-card"><h4>Infrastructure</h4><p class="tk">Docker Compose (PostgreSQL 16), .gitlab-ci.yml, .env.example</p></div>
+    <div class="token-card"><h4>Infrastructure</h4><p class="tk">PM2 + MongoDB, .gitlab-ci.yml, .env.example</p></div>
   </div>
 </div>
 
@@ -397,7 +397,7 @@
     <div class="token-card"><h4>Infrastructure</h4>
       <p class="tk"><strong>CI/CD:</strong> GitLab CI (gitlabs.inet.vn)</p>
       <p class="tk"><strong>Registry:</strong> gitlabs.inet.vn:5050</p>
-      <p class="tk"><strong>Deploy:</strong> Docker on CentOS 7</p>
+      <p class="tk"><strong>Deploy:</strong> PM2 on CentOS 7</p>
       <p class="tk"><strong>License:</strong> AGPL-3.0</p>
     </div>
     <div class="token-card"><h4>Architecture</h4>

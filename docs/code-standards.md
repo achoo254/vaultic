@@ -55,9 +55,6 @@ vaultic/
 │       └── ui/                   # @vaultic/ui (React components)
 │
 ├── shared/types/                 # @vaultic/types (shared)
-├── docker/
-│   ├── Dockerfile                # Node.js 22 Alpine
-│   └── docker-compose.yml        # Backend only
 ├── pnpm-workspace.yaml
 ├── package.json
 ├── turbo.json
@@ -532,13 +529,6 @@ pnpm dev
 pnpm --filter @vaultic/extension dev
 ```
 
-### Docker
-
-```bash
-docker build -f docker/Dockerfile -t vaultic:latest .
-docker compose -f docker/docker-compose.yml up -d
-```
-
 ---
 
 ## API Contract Standards
@@ -805,7 +795,7 @@ pnpm lint && pnpm test && pnpm build
 - [ ] HTTPS enabled
 - [ ] CORS correctly scoped
 - [ ] MongoDB connection string validated
-- [ ] Docker image builds successfully
+- [ ] PM2 process starts successfully
 - [ ] CI/CD pipeline passes
 
 ---
