@@ -6,7 +6,13 @@
   "license": "AGPL-3.0",
   "scripts": {
     "dev": "turbo dev",
-    "build": "turbo build",
+    "dev:dattqh": "turbo dev:dattqh",
+    "dev:ext:dattqh": "pnpm --filter @vaultic/extension dev:dattqh",
+    "dev:be:dattqh": "pnpm --filter @vaultic/backend dev:dattqh",
+    "build:ext:staging": "pnpm --filter @vaultic/extension build:staging",
+    "build:ext:production": "pnpm --filter @vaultic/extension build:production",
+    "build:be:staging": "turbo build:staging",
+    "build:be:production": "pnpm --filter @vaultic/backend build",
     "lint": "turbo lint",
     "test": "turbo test"
   },

@@ -5,7 +5,23 @@
       "persistent": true,
       "cache": false
     },
+    "dev:dattqh": {
+      "persistent": true,
+      "cache": false
+    },
+    "dev:staging": {
+      "persistent": true,
+      "cache": false
+    },
     "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".output/**", "dist/**"]
+    },
+    "build:staging": {
+      "dependsOn": ["^build"],
+      "outputs": [".output/**", "dist/**"]
+    },
+    "build:production": {
       "dependsOn": ["^build"],
       "outputs": [".output/**", "dist/**"]
     },
