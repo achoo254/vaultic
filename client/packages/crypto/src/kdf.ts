@@ -31,18 +31,29 @@ export async function deriveMasterKey(
 }
 
 /** Derive AES-256-GCM encryption key from master key using HKDF-SHA256.
- *  Info string: "vaultic-enc" for domain separation. */
+ *  Info string: "vaultic-enc" for domain separation.
+ *  Returns non-extractable CryptoKey — safe for chrome.storage.session via bytes. */
 export async function deriveEncryptionKey(
   masterKey: ArrayBuffer,
 ): Promise<CryptoKey> {
+  const { key } = await deriveEncryptionKeyWithBytes(masterKey);
+  return key;
+}
+
+/** Derive AES-256-GCM encryption key + raw bytes in one pass.
+ *  Uses deriveBits to get the 256-bit raw material, then imports as non-extractable CryptoKey.
+ *  rawBytes is used for: verifier computation, chrome.storage.session persistence. */
+export async function deriveEncryptionKeyWithBytes(
+  masterKey: ArrayBuffer,
+): Promise<{ key: CryptoKey; rawBytes: ArrayBuffer }> {
   const hkdfKey = await crypto.subtle.importKey(
     'raw',
     masterKey,
     'HKDF',
     false,
-    ['deriveKey'],
+    ['deriveBits'],
   );
-  return crypto.subtle.deriveKey(
+  const rawBytes = await crypto.subtle.deriveBits(
     {
       name: 'HKDF',
       hash: 'SHA-256',
@@ -50,10 +61,16 @@ export async function deriveEncryptionKey(
       info: HKDF_INFO_ENC,
     },
     hkdfKey,
-    { name: 'AES-GCM', length: 256 },
-    true, // extractable — needed for chrome.storage.session export
+    256,
+  );
+  const key = await crypto.subtle.importKey(
+    'raw',
+    rawBytes,
+    { name: 'AES-GCM' },
+    false, // non-extractable — security hardening (ADV-07)
     ['encrypt', 'decrypt'],
   );
+  return { key, rawBytes };
 }
 
 /** Derive auth hash from master key for server authentication.
@@ -101,17 +118,18 @@ export async function deriveMasterKeyWithSalt(
   return hexToBuffer(hashHex);
 }
 
-/** Derive all keys from password + email in one call. */
+/** Derive all keys from password + email in one call.
+ *  Returns encryption_key (non-extractable), auth_hash, and rawKeyBytes for session storage. */
 export async function deriveKeys(
   password: string,
   email: string,
-): Promise<DerivedKeys> {
+): Promise<DerivedKeys & { rawKeyBytes: ArrayBuffer }> {
   const masterKey = await deriveMasterKey(password, email);
-  const [encryption_key, auth_hash] = await Promise.all([
-    deriveEncryptionKey(masterKey),
+  const [{ key: encryption_key, rawBytes: rawKeyBytes }, auth_hash] = await Promise.all([
+    deriveEncryptionKeyWithBytes(masterKey),
     deriveAuthHash(masterKey),
   ]);
-  return { encryption_key, auth_hash };
+  return { encryption_key, auth_hash, rawKeyBytes };
 }
 
 /** Convert ArrayBuffer to hex string. */

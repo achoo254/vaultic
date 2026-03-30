@@ -2,15 +2,23 @@
 // Encryption key: chrome.storage.session (cleared on browser close)
 // JWT tokens + user info: chrome.storage.local (persists)
 
-/** Store encryption key in session storage (cleared on browser close). */
-export async function storeEncryptionKey(key: CryptoKey): Promise<void> {
-  const exported = await crypto.subtle.exportKey('raw', key);
+/** Store raw encryption key bytes in session storage (cleared on browser close).
+ *  Preferred over storeEncryptionKey() — works with non-extractable CryptoKeys. */
+export async function storeEncryptionKeyBytes(rawBytes: ArrayBuffer): Promise<void> {
   await chrome.storage.session.set({
-    enc_key: Array.from(new Uint8Array(exported)),
+    enc_key: Array.from(new Uint8Array(rawBytes)),
   });
 }
 
-/** Retrieve encryption key from session storage. */
+/** @deprecated Use storeEncryptionKeyBytes() instead.
+ *  Kept for any legacy call sites; requires an extractable CryptoKey. */
+export async function storeEncryptionKey(key: CryptoKey): Promise<void> {
+  const exported = await crypto.subtle.exportKey('raw', key);
+  await storeEncryptionKeyBytes(exported);
+}
+
+/** Retrieve encryption key from session storage.
+ *  Returns non-extractable CryptoKey — prevents key material leakage (ADV-07). */
 export async function getEncryptionKey(): Promise<CryptoKey | null> {
   const result = await chrome.storage.session.get('enc_key');
   if (!result.enc_key) return null;
@@ -18,7 +26,7 @@ export async function getEncryptionKey(): Promise<CryptoKey | null> {
     'raw',
     new Uint8Array(result.enc_key),
     { name: 'AES-GCM' },
-    true, // extractable — needed for upgrade flow + verifier computation
+    false, // non-extractable — security hardening (ADV-07)
     ['encrypt', 'decrypt'],
   );
 }
@@ -83,18 +91,20 @@ export async function clearUserInfo(): Promise<void> {
   await chrome.storage.local.remove(['user_email', 'user_id']);
 }
 
-/** Store auth hash verifier for offline password verification. */
+/** @deprecated Do NOT call on new code paths — storing auth_hash in chrome.storage.local
+ *  is a security risk (E-C1). Kept only for legacy migration reads in hydrate().
+ *  New register/login/upgrade flows must NOT call this function. */
 export async function storeAuthHashVerifier(authHash: string): Promise<void> {
   await chrome.storage.local.set({ auth_hash_verifier: authHash });
 }
 
-/** Retrieve auth hash verifier. */
+/** Retrieve auth hash verifier (used only for legacy migration in hydrate()). */
 export async function getAuthHashVerifier(): Promise<string | null> {
   const result = await chrome.storage.local.get('auth_hash_verifier');
   return result.auth_hash_verifier || null;
 }
 
-/** Clear auth hash verifier. */
+/** Clear auth hash verifier from local storage. */
 export async function clearAuthHashVerifier(): Promise<void> {
   await chrome.storage.local.remove('auth_hash_verifier');
 }

@@ -2,12 +2,12 @@
 // Supports both offline (local-only) and online (server-backed) vault modes
 
 import { create } from 'zustand';
-import { deriveKeys, deriveMasterKeyWithSalt, deriveEncryptionKey, encrypt, decrypt } from '@vaultic/crypto';
+import { deriveKeys, deriveMasterKeyWithSalt, deriveEncryptionKeyWithBytes, encrypt, decrypt } from '@vaultic/crypto';
 import { IndexedDBStore } from '@vaultic/storage';
 import type { AuthState } from '@vaultic/types';
 import type { VaultMode, VaultConfig } from '@vaultic/types';
 import {
-  storeEncryptionKey,
+  storeEncryptionKeyBytes,
   getEncryptionKey,
   clearEncryptionKey,
   storeTokens,
@@ -16,9 +16,8 @@ import {
   storeUserInfo,
   getUserInfo,
   clearUserInfo,
-  storeAuthHashVerifier,
-  getAuthHashVerifier,
   clearAuthHashVerifier,
+  getAuthHashVerifier,
   storeVaultConfig,
   getVaultConfig,
   clearVaultConfig,
@@ -75,7 +74,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   register: async (email, password, apiBaseUrl) => {
     email = email.toLowerCase().trim();
-    const { encryption_key, auth_hash } = await deriveKeys(password, email);
+    const { auth_hash, rawKeyBytes } = await deriveKeys(password, email);
 
     let res: Response;
     try {
@@ -84,7 +83,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
-          auth_hash: auth_hash,
+          auth_hash,
           argon2_params: { m: 65536, t: 3, p: 4 },
         }),
       });
@@ -114,14 +113,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
 
     const data = await loginRes.json();
-    await storeEncryptionKey(encryption_key);
+    // Store raw bytes (non-extractable key cannot be exported)
+    await storeEncryptionKeyBytes(rawKeyBytes);
     await storeTokens(data.access_token, data.refresh_token);
     await storeUserInfo(email, data.user_id);
-    await storeAuthHashVerifier(auth_hash);
+    // NOTE: storeAuthHashVerifier removed — auth_hash must NOT persist to chrome.storage.local (E-C1)
 
-    // Store VaultConfig for online mode
-    const exportedKey = await crypto.subtle.exportKey('raw', encryption_key);
-    const verifier = await computeVerifier(exportedKey);
+    // Verifier computed from raw key bytes (no exportKey needed)
+    const verifier = await computeVerifier(rawKeyBytes);
     await storeVaultConfig({
       mode: 'online',
       salt: email, // online mode uses email as salt
@@ -139,7 +138,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   login: async (email, password, apiBaseUrl) => {
     email = email.toLowerCase().trim();
-    const { encryption_key, auth_hash } = await deriveKeys(password, email);
+    const { auth_hash, rawKeyBytes } = await deriveKeys(password, email);
 
     let res: Response;
     try {
@@ -158,15 +157,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
 
     const data = await res.json();
-
-    await storeEncryptionKey(encryption_key);
+    // Store raw bytes (non-extractable key cannot be exported)
+    await storeEncryptionKeyBytes(rawKeyBytes);
     await storeTokens(data.access_token, data.refresh_token);
     await storeUserInfo(email, data.user_id);
-    await storeAuthHashVerifier(auth_hash);
+    // NOTE: storeAuthHashVerifier removed — auth_hash must NOT persist to chrome.storage.local (E-C1)
 
-    // Store VaultConfig for online mode
-    const exportedKey = await crypto.subtle.exportKey('raw', encryption_key);
-    const verifier = await computeVerifier(exportedKey);
+    // Verifier computed from raw key bytes (no exportKey needed)
+    const verifier = await computeVerifier(rawKeyBytes);
     await storeVaultConfig({
       mode: 'online',
       salt: email,
@@ -189,11 +187,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     // Derive encryption key via Argon2id + HKDF
     const masterKey = await deriveMasterKeyWithSalt(password, salt);
-    const encryptionKey = await deriveEncryptionKey(masterKey);
+    const { key: encryptionKey, rawBytes } = await deriveEncryptionKeyWithBytes(masterKey);
 
     // Compute verifier = SHA256(raw encryption key bytes)
-    const exportedKey = await crypto.subtle.exportKey('raw', encryptionKey);
-    const verifier = await computeVerifier(exportedKey);
+    const verifier = await computeVerifier(rawBytes);
 
     // Store VaultConfig
     const config: VaultConfig = {
@@ -204,8 +201,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     };
     await storeVaultConfig(config);
 
-    // Store encryption key in session
-    await storeEncryptionKey(encryptionKey);
+    // Store raw key bytes in session (non-extractable key cannot be exported)
+    await storeEncryptionKeyBytes(rawBytes);
 
     set({
       isLocked: false, isLoggedIn: false, email: null, userId: null,
@@ -217,27 +214,27 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     const config = await getVaultConfig();
     if (!config) throw new Error('No vault found — please set up your vault first');
 
-    let encryptionKey: CryptoKey;
+    let rawBytes: ArrayBuffer;
 
     if (config.mode === 'online' && config.email) {
       // Online mode: derive from password + email
-      const { encryption_key } = await deriveKeys(password, config.email);
-      encryptionKey = encryption_key;
+      const result = await deriveKeys(password, config.email);
+      rawBytes = result.rawKeyBytes;
     } else {
       // Offline mode: derive from password + stored salt
       const salt = base64ToUint8(config.salt);
       const masterKey = await deriveMasterKeyWithSalt(password, salt);
-      encryptionKey = await deriveEncryptionKey(masterKey);
+      const result = await deriveEncryptionKeyWithBytes(masterKey);
+      rawBytes = result.rawBytes;
     }
 
-    // Verify password by comparing SHA256(key) with stored verifier
-    const exportedKey = await crypto.subtle.exportKey('raw', encryptionKey);
-    const verifier = await computeVerifier(exportedKey);
+    // Verify password by comparing SHA256(key bytes) with stored verifier
+    const verifier = await computeVerifier(rawBytes);
     if (verifier !== config.authHashVerifier) {
       throw new Error('Wrong master password');
     }
 
-    await storeEncryptionKey(encryptionKey);
+    await storeEncryptionKeyBytes(rawBytes);
     set({ isLocked: false, vaultState: 'unlocked' });
   },
 
@@ -250,7 +247,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     await clearEncryptionKey();
     await clearTokens();
     await clearUserInfo();
-    await clearAuthHashVerifier();
+    await clearAuthHashVerifier(); // clears any legacy auth_hash_verifier from storage
     await clearVaultConfig();
     set({
       isLocked: true, isLoggedIn: false, email: null, userId: null,
@@ -261,47 +258,33 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   upgradeToOnline: async (email, password, apiBaseUrl) => {
     email = email.toLowerCase().trim();
 
-    // Must have vault config
+    // Must have vault config and be unlocked
     const config = await getVaultConfig();
     if (!config) throw new Error('No vault config found');
 
-    // Re-derive keys using password + email (proper auth_hash for server)
-    const { encryption_key, auth_hash: authHash } = await deriveKeys(password, email);
-
-    // Verify the derived key matches current vault by checking verifier
-    const exportedNewKey = await crypto.subtle.exportKey('raw', encryption_key);
-    const newVerifier = await computeVerifier(exportedNewKey);
-
-    // Verify against current vault's encryption key (must be unlocked)
     const currentKey = await getEncryptionKey();
     if (!currentKey) throw new Error('Vault must be unlocked to upgrade');
-    const currentExported = await crypto.subtle.exportKey('raw', currentKey);
-    const currentVerifier = await computeVerifier(currentExported);
 
-    // Re-encrypt all vault items + folders from old key to new key.
-    // Offline key (salt=random) differs from online key (salt=email),
-    // so existing ciphertext must be re-encrypted before switching keys.
-    const store = new IndexedDBStore();
-    const [items, folders] = await Promise.all([
-      store.getAllItems('local'),
-      store.getAllFolders('local'),
-    ]);
+    // Re-derive keys using password + email (proper auth_hash for server)
+    const { encryption_key: newEncKey, auth_hash: authHash, rawKeyBytes: newRawBytes } = await deriveKeys(password, email);
 
-    // Re-encrypt items with new key (re-tag user_id after register/login)
-    for (const item of items) {
-      const plaintext = await decrypt(currentKey, item.encrypted_data);
-      item.encrypted_data = await encrypt(encryption_key, plaintext);
-      await store.putItem(item);
+    // Verify the supplied password matches current vault before touching anything.
+    // Compute verifier for new key and compare with stored — only valid if password
+    // matches the current offline vault's password (same password, different salt/key).
+    // NOTE: Online key (salt=email) differs from offline key (salt=random), so verifiers
+    // will NOT match. Instead we verify via currentKey by re-deriving from current config.
+    // For offline mode: re-derive with stored salt and verify against stored verifier.
+    if (config.mode === 'offline') {
+      const salt = base64ToUint8(config.salt);
+      const masterKey = await deriveMasterKeyWithSalt(password, salt);
+      const { rawBytes: currentRawBytes } = await deriveEncryptionKeyWithBytes(masterKey);
+      const currentVerifier = await computeVerifier(currentRawBytes);
+      if (currentVerifier !== config.authHashVerifier) {
+        throw new Error('Wrong master password — cannot upgrade vault');
+      }
     }
 
-    // Re-encrypt folders with new key
-    for (const folder of folders) {
-      const plainName = await decrypt(currentKey, folder.encrypted_name);
-      folder.encrypted_name = await encrypt(encryption_key, plainName);
-      await store.putFolder(folder);
-    }
-
-    // Register with server
+    // ── STEP 1: Register with server FIRST (vault unchanged on failure) ──
     let res: Response;
     try {
       res = await fetch(`${apiBaseUrl}/api/v1/auth/register`, {
@@ -322,7 +305,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       throw new Error(err.error || 'Registration failed');
     }
 
-    // Auto-login
+    // ── STEP 2: Auto-login to get JWT tokens + userId ──
     let loginRes: Response;
     try {
       loginRes = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
@@ -338,23 +321,38 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     const data = await loginRes.json();
 
-    // Re-tag all items/folders from "local" to new server userId
+    // ── STEP 3: Re-encrypt all vault items from old key to new key ──
+    // Offline key (salt=random) differs from online key (salt=email),
+    // so existing ciphertext must be re-encrypted before switching keys.
+    const store = new IndexedDBStore();
+    const [items, folders] = await Promise.all([
+      store.getAllItems('local'),
+      store.getAllFolders('local'),
+    ]);
+
+    // Re-encrypt items + re-tag userId in one pass
     for (const item of items) {
+      const plaintext = await decrypt(currentKey, item.encrypted_data);
+      item.encrypted_data = await encrypt(newEncKey, plaintext);
       item.user_id = data.user_id;
       await store.putItem(item);
     }
+
+    // Re-encrypt folders + re-tag userId in one pass
     for (const folder of folders) {
+      const plainName = await decrypt(currentKey, folder.encrypted_name);
+      folder.encrypted_name = await encrypt(newEncKey, plainName);
       folder.user_id = data.user_id;
       await store.putFolder(folder);
     }
 
-    // Store new online-derived encryption key (replaces offline key)
-    await storeEncryptionKey(encryption_key);
+    // ── STEP 4: Persist new credentials + config ──
+    // NOTE: storeAuthHashVerifier removed — auth_hash must NOT persist (E-C1)
+    await storeEncryptionKeyBytes(newRawBytes);
     await storeTokens(data.access_token, data.refresh_token);
     await storeUserInfo(email, data.user_id);
-    await storeAuthHashVerifier(authHash);
 
-    // Update VaultConfig to online mode with new verifier
+    const newVerifier = await computeVerifier(newRawBytes);
     await storeVaultConfig({
       ...config,
       mode: 'online',
@@ -387,7 +385,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         userId: config.userId || userInfo?.userId || null,
       });
     } else if (userInfo) {
-      // Legacy: has user info but no VaultConfig — auto-migrate
+      // Legacy: has user info but no VaultConfig — auto-migrate using stored auth_hash_verifier
       const storedHash = await getAuthHashVerifier();
       if (storedHash) {
         await storeVaultConfig({
