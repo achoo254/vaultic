@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { tokens, Modal, Button, useTheme } from '@vaultic/ui';
 import { ArrowLeft, Plus, List, Folder, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useVaultStore } from '../../stores/vault-store';
 
 interface FolderManagementProps {
@@ -10,6 +11,7 @@ interface FolderManagementProps {
 
 export function FolderManagement({ onBack }: FolderManagementProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['vault', 'common']);
   const { folders, items, addFolder, deleteFolder, setSelectedFolder } = useVaultStore();
   const [newName, setNewName] = useState('');
   const [adding, setAdding] = useState(false);
@@ -24,7 +26,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
 
     // Check duplicate name
     if (folders.some((f) => f.name.toLowerCase() === trimmed.toLowerCase())) {
-      setError('Folder name already exists');
+      setError(t('vault:folder.nameExists'));
       return;
     }
 
@@ -34,7 +36,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
       setNewName('');
       setAdding(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create folder');
+      setError(err instanceof Error ? err.message : t('vault:folder.createFailed'));
     }
   };
 
@@ -138,7 +140,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
       {/* Header */}
       <div style={headerStyle}>
         <button onClick={onBack} style={backBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
-        <span style={titleStyle}>Folders</span>
+        <span style={titleStyle}>{t('vault:folder.title')}</span>
         <button
           onClick={() => setAdding(!adding)}
           style={addBtnStyle}
@@ -156,7 +158,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
           onClick={() => handleSelectFolder(null)}
         >
           <List size={16} strokeWidth={1.5} color={colors.secondary} />
-          <span style={rowNameStyle}>All Items</span>
+          <span style={rowNameStyle}>{t('vault:folder.allItems')}</span>
           <span style={rowCountStyle}>{allItemCount}</span>
         </button>
 
@@ -189,7 +191,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
               style={inputStyle}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="New Folder"
+              placeholder={t('vault:folder.newPlaceholder')}
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleAdd();
@@ -197,7 +199,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
               }}
             />
             <button onClick={handleAdd} style={saveBtnStyle}>
-              Save
+              {t('common:save')}
             </button>
           </div>
         )}
@@ -206,16 +208,16 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
       </div>
 
       {/* Delete confirmation modal */}
-      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Folder">
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title={t('vault:folder.deleteTitle')}>
         <p style={{ fontSize: tokens.font.size.base, color: colors.secondary, fontFamily: tokens.font.family, marginBottom: tokens.spacing.lg }}>
-          Delete "{deleteTarget?.name}"? Items in this folder will be moved to All Items.
+          {t('vault:folder.deleteMessage', { name: deleteTarget?.name })}
         </p>
         <div style={{ display: 'flex', gap: tokens.spacing.sm }}>
           <Button variant="secondary" size="md" onClick={() => setDeleteTarget(null)} style={{ flex: 1 }}>
-            Cancel
+            {t('common:cancel')}
           </Button>
           <Button variant="primary" size="md" onClick={handleConfirmDelete} style={{ flex: 1, backgroundColor: colors.error }}>
-            Delete
+            {t('common:delete')}
           </Button>
         </div>
       </Modal>

@@ -1,8 +1,8 @@
 // Modal shown when user disables Cloud Sync — choose to delete or keep server data
-
 import React from 'react';
 import { tokens, Modal, useTheme } from '@vaultic/ui';
 import { CloudOff, Trash2, Pause } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface DisableSyncModalProps {
   open: boolean;
@@ -12,6 +12,7 @@ interface DisableSyncModalProps {
 
 export function DisableSyncModal({ open, onClose, onConfirm }: DisableSyncModalProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['settings', 'common']);
 
   return (
     <Modal open={open} onClose={onClose} title="">
@@ -26,12 +27,12 @@ export function DisableSyncModal({ open, onClose, onConfirm }: DisableSyncModalP
 
         {/* Title */}
         <div style={{ fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family }}>
-          Disable Cloud Sync?
+          {t('settings:sync.disableModal.title')}
         </div>
 
         {/* Description */}
         <p style={{ fontSize: tokens.font.size.sm, color: colors.secondary, fontFamily: tokens.font.family, lineHeight: 1.5, margin: 0 }}>
-          Choose what happens to your vault data currently stored on the server.
+          {t('settings:sync.disableModal.description')}
         </p>
 
         {/* Delete from server */}
@@ -42,10 +43,10 @@ export function DisableSyncModal({ open, onClose, onConfirm }: DisableSyncModalP
           color: colors.error, fontSize: tokens.font.size.base, fontWeight: tokens.font.weight.medium,
           fontFamily: tokens.font.family, cursor: 'pointer',
         }}>
-          <Trash2 size={16} strokeWidth={1.5} /> Delete from server
+          <Trash2 size={16} strokeWidth={1.5} /> {t('settings:sync.disableModal.deleteServer')}
         </button>
         <p style={{ fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family, margin: `-${tokens.spacing.xs}px 0 0 0`, lineHeight: 1.4 }}>
-          Recommended — removes all vault data from cloud
+          {t('settings:sync.disableModal.deleteHint')}
         </p>
 
         {/* Keep on server (frozen) */}
@@ -56,10 +57,10 @@ export function DisableSyncModal({ open, onClose, onConfirm }: DisableSyncModalP
           color: colors.text, fontSize: tokens.font.size.base, fontWeight: tokens.font.weight.medium,
           fontFamily: tokens.font.family, cursor: 'pointer',
         }}>
-          <Pause size={16} strokeWidth={1.5} /> Keep on server (frozen)
+          <Pause size={16} strokeWidth={1.5} /> {t('settings:sync.disableModal.keepServer')}
         </button>
         <p style={{ fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family, margin: `-${tokens.spacing.xs}px 0 0 0`, lineHeight: 1.4 }}>
-          Data encrypted, server cannot read it. Quick re-enable later.
+          {t('settings:sync.disableModal.keepHint')}
         </p>
 
         {/* Cancel */}
@@ -69,7 +70,7 @@ export function DisableSyncModal({ open, onClose, onConfirm }: DisableSyncModalP
           fontFamily: tokens.font.family, cursor: 'pointer', padding: `${tokens.spacing.xs}px 0`,
           textAlign: 'left',
         }}>
-          Cancel
+          {t('common:cancel')}
         </button>
       </div>
     </Modal>

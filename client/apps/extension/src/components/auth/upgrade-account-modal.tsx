@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Button, Input, Modal, tokens, useTheme } from '@vaultic/ui';
 import { UserPlus, ShieldCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/auth-store';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
@@ -14,6 +15,7 @@ interface UpgradeAccountModalProps {
 
 export function UpgradeAccountModal({ open, onClose }: UpgradeAccountModalProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['auth', 'common']);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -25,15 +27,15 @@ export function UpgradeAccountModal({ open, onClose }: UpgradeAccountModalProps)
     e.preventDefault();
     setError('');
     setErrorField(null);
-    if (!email.trim()) { setError('Email is required'); setErrorField('email'); return; }
-    if (!password) { setError('Password is required'); setErrorField('password'); return; }
+    if (!email.trim()) { setError(t('auth:upgrade.error.emailRequired')); setErrorField('email'); return; }
+    if (!password) { setError(t('auth:upgrade.error.passwordRequired')); setErrorField('password'); return; }
 
     setLoading(true);
     try {
       await upgradeToOnline(email, password, API_BASE_URL);
       onClose();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Upgrade failed';
+      const msg = err instanceof Error ? err.message : t('auth:upgrade.error.failed');
       setError(msg);
       // Route error to correct input based on message content
       setErrorField(msg.toLowerCase().includes('email') ? 'email' : 'password');
@@ -54,23 +56,23 @@ export function UpgradeAccountModal({ open, onClose }: UpgradeAccountModalProps)
         </div>
 
         <div style={{ fontSize: 16, fontWeight: tokens.font.weight.bold, color: colors.text, fontFamily: tokens.font.family }}>
-          Create Account
+          {t('auth:upgrade.title')}
         </div>
 
         <div style={{ fontSize: 13, color: colors.secondary, fontFamily: tokens.font.family, lineHeight: 1.5 }}>
-          Link your vault to an account to enable cloud sync and server-based sharing.
+          {t('auth:upgrade.description')}
         </div>
 
         {/* Email field */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ fontSize: 11, fontWeight: tokens.font.weight.semibold, color: colors.secondary, letterSpacing: 1, fontFamily: tokens.font.family }}>
-            EMAIL
+            {t('auth:upgrade.emailLabel')}
           </span>
           <Input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
+            placeholder={t('auth:upgrade.placeholder.email')}
             error={errorField === 'email' ? error : undefined}
             required
           />
@@ -79,13 +81,13 @@ export function UpgradeAccountModal({ open, onClose }: UpgradeAccountModalProps)
         {/* Password field — re-enter current master password */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ fontSize: 11, fontWeight: tokens.font.weight.semibold, color: colors.secondary, letterSpacing: 1, fontFamily: tokens.font.family }}>
-            MASTER PASSWORD
+            {t('auth:upgrade.passwordLabel')}
           </span>
           <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Re-enter your master password"
+            placeholder={t('auth:upgrade.placeholder.password')}
             error={errorField === 'password' ? error : undefined}
             required
           />
@@ -98,21 +100,21 @@ export function UpgradeAccountModal({ open, onClose }: UpgradeAccountModalProps)
         }}>
           <ShieldCheck size={16} strokeWidth={1.5} color={colors.successText} style={{ flexShrink: 0 }} />
           <span style={{ fontSize: 11, fontWeight: tokens.font.weight.medium, color: colors.successText, fontFamily: tokens.font.family }}>
-            Your vault data will be preserved
+            {t('auth:upgrade.vaultPreserved')}
           </span>
         </div>
 
         {/* Buttons — Create Account + Cancel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Button type="submit" variant="primary" size="md" loading={loading} style={{ width: '100%', height: 40 }}>
-            Create Account
+            {t('auth:upgrade.title')}
           </Button>
           <button type="button" onClick={onClose} style={{
             width: '100%', height: 40, borderRadius: 8, border: `1px solid ${colors.border}`,
             background: 'none', cursor: 'pointer', fontSize: 14, fontWeight: tokens.font.weight.medium,
             color: colors.text, fontFamily: tokens.font.family,
           }}>
-            Cancel
+            {t('common:cancel')}
           </button>
         </div>
       </form>

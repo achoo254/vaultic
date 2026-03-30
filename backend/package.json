@@ -7,26 +7,27 @@
     "dev": "tsx watch src/server.ts",
     "dev:dattqh": "tsx watch --env-file=.env.dattqh src/server.ts",
     "dev:staging": "tsx watch --env-file=.env.staging src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "start:pm2": "pm2 start ecosystem.config.cjs --env production"
+    "build:staging": "node build.js --env-file=.env.staging",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/server.js"
   },
   "dependencies": {
     "@vaultic/types": "workspace:*",
+    "cors": "^2",
+    "dotenv": "^16",
     "express": "^4",
     "express-async-errors": "^3",
-    "mongoose": "^8",
-    "zod": "^3",
     "jsonwebtoken": "^9",
-    "dotenv": "^16",
+    "mongoose": "^8",
     "pino": "^9",
     "pino-http": "^10",
-    "cors": "^2"
+    "zod": "^3"
   },
   "devDependencies": {
+    "@types/cors": "^2",
     "@types/express": "^5",
     "@types/jsonwebtoken": "^9",
-    "@types/cors": "^2",
+    "esbuild": "^0.27.4",
     "tsx": "^4",
     "typescript": "^5.7"
   }

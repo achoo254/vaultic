@@ -2,10 +2,12 @@
 import React, { useState } from 'react';
 import { Button, Input, Modal, tokens, useTheme } from '@vaultic/ui';
 import { Lock, Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/auth-store';
 
 export function LockScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation(['auth', 'common']);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ export function LockScreen() {
     try {
       await unlock(password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to unlock');
+      setError(err instanceof Error ? err.message : t('auth:lock.error.failed'));
     } finally {
       setLoading(false);
     }
@@ -98,18 +100,18 @@ export function LockScreen() {
           <Lock size={48} strokeWidth={1.5} color={colors.primary} />
         </div>
         <div style={emailStyle}>
-          {mode === 'online' && email ? email : 'Offline Vault'}
+          {mode === 'online' && email ? email : t('auth:lock.offlineVault')}
         </div>
       </div>
 
       <div style={fieldSection}>
         <div style={{ position: 'relative' }}>
           <Input
-            label="Master Password"
+            label={t('common:masterPassword')}
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter master password"
+            placeholder={t('auth:login.placeholder.password')}
             error={error || undefined}
             required
             autoFocus
@@ -133,21 +135,29 @@ export function LockScreen() {
           loading={loading}
           style={{ width: '100%' }}
         >
-          Unlock
+          {t('auth:lock.unlock')}
         </Button>
 
-        <button type="button" onClick={() => mode === 'online' ? logout() : setShowResetConfirm(true)} style={logoutLink}>
-          {mode === 'online' ? 'Log out' : 'Reset vault'}
+        <button
+          type="button"
+          onClick={() => mode === 'online' ? logout() : setShowResetConfirm(true)}
+          style={logoutLink}
+        >
+          {mode === 'online' ? t('auth:lock.logout') : t('auth:lock.resetVault')}
         </button>
       </div>
 
-      <Modal open={showResetConfirm} onClose={() => setShowResetConfirm(false)} title="Reset Vault">
+      <Modal open={showResetConfirm} onClose={() => setShowResetConfirm(false)} title={t('auth:lock.resetTitle')}>
         <p style={{ fontSize: tokens.font.size.base, color: colors.secondary, fontFamily: tokens.font.family, marginBottom: tokens.spacing.lg, lineHeight: 1.5 }}>
-          This will permanently delete all your vault data. This action cannot be undone.
+          {t('auth:lock.resetMessage')}
         </p>
         <div style={{ display: 'flex', gap: tokens.spacing.sm }}>
-          <Button variant="secondary" size="md" onClick={() => setShowResetConfirm(false)} style={{ flex: 1 }}>Cancel</Button>
-          <Button variant="primary" size="md" onClick={() => logout()} style={{ flex: 1, backgroundColor: colors.error }}>Reset</Button>
+          <Button variant="secondary" size="md" onClick={() => setShowResetConfirm(false)} style={{ flex: 1 }}>
+            {t('common:cancel')}
+          </Button>
+          <Button variant="primary" size="md" onClick={() => logout()} style={{ flex: 1, backgroundColor: colors.error }}>
+            {t('common:reset')}
+          </Button>
         </div>
       </Modal>
     </form>

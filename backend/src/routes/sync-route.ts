@@ -1,6 +1,7 @@
 import { Router, type Router as RouterType } from "express";
 import { z } from "zod";
 import * as syncService from "../services/sync-service.js";
+import { User } from "../models/user-model.js";
 import { authRequired } from "../middleware/auth-middleware.js";
 import { AppError } from "../utils/app-error.js";
 
@@ -58,4 +59,27 @@ syncRouter.delete("/data", authRequired, async (req, res) => {
   if (!req.userId) throw AppError.unauthorized("missing user");
   const result = await syncService.purge(req.userId);
   res.json(result);
+});
+
+// --- Preferences sync (language + theme) ---
+
+const preferencesSchema = z.object({
+  language: z.enum(["en", "vi"]),
+  theme: z.enum(["light", "dark", "system"]),
+  updatedAt: z.number().int().positive(),
+});
+
+// PUT /api/v1/sync/preferences — push local preferences to server
+syncRouter.put("/preferences", authRequired, async (req, res) => {
+  if (!req.userId) throw AppError.unauthorized("missing user");
+  const body = preferencesSchema.parse(req.body);
+  await User.updateOne({ _id: req.userId }, { $set: { preferences: body } });
+  res.json({ ok: true });
+});
+
+// GET /api/v1/sync/preferences — pull preferences from server
+syncRouter.get("/preferences", authRequired, async (req, res) => {
+  if (!req.userId) throw AppError.unauthorized("missing user");
+  const user = await User.findById(req.userId).select("preferences").lean();
+  res.json({ preferences: user?.preferences ?? null });
 });

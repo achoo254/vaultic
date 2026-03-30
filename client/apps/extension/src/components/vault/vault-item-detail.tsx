@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { tokens, VStack, HStack, Modal, Button, useTheme } from '@vaultic/ui';
 import { ArrowLeft, Pencil, Trash2, Globe, Folder } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { PasswordField } from '../common/password-field';
 import { CopyButton } from '../common/copy-button';
 import { useVaultStore } from '../../stores/vault-store';
@@ -15,13 +16,14 @@ interface VaultItemDetailProps {
 
 export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemDetailProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['vault', 'common']);
   const item = useVaultStore((s) => s.items.find((i) => i.id === itemId));
   const folders = useVaultStore((s) => s.folders);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const centerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: colors.secondary };
 
-  if (!item) return <div style={centerStyle}>Item not found</div>;
+  if (!item) return <div style={centerStyle}>{t('vault:item.notFound')}</div>;
 
   const { credential } = item;
 
@@ -85,7 +87,7 @@ export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemD
       <div style={fieldsStyle}>
         {credential.username && (
           <div style={fieldRow}>
-            <div style={fieldLabel}>Username</div>
+            <div style={fieldLabel}>{t('vault:item.username')}</div>
             <div style={fieldValueRow}>
               <span style={fieldValue}>{credential.username}</span>
               <CopyButton text={credential.username} />
@@ -99,7 +101,7 @@ export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemD
 
         {credential.notes && (
           <div style={fieldRow}>
-            <div style={fieldLabel}>Notes</div>
+            <div style={fieldLabel}>{t('vault:item.notes')}</div>
             <div style={notesStyle}>{credential.notes}</div>
           </div>
         )}
@@ -117,17 +119,17 @@ export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemD
           ) : null;
         })()}
 
-        <div style={metaStyle}>Last modified: {new Date(item.updated_at).toLocaleDateString()}</div>
+        <div style={metaStyle}>{t('vault:item.lastModified', { date: new Date(item.updated_at).toLocaleDateString() })}</div>
       </div>
 
       {/* Delete confirmation */}
-      <Modal open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title="Delete Credential?">
+      <Modal open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title={t('vault:item.deleteTitle')}>
         <VStack gap="md" align="center">
           <Trash2 size={32} strokeWidth={1.5} color={colors.error} />
-          <div style={modalText}>This will permanently delete "{credential.name}". This action cannot be undone.</div>
+          <div style={modalText}>{t('vault:item.deleteMessage', { name: credential.name })}</div>
           <HStack gap="md" style={{ width: '100%' }}>
-            <Button variant="secondary" size="md" onClick={() => setShowDeleteConfirm(false)} style={{ flex: 1 }}>Cancel</Button>
-            <Button variant="primary" size="md" onClick={onDelete} style={{ flex: 1, backgroundColor: colors.error }}>Delete</Button>
+            <Button variant="secondary" size="md" onClick={() => setShowDeleteConfirm(false)} style={{ flex: 1 }}>{t('common:cancel')}</Button>
+            <Button variant="primary" size="md" onClick={onDelete} style={{ flex: 1, backgroundColor: colors.error }}>{t('common:delete')}</Button>
           </HStack>
         </VStack>
       </Modal>

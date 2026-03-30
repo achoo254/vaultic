@@ -2,6 +2,7 @@
 import React from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
 import { Dices, LayoutGrid, Share2, Shield } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export type NavTab = 'generator' | 'vault' | 'share' | 'health';
 
@@ -10,15 +11,29 @@ interface BottomNavProps {
   onChange: (tab: NavTab) => void;
 }
 
-const tabs: { id: NavTab; label: string; Icon: React.FC<{ size: number; strokeWidth: number; color: string }> }[] = [
-  { id: 'generator', label: 'Generator', Icon: Dices },
-  { id: 'vault', label: 'Vault', Icon: LayoutGrid },
-  { id: 'share', label: 'Share', Icon: Share2 },
-  { id: 'health', label: 'Health', Icon: Shield },
-];
+const tabStyle: React.CSSProperties = {
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 2,
+  padding: `${tokens.spacing.sm}px 0`,
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  fontFamily: tokens.font.family,
+};
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation('common');
+
+  const tabs: { id: NavTab; label: string; Icon: React.FC<{ size: number; strokeWidth: number; color: string }> }[] = [
+    { id: 'generator', label: t('common:nav.generator'), Icon: Dices },
+    { id: 'vault', label: t('common:nav.vault'), Icon: LayoutGrid },
+    { id: 'share', label: t('common:nav.share'), Icon: Share2 },
+    { id: 'health', label: t('common:nav.health'), Icon: Shield },
+  ];
 
   const navStyle: React.CSSProperties = {
     display: 'flex',
@@ -42,16 +57,3 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
     </nav>
   );
 }
-
-const tabStyle: React.CSSProperties = {
-  flex: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: 2,
-  padding: `${tokens.spacing.sm}px 0`,
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  fontFamily: tokens.font.family,
-};

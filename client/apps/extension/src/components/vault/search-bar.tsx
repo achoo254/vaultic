@@ -2,6 +2,7 @@
 import React from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
 import { Search, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface SearchBarProps {
   value: string;
@@ -10,6 +11,7 @@ interface SearchBarProps {
 
 export function SearchBar({ value, onChange }: SearchBarProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation('common');
 
   const containerStyle: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: tokens.spacing.sm,
@@ -32,7 +34,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Search vault..."
+        placeholder={t('common:search')}
         style={inputStyle}
       />
       {value && (

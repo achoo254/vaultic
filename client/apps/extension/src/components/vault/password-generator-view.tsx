@@ -2,11 +2,13 @@
 import React, { useState, useCallback } from 'react';
 import { Button, VStack, HStack, Card, tokens, useTheme } from '@vaultic/ui';
 import { RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { generatePassword } from '@vaultic/crypto';
 import { CopyButton } from '../common/copy-button';
 
 export function PasswordGeneratorView() {
   const { colors } = useTheme();
+  const { t } = useTranslation(['vault', 'common']);
   const [length, setLength] = useState(20);
   const [uppercase, setUppercase] = useState(true);
   const [lowercase, setLowercase] = useState(true);
@@ -27,7 +29,12 @@ export function PasswordGeneratorView() {
   if (uppercase) strength++;
   if (digits) strength++;
   if (symbols) strength++;
-  const strengthLabel = strength <= 2 ? 'Weak' : strength <= 3 ? 'Medium' : 'Strong';
+
+  const strengthLabel = strength <= 2
+    ? t('common:strength.weak')
+    : strength <= 3
+      ? t('common:strength.medium')
+      : t('common:strength.strong');
   const strengthColor = strength <= 2 ? colors.error : strength <= 3 ? colors.warning : colors.success;
 
   const passwordText: React.CSSProperties = {
@@ -70,7 +77,7 @@ export function PasswordGeneratorView() {
         <div style={passwordText}>{password}</div>
         <HStack gap="xs" style={{ flexShrink: 0 }}>
           <CopyButton text={password} size={16} />
-          <button onClick={regenerate} style={regenBtn} title="Regenerate">
+          <button onClick={regenerate} style={regenBtn} title={t('vault:generator.regenerate')}>
             <RefreshCw size={16} strokeWidth={1.5} color={colors.secondary} />
           </button>
         </HStack>
@@ -86,18 +93,18 @@ export function PasswordGeneratorView() {
 
       {/* Length slider */}
       <HStack gap="md">
-        <span style={optionLabel}>Length: {length}</span>
+        <span style={optionLabel}>{t('vault:generator.length', { length })}</span>
         <input type="range" min={8} max={64} value={length} onChange={(e) => { setLength(+e.target.value); regenerate(); }} style={{ flex: 1 }} />
       </HStack>
 
       {/* Toggles */}
-      <ToggleRow label="Uppercase (A-Z)" checked={uppercase} onChange={setUppercase} />
-      <ToggleRow label="Lowercase (a-z)" checked={lowercase} onChange={setLowercase} />
-      <ToggleRow label="Numbers (0-9)" checked={digits} onChange={setDigits} />
-      <ToggleRow label="Symbols (!@#$)" checked={symbols} onChange={setSymbols} />
+      <ToggleRow label={t('vault:generator.uppercase')} checked={uppercase} onChange={setUppercase} />
+      <ToggleRow label={t('vault:generator.lowercase')} checked={lowercase} onChange={setLowercase} />
+      <ToggleRow label={t('vault:generator.numbers')} checked={digits} onChange={setDigits} />
+      <ToggleRow label={t('vault:generator.symbols')} checked={symbols} onChange={setSymbols} />
 
       <Button variant="primary" size="md" onClick={regenerate} style={{ width: '100%', marginTop: 'auto' }}>
-        Regenerate
+        {t('vault:generator.regenerate')}
       </Button>
     </VStack>
   );

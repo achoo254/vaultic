@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "description": "Open-source, extension-first password manager with zero-knowledge encryption",
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "scripts": {
     "dev": "turbo dev",
     "dev:dattqh": "turbo dev:dattqh",
@@ -11,8 +11,8 @@
     "dev:be:dattqh": "pnpm --filter @vaultic/backend dev:dattqh",
     "build:ext:staging": "pnpm --filter @vaultic/extension build:staging",
     "build:ext:production": "pnpm --filter @vaultic/extension build:production",
-    "build:be:staging": "turbo build:staging",
-    "build:be:production": "pnpm --filter @vaultic/backend build",
+    "build:be:staging": "pnpm --filter @vaultic/backend build:staging",
+    "build:be:production": "pnpm --filter @vaultic/backend build:production",
     "lint": "turbo lint",
     "test": "turbo test"
   },

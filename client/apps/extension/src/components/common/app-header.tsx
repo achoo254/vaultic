@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
 import { ShieldCheck, WifiOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AppHeaderProps {
   children?: React.ReactNode;
@@ -12,6 +13,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ children, borderBottom }: AppHeaderProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation('common');
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
@@ -70,7 +72,7 @@ export function AppHeader({ children, borderBottom }: AppHeaderProps) {
         }}>
           <WifiOff size={14} strokeWidth={1.5} color="#92400E" style={{ flexShrink: 0 }} />
           <span style={{ fontSize: tokens.font.size.xs, color: '#92400E', fontFamily: tokens.font.family }}>
-            Offline — changes will sync when connected
+            {t('common:offline')}
           </span>
         </div>
       )}

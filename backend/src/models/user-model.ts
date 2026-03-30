@@ -1,12 +1,19 @@
 import { Schema, model } from "mongoose";
 import { randomUUID } from "node:crypto";
 
+export interface IUserPreferences {
+  language: string;
+  theme: string;
+  updatedAt: number;
+}
+
 export interface IUser {
   _id: string;
   email: string;
   authHash: string;
   encryptedSymmetricKey: string | null;
   argon2Params: { m: number; t: number; p: number };
+  preferences: IUserPreferences | null;
   tokenVersion: number;
   createdAt: Date;
   updatedAt: Date;
@@ -21,6 +28,14 @@ const userSchema = new Schema<IUser>(
     argon2Params: {
       type: { m: Number, t: Number, p: Number },
       default: { m: 65536, t: 3, p: 4 },
+    },
+    preferences: {
+      type: {
+        language: { type: String, default: 'en' },
+        theme: { type: String, default: 'system' },
+        updatedAt: { type: Number, default: 0 },
+      },
+      default: null,
     },
     tokenVersion: { type: Number, default: 0 },
   },

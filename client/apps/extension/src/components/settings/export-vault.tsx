@@ -2,12 +2,14 @@
 import React, { useState } from 'react';
 import { Button, VStack, HStack, tokens, useTheme } from '@vaultic/ui';
 import { ArrowLeft, Download, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useVaultStore } from '../../stores/vault-store';
 
 interface ExportVaultProps { onBack: () => void; }
 
 export function ExportVault({ onBack }: ExportVaultProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['settings', 'common']);
   const [format, setFormat] = useState<'json' | 'csv'>('json');
   const [loading, setLoading] = useState(false);
   const items = useVaultStore((s) => s.items);
@@ -62,39 +64,39 @@ export function ExportVault({ onBack }: ExportVaultProps) {
     <div style={containerStyle}>
       <div style={headerStyle}>
         <button onClick={onBack} style={backBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
-        <span style={titleStyle}>Export Vault</span>
+        <span style={titleStyle}>{t('settings:export.title')}</span>
       </div>
       <VStack gap="lg" style={{ padding: tokens.spacing.xxl, flex: 1, justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}><Download size={36} strokeWidth={1.5} color={colors.primary} /></div>
-        <div style={descStyle}>Export your vault data to a file</div>
+        <div style={descStyle}>{t('settings:export.description')}</div>
 
         <HStack gap="sm">
           <label style={format === 'json' ? optionActive : optionBtn}>
             <input type="radio" name="format" checked={format === 'json'} onChange={() => setFormat('json')} style={{ display: 'none' }} />
-            <span style={optionLabel}>JSON (.json)</span>
-            <span style={optionHint}>Plaintext</span>
+            <span style={optionLabel}>{t('settings:export.json')}</span>
+            <span style={optionHint}>{t('settings:export.jsonHint')}</span>
           </label>
           <label style={format === 'csv' ? optionActive : optionBtn}>
             <input type="radio" name="format" checked={format === 'csv'} onChange={() => setFormat('csv')} style={{ display: 'none' }} />
-            <span style={optionLabel}>CSV (.csv)</span>
-            <span style={optionHint}>Unencrypted</span>
+            <span style={optionLabel}>{t('settings:export.csv')}</span>
+            <span style={optionHint}>{t('settings:export.csvHint')}</span>
           </label>
         </HStack>
 
         {format === 'json' && (
           <div style={warningStyle}>
-            <AlertTriangle size={14} strokeWidth={1.5} style={{ flexShrink: 0 }} /> JSON exports are unencrypted. Handle with care.
+            <AlertTriangle size={14} strokeWidth={1.5} style={{ flexShrink: 0 }} /> {t('settings:export.jsonWarning')}
           </div>
         )}
 
         {format === 'csv' && (
           <div style={warningStyle}>
-            <AlertTriangle size={14} strokeWidth={1.5} style={{ flexShrink: 0 }} /> CSV exports are unencrypted. Handle with care.
+            <AlertTriangle size={14} strokeWidth={1.5} style={{ flexShrink: 0 }} /> {t('settings:export.csvWarning')}
           </div>
         )}
 
         <Button variant="primary" size="lg" loading={loading} onClick={handleExport} style={{ width: '100%' }}>
-          Export {items.length} items
+          {t('settings:export.button', { count: items.length })}
         </Button>
       </VStack>
     </div>

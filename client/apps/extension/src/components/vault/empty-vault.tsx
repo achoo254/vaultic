@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button, tokens, useTheme } from '@vaultic/ui';
 import { PackageOpen, Lock, FolderOpen, Settings, Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../common/app-header';
 import { useAuthStore } from '../../stores/auth-store';
 
@@ -13,6 +14,7 @@ interface EmptyVaultProps {
 
 export function EmptyVault({ onAddItem, onSettings, onManageFolders }: EmptyVaultProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['vault', 'common']);
   const lockVault = useAuthStore((s) => s.lock);
 
   const iconBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' };
@@ -43,13 +45,13 @@ export function EmptyVault({ onAddItem, onSettings, onManageFolders }: EmptyVaul
       }}>
         <PackageOpen size={48} strokeWidth={1.5} color={colors.secondary} />
         <div style={{ fontSize: tokens.font.size.xl, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family }}>
-          Your vault is empty
+          {t('vault:empty.title')}
         </div>
         <div style={{ fontSize: tokens.font.size.base, color: colors.secondary, fontFamily: tokens.font.family }}>
-          Add your first credential to get started
+          {t('vault:empty.description')}
         </div>
         <Button variant="primary" size="md" onClick={onAddItem}>
-          + Add Credential
+          {t('vault:empty.addCredential')}
         </Button>
       </div>
     </div>

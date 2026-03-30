@@ -63,7 +63,7 @@
 | **Security** | No plaintext on server, WebCrypto + Argon2id, no plaintext in transit (HTTPS only) | 2–3 |
 | **Performance** | Sub-200ms vault search, <2s sync, <1s form auto-fill | 5–6 |
 | **Availability** | Server 99% uptime SLA, graceful offline-first fallback | 3, 8 |
-| **Compliance** | AGPL-3.0 license, GDPR-ready (user can request data export) | 1, 8 |
+| **Compliance** | MIT license, GDPR-ready (user can request data export) | 1, 8 |
 | **Browser Support** | Chrome MV3 + Firefox (native manifest support) | 1, 6 |
 | **Crypto Freshness** | TLS 1.3+, rustls (not openssl-sys for CentOS 7 compat) | 3 |
 

@@ -2,26 +2,29 @@
 import React, { useState, useRef } from 'react';
 import { Button, VStack, tokens, useTheme } from '@vaultic/ui';
 import { ArrowLeft, Upload } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useVaultStore } from '../../stores/vault-store';
 import type { LoginCredential } from '@vaultic/types';
 
 interface ImportPasswordsProps { onBack: () => void; }
 
-const SOURCES = [
-  { id: 'chrome', label: 'Google Chrome', ext: '.csv' },
-  { id: 'bitwarden', label: 'Bitwarden', ext: '.csv,.json' },
-  { id: '1password', label: '1Password', ext: '.csv,.1pux' },
-  { id: 'csv', label: 'CSV File', ext: '.csv' },
-];
-
 export function ImportPasswords({ onBack }: ImportPasswordsProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['settings', 'common']);
   const [source, setSource] = useState('chrome');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const addItem = useVaultStore((s) => s.addItem);
+
+  // Source labels resolved inside component to access t()
+  const SOURCES = [
+    { id: 'chrome', label: t('settings:import.chrome'), ext: '.csv' },
+    { id: 'bitwarden', label: t('settings:import.bitwarden'), ext: '.csv,.json' },
+    { id: '1password', label: t('settings:import.1password'), ext: '.csv,.1pux' },
+    { id: 'csv', label: t('settings:import.csv'), ext: '.csv' },
+  ];
 
   const handleImport = async () => {
     if (!file) return;
@@ -32,9 +35,9 @@ export function ImportPasswords({ onBack }: ImportPasswordsProps) {
       for (const item of items) {
         await addItem(item);
       }
-      setResult(`Successfully imported ${items.length} credentials`);
+      setResult(t('settings:import.success', { count: items.length }));
     } catch (err) {
-      setResult(`Import failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      setResult(t('settings:import.failed', { error: err instanceof Error ? err.message : 'Unknown error' }));
     } finally {
       setLoading(false);
     }
@@ -55,11 +58,11 @@ export function ImportPasswords({ onBack }: ImportPasswordsProps) {
     <div style={containerStyle}>
       <div style={headerStyle}>
         <button onClick={onBack} style={backBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
-        <span style={titleStyle}>Import Passwords</span>
+        <span style={titleStyle}>{t('settings:import.title')}</span>
       </div>
       <VStack gap="lg" style={{ padding: tokens.spacing.xxl, flex: 1 }}>
         <div style={{ textAlign: 'center' }}><Upload size={36} strokeWidth={1.5} color={colors.primary} /></div>
-        <div style={descStyle}>Import passwords from another manager</div>
+        <div style={descStyle}>{t('settings:import.description')}</div>
 
         <div style={sourceGrid}>
           {SOURCES.map((s) => (
@@ -69,18 +72,21 @@ export function ImportPasswords({ onBack }: ImportPasswordsProps) {
           ))}
         </div>
 
-        <div
-          onClick={() => fileRef.current?.click()}
-          style={uploadArea}
-        >
-          <input ref={fileRef} type="file" accept={SOURCES.find((s) => s.id === source)?.ext} onChange={(e) => setFile(e.target.files?.[0] || null)} style={{ display: 'none' }} />
-          {file ? <span>{file.name}</span> : <span>Tap to select file</span>}
+        <div onClick={() => fileRef.current?.click()} style={uploadArea}>
+          <input
+            ref={fileRef}
+            type="file"
+            accept={SOURCES.find((s) => s.id === source)?.ext}
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            style={{ display: 'none' }}
+          />
+          {file ? <span>{file.name}</span> : <span>{t('settings:import.selectFile')}</span>}
         </div>
 
         {result && <div style={resultStyle}>{result}</div>}
 
         <Button variant="primary" size="lg" loading={loading} disabled={!file} onClick={handleImport} style={{ width: '100%' }}>
-          Import
+          {t('common:import')}
         </Button>
       </VStack>
     </div>
