@@ -1,7 +1,7 @@
 // Delta sync engine — pushes local changes, pulls remote changes
 // Sync is user-controlled: only runs when Cloud Sync is enabled
 
-import type { SyncStatus, VaultItem } from '@vaultic/types';
+import type { SyncStatus, VaultItem, Folder } from '@vaultic/types';
 import type { VaultStore, SyncQueue } from '@vaultic/storage';
 import type { ConflictResolver } from './conflict-resolver';
 import { getDeviceId } from './device';
@@ -52,26 +52,42 @@ export class SyncEngine {
     try {
       const pending = await this.queue.getPending(this.userId);
       if (pending.length > 0) {
-        const itemIds = new Set(pending.map((p) => p.item_id));
-        const items: VaultItem[] = [];
+        // Separate item vs folder entries from queue
+        const itemEntries = pending.filter((p) => p.type !== 'folder');
+        const folderEntries = pending.filter((p) => p.type === 'folder');
 
+        const itemIds = new Set(itemEntries.map((p) => p.item_id));
+        const items: VaultItem[] = [];
         for (const id of itemIds) {
           const item = await this.store.getItem(this.userId, id);
           if (item) items.push(item);
         }
 
+        const folderIds = new Set(folderEntries.map((p) => p.item_id));
+        const folders: Folder[] = [];
+        for (const id of folderIds) {
+          const folder = await this.store.getFolder(this.userId, id);
+          if (folder) folders.push(folder);
+        }
+
         const result = await this.api.push({
           device_id: deviceId,
           items,
-          folders: [],
+          folders: folders.map((f) => ({
+            id: f.id,
+            encrypted_name: f.encrypted_name,
+            parent_id: f.parent_id,
+            updated_at: f.updated_at,
+          })),
         });
 
-        // Clear accepted entries from queue
+        // Clear accepted entries from queue (both items and folders)
+        const acceptedSet = new Set([...result.accepted_items, ...result.accepted_folders]);
         const acceptedIds = pending
-          .filter((p) => result.accepted_items.includes(p.item_id))
+          .filter((p) => acceptedSet.has(p.item_id))
           .map((p) => p.id);
         await this.queue.clear(acceptedIds);
-        pushed = result.accepted_items.length;
+        pushed = result.accepted_items.length + result.accepted_folders.length;
         conflicts = result.conflicts.length;
       }
     } catch (err) {
@@ -103,12 +119,28 @@ export class SyncEngine {
         }
       }
 
-      // Handle deletions
-      for (const id of delta.deleted_ids) {
-        await this.store.deleteItem(this.userId, id);
+      // Pull remote folders and apply LWW
+      for (const remoteFolder of delta.folders) {
+        const tagged: Folder = { ...remoteFolder, user_id: this.userId, created_at: remoteFolder.updated_at };
+        const localFolder = await this.store.getFolder(this.userId, remoteFolder.id);
+        if (localFolder) {
+          const localTime = new Date(localFolder.updated_at).getTime();
+          const remoteTime = new Date(remoteFolder.updated_at).getTime();
+          if (remoteTime > localTime) {
+            await this.store.putFolder(tagged);
+          }
+        } else {
+          await this.store.putFolder(tagged);
+        }
       }
 
-      pulled = delta.items.length + delta.deleted_ids.length;
+      // Handle deletions (items + folders)
+      for (const id of delta.deleted_ids) {
+        await this.store.deleteItem(this.userId, id);
+        await this.store.deleteFolder(this.userId, id);
+      }
+
+      pulled = delta.items.length + delta.folders.length + delta.deleted_ids.length;
       await this.store.setMetadata(lastSyncKey, delta.server_time);
     } catch (err) {
       console.error('[SyncEngine] pull failed', err);

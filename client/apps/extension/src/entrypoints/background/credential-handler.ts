@@ -147,7 +147,7 @@ export async function saveCredential(data: {
         cred.password = data.password;
         const encrypted = await encrypt(key, JSON.stringify(cred));
         await store.putItem({ ...item, encrypted_data: encrypted, version: item.version + 1, updated_at: new Date().toISOString() });
-        await syncQueue.enqueue({ id: crypto.randomUUID(), user_id: userId, item_id: item.id, action: 'update', timestamp: Date.now() });
+        await syncQueue.enqueue({ id: crypto.randomUUID(), user_id: userId, item_id: item.id, type: 'item', action: 'update', timestamp: Date.now() });
         return;
       }
     } catch {
@@ -171,5 +171,5 @@ export async function saveCredential(data: {
     created_at: now,
     updated_at: now,
   });
-  await syncQueue.enqueue({ id: crypto.randomUUID(), user_id: userId, item_id: id, action: 'create', timestamp: Date.now() });
+  await syncQueue.enqueue({ id: crypto.randomUUID(), user_id: userId, item_id: id, type: 'item', action: 'create', timestamp: Date.now() });
 }

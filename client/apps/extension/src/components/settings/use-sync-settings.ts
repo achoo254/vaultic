@@ -111,13 +111,16 @@ export function useSyncSettings(saveSetting: (key: string, value: number | boole
     try {
       const store = new IndexedDBStore();
       const userId = useAuthStore.getState().getCurrentUserId();
-      const items = await store.getAllItems(userId);
+      const [items, folders] = await Promise.all([
+        store.getAllItems(userId),
+        store.getAllFolders(userId),
+      ]);
       await fetchWithAuth('/api/v1/sync/push', {
         method: 'POST',
         body: JSON.stringify({
           deviceId: getDeviceId(),
           items: items.map(toApiItem),
-          folders: [],
+          folders: folders.map(toApiFolder),
         }),
       });
       setSyncStatus('Synced');
