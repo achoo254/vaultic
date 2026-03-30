@@ -4,8 +4,9 @@
 *.swp
 *.swo
 
-# Rust
+# Build artifacts
 target/
+packages/
 
 # Node.js
 node_modules/
@@ -19,6 +20,10 @@ dist/
 .env.*
 !.env.example
 !.env.dattqh
+
+# Claude Code session data
+.claude/session-state/archive/
+.claude/agent-memory/
 
 # OS
 .DS_Store

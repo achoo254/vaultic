@@ -1,5 +1,5 @@
 // WebCrypto bridge — Argon2id KDF + AES-256-GCM encryption
-export { deriveMasterKey, deriveMasterKeyWithSalt, deriveEncryptionKey, deriveAuthHash, deriveKeys } from './kdf';
+export { deriveMasterKey, deriveMasterKeyWithSalt, deriveEncryptionKey, deriveEncryptionKeyWithBytes, deriveAuthHash, deriveKeys } from './kdf';
 export { encrypt, decrypt, encryptBytes, decryptBytes } from './cipher';
 export { generatePassword } from './password-gen';
 export {
