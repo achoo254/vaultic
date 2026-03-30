@@ -1,7 +1,7 @@
 // Screen 02: Login — email + master password → derive keys → call API
 import React, { useState } from 'react';
 import { Button, Input, tokens, useTheme } from '@vaultic/ui';
-import { Eye, EyeOff } from 'lucide-react';
+import { IconEye, IconEyeOff } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/auth-store';
 
@@ -108,7 +108,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToSetup }: LoginFormProp
             required
           />
           <button type="button" onClick={() => setShowPassword(!showPassword)} style={eyeToggleStyle} tabIndex={-1}>
-            {showPassword ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
+            {showPassword ? <IconEyeOff size={16} stroke={1.5} /> : <IconEye size={16} stroke={1.5} />}
           </button>
         </div>
       </div>

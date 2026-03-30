@@ -1,7 +1,7 @@
 // Screen 15: Share Link Created — success + copy link + expiry info
 import React, { useState } from 'react';
 import { Button, tokens, useTheme } from '@vaultic/ui';
-import { ArrowLeft, CircleCheck, Copy, Check, Clock, Eye } from 'lucide-react';
+import { IconArrowLeft, IconCircleCheck, IconCopy, IconCheck, IconClock, IconEye } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
 interface ShareLinkResultProps {
@@ -39,7 +39,7 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
         padding: `0 ${tokens.spacing.lg}px`, borderBottom: `1px solid ${colors.border}`,
       }}>
         <button onClick={onDone} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.text, padding: 4, display: 'flex', alignItems: 'center' }}>
-          <ArrowLeft size={20} strokeWidth={1.5} />
+          <IconArrowLeft size={20} stroke={1.5} />
         </button>
         <span style={{ fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family }}>
           {t('share:link.title')}
@@ -53,7 +53,7 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
           width: 64, height: 64, borderRadius: 32, backgroundColor: '#F0FDF4',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <CircleCheck size={32} strokeWidth={1.5} color="#22C55E" />
+          <IconCircleCheck size={32} stroke={1.5} color="#22C55E" />
         </div>
 
         <div style={{
@@ -76,8 +76,8 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
           </span>
           <button onClick={handleCopy} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0, display: 'flex' }}>
             {copied
-              ? <Check size={18} strokeWidth={1.5} color="#22C55E" />
-              : <Copy size={18} strokeWidth={1.5} color={colors.primary} />
+              ? <IconCheck size={18} stroke={1.5} color="#22C55E" />
+              : <IconCopy size={18} stroke={1.5} color={colors.primary} />
             }
           </button>
         </div>
@@ -105,11 +105,11 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
             {t('share:link.expireTitle')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: colors.text, fontFamily: tokens.font.family }}>
-            <Clock size={14} strokeWidth={1.5} color={colors.secondary} />
+            <IconClock size={14} stroke={1.5} color={colors.secondary} />
             {t('share:link.afterTime', { time: expiryText })}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: colors.text, fontFamily: tokens.font.family }}>
-            <Eye size={14} strokeWidth={1.5} color={colors.secondary} />
+            <IconEye size={14} stroke={1.5} color={colors.secondary} />
             {t('share:link.afterViews', { views: viewsText })}
           </div>
           <div style={{ fontSize: 11, fontWeight: tokens.font.weight.medium, color: '#A1A1AA', fontFamily: tokens.font.family }}>

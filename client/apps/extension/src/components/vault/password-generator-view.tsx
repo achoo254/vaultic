@@ -1,7 +1,7 @@
 // Screen 09: Password Generator — standalone tab view
 import React, { useState, useCallback } from 'react';
 import { Button, VStack, HStack, Card, tokens, useTheme } from '@vaultic/ui';
-import { RefreshCw } from 'lucide-react';
+import { IconRefresh } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { generatePassword } from '@vaultic/crypto';
 import { CopyButton } from '../common/copy-button';
@@ -78,7 +78,7 @@ export function PasswordGeneratorView() {
         <HStack gap="xs" style={{ flexShrink: 0 }}>
           <CopyButton text={password} size={16} />
           <button onClick={regenerate} style={regenBtn} title={t('vault:generator.regenerate')}>
-            <RefreshCw size={16} strokeWidth={1.5} color={colors.secondary} />
+            <IconRefresh size={16} stroke={1.5} color={colors.secondary} />
           </button>
         </HStack>
       </Card>

@@ -1,7 +1,7 @@
 // Screen 05: Vault List — main popup view with search, suggested, recent, all items
 import React, { useEffect, useState } from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
-import { Lock, Settings, Plus, FolderOpen } from 'lucide-react';
+import { IconLock, IconSettings, IconPlus, IconFolderOpen } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../common/app-header';
 import { useAuthStore } from '../../stores/auth-store';
@@ -57,7 +57,7 @@ export function VaultList({ onItemClick, onAddItem, onManageFolders, onSettings 
       <div style={containerStyle}>
         <AppHeader>
           <button onClick={lockVault} style={iconBtn} title="Lock vault">
-            <Lock size={18} strokeWidth={1.5} color={colors.secondary} />
+            <IconLock size={18} stroke={1.5} color={colors.secondary} />
           </button>
         </AppHeader>
         <VaultListSkeleton rows={4} />
@@ -95,18 +95,18 @@ export function VaultList({ onItemClick, onAddItem, onManageFolders, onSettings 
     <div style={containerStyle}>
       <AppHeader>
         <button onClick={lockVault} style={iconBtn} title="Lock vault">
-          <Lock size={18} strokeWidth={1.5} color={colors.secondary} />
+          <IconLock size={18} stroke={1.5} color={colors.secondary} />
         </button>
         <button onClick={onManageFolders} style={iconBtn} title="Manage folders">
-          <FolderOpen size={18} strokeWidth={1.5} color={colors.secondary} />
+          <IconFolderOpen size={18} stroke={1.5} color={colors.secondary} />
         </button>
         {onSettings && (
           <button onClick={onSettings} style={iconBtn} title="Settings">
-            <Settings size={18} strokeWidth={1.5} color={colors.secondary} />
+            <IconSettings size={18} stroke={1.5} color={colors.secondary} />
           </button>
         )}
         <button onClick={onAddItem} style={iconBtn} title="Add credential">
-          <Plus size={18} strokeWidth={1.5} color={colors.primary} />
+          <IconPlus size={18} stroke={1.5} color={colors.primary} />
         </button>
       </AppHeader>
       <div style={{ padding: `0 ${tokens.spacing.lg}px ${tokens.spacing.sm}px` }}>

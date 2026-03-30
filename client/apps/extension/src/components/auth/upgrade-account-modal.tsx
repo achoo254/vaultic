@@ -2,7 +2,7 @@
 // Shows when user with existing offline vault tries to register
 import React, { useState } from 'react';
 import { Button, Input, Modal, tokens, useTheme } from '@vaultic/ui';
-import { UserPlus, ShieldCheck } from 'lucide-react';
+import { IconUserPlus, IconShieldCheck } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/auth-store';
 
@@ -52,7 +52,7 @@ export function UpgradeAccountModal({ open, onClose }: UpgradeAccountModalProps)
           width: 48, height: 48, borderRadius: 24, backgroundColor: colors.primaryBg,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <UserPlus size={24} strokeWidth={1.5} color={colors.primary} />
+          <IconUserPlus size={24} stroke={1.5} color={colors.primary} />
         </div>
 
         <div style={{ fontSize: 16, fontWeight: tokens.font.weight.bold, color: colors.text, fontFamily: tokens.font.family }}>
@@ -98,7 +98,7 @@ export function UpgradeAccountModal({ open, onClose }: UpgradeAccountModalProps)
           display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px',
           backgroundColor: colors.successBg, borderRadius: 8,
         }}>
-          <ShieldCheck size={16} strokeWidth={1.5} color={colors.successText} style={{ flexShrink: 0 }} />
+          <IconShieldCheck size={16} stroke={1.5} color={colors.successText} style={{ flexShrink: 0 }} />
           <span style={{ fontSize: 11, fontWeight: tokens.font.weight.medium, color: colors.successText, fontFamily: tokens.font.family }}>
             {t('auth:upgrade.vaultPreserved')}
           </span>

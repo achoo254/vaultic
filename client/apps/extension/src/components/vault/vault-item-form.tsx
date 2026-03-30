@@ -1,7 +1,7 @@
 // Screen 07: Add/Edit Credential form
 import React, { useState, useEffect } from 'react';
 import { Button, Input, VStack, HStack, Modal, Card, Textarea, tokens, useTheme } from '@vaultic/ui';
-import { ArrowLeft, Sparkles, RefreshCw } from 'lucide-react';
+import { IconArrowLeft, IconSparkles, IconRefresh } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { generatePassword } from '@vaultic/crypto';
 import { useVaultStore } from '../../stores/vault-store';
@@ -108,7 +108,7 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <button onClick={onBack} style={backBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
+        <button onClick={onBack} style={backBtn}><IconArrowLeft size={18} stroke={1.5} /></button>
         <span style={titleStyle}>{editId ? t('vault:form.editTitle') : t('vault:form.addTitle')}</span>
       </div>
 
@@ -124,7 +124,7 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
               <Input label={t('common:password')} type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('vault:form.passwordPlaceholder')} />
             </div>
             <button type="button" onClick={openGenModal} style={generateBtn} title={t('vault:form.generate')}>
-              <Sparkles size={14} strokeWidth={1.5} /> {t('vault:form.generate')}
+              <IconSparkles size={14} stroke={1.5} /> {t('vault:form.generate')}
             </button>
           </div>
         </div>
@@ -150,7 +150,7 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
           <Card variant="outlined" padding="sm" style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.sm, backgroundColor: colors.surface }}>
             <span style={{ flex: 1, fontFamily: 'monospace', fontSize: tokens.font.size.sm, color: colors.text, wordBreak: 'break-all' }}>{genPreview}</span>
             <button type="button" onClick={regeneratePreview} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
-              <RefreshCw size={14} strokeWidth={1.5} color={colors.secondary} />
+              <IconRefresh size={14} stroke={1.5} color={colors.secondary} />
             </button>
           </Card>
 

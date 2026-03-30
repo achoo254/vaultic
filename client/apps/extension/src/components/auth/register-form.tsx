@@ -2,7 +2,7 @@
 // If user already has offline vault data, shows Upgrade Account modal (screen 19c) instead
 import React, { useState } from 'react';
 import { Button, Input, tokens, useTheme } from '@vaultic/ui';
-import { Eye, EyeOff } from 'lucide-react';
+import { IconEye, IconEyeOff } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/auth-store';
 import { getStyles } from './register-form.styles';
@@ -105,7 +105,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
               style={eyeToggleStyle}
               tabIndex={-1}
             >
-              {showPassword ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
+              {showPassword ? <IconEyeOff size={16} stroke={1.5} /> : <IconEye size={16} stroke={1.5} />}
             </button>
           </div>
           {password && (

@@ -1,7 +1,7 @@
 // Screen 04: Empty Vault — shown when vault has 0 items
 import React from 'react';
 import { Button, tokens, useTheme } from '@vaultic/ui';
-import { PackageOpen, Lock, FolderOpen, Settings, Plus } from 'lucide-react';
+import { IconPackage, IconLock, IconFolderOpen, IconSettings, IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../common/app-header';
 import { useAuthStore } from '../../stores/auth-store';
@@ -23,27 +23,27 @@ export function EmptyVault({ onAddItem, onSettings, onManageFolders }: EmptyVaul
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <AppHeader>
         <button onClick={lockVault} style={iconBtn} title="Lock vault">
-          <Lock size={18} strokeWidth={1.5} color={colors.secondary} />
+          <IconLock size={18} stroke={1.5} color={colors.secondary} />
         </button>
         {onManageFolders && (
           <button onClick={onManageFolders} style={iconBtn} title="Manage folders">
-            <FolderOpen size={18} strokeWidth={1.5} color={colors.secondary} />
+            <IconFolderOpen size={18} stroke={1.5} color={colors.secondary} />
           </button>
         )}
         {onSettings && (
           <button onClick={onSettings} style={iconBtn} title="Settings">
-            <Settings size={18} strokeWidth={1.5} color={colors.secondary} />
+            <IconSettings size={18} stroke={1.5} color={colors.secondary} />
           </button>
         )}
         <button onClick={onAddItem} style={iconBtn} title="Add credential">
-          <Plus size={18} strokeWidth={1.5} color={colors.primary} />
+          <IconPlus size={18} stroke={1.5} color={colors.primary} />
         </button>
       </AppHeader>
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', gap: tokens.spacing.lg, flex: 1, padding: tokens.spacing.xxl,
       }}>
-        <PackageOpen size={48} strokeWidth={1.5} color={colors.secondary} />
+        <IconPackage size={48} stroke={1.5} color={colors.secondary} />
         <div style={{ fontSize: tokens.font.size.xl, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family }}>
           {t('vault:empty.title')}
         </div>

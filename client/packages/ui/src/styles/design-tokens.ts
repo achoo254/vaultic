@@ -1,47 +1,55 @@
-// Source of truth for all Vaultic design values — extracted from system-design.pen
+// Source of truth for all Vaultic design values — VIUI corporate design system
 // ALL UI components MUST use these tokens. Never hardcode colors/fonts/spacing.
 
-/** Theme-specific color palettes — Zinc scale for neutral tones */
+/** Theme-specific color palettes — VIUI corporate design system */
 export const lightColors = {
-  primary: '#2563EB',
-  primaryHover: '#1D4ED8',
-  text: '#18181B',
-  secondary: '#71717A',
-  border: '#E4E4E7',
-  background: '#FFFFFF',
-  surface: '#F4F4F5',
-  error: '#EF4444',
-  success: '#22C55E',
-  warning: '#F59E0B',
+  primary: '#024799',
+  primaryHover: '#023A7A',
+  accent: '#CC0E0E',
+  accentHover: '#A80B0B',
+  text: '#0F1E2D',
+  secondary: '#4A6278',
+  border: '#D0DAE6',
+  background: '#F4F7FA',
+  surface: '#FFFFFF',
+  error: '#B91C1C',
+  success: '#0E9F6E',
+  warning: '#D47B0A',
+  info: '#8ABDEF',
   // Badge semantic backgrounds
-  badgeSuccessBg: '#DCFCE7', badgeSuccessText: '#166534',
-  badgeWarningBg: '#FEF9C3', badgeWarningText: '#854D0E',
-  badgeErrorBg: '#FEE2E2', badgeErrorText: '#991B1B',
+  badgeSuccessBg: '#ECFDF5', badgeSuccessText: '#065F46',
+  badgeWarningBg: '#FFFBEB', badgeWarningText: '#92400E',
+  badgeErrorBg: '#FEF2F2', badgeErrorText: '#991B1B',
+  badgeInfoBg: '#EFF6FF', badgeInfoText: '#1E40AF',
   // Semantic surface backgrounds + text (used by form warnings, modals, etc.)
-  warningBg: '#FEF3C7', warningText: '#92400E',
-  successBg: '#F0FDF4', successText: '#16A34A',
+  warningBg: '#FFFBEB', warningText: '#92400E',
+  successBg: '#ECFDF5', successText: '#065F46',
   primaryBg: '#EFF6FF',
 } as const;
 
 export const darkColors = {
-  primary: '#3B82F6',
-  primaryHover: '#2563EB',
-  text: '#FAFAFA',
-  secondary: '#A1A1AA',
-  border: '#27272A',
-  background: '#09090B',
-  surface: '#18181B',
+  primary: '#619EE9',
+  primaryHover: '#4F8AD6',
+  accent: '#ED7B7B',
+  accentHover: '#E05A5A',
+  text: '#E6EDF3',
+  secondary: '#8B949E',
+  border: '#21262D',
+  background: '#0D1117',
+  surface: '#161B22',
   error: '#F87171',
-  success: '#4ADE80',
+  success: '#34D399',
   warning: '#FBBF24',
+  info: '#619EE9',
   // Badge semantic backgrounds
-  badgeSuccessBg: '#052E16', badgeSuccessText: '#4ADE80',
-  badgeWarningBg: '#422006', badgeWarningText: '#FBBF24',
-  badgeErrorBg: '#450A0A', badgeErrorText: '#F87171',
+  badgeSuccessBg: '#0A2A1F', badgeSuccessText: '#34D399',
+  badgeWarningBg: '#2A1F06', badgeWarningText: '#FBBF24',
+  badgeErrorBg: '#450A0A', badgeErrorText: '#FECACA',
+  badgeInfoBg: '#0A1628', badgeInfoText: '#93C5FD',
   // Semantic surface backgrounds + text (dark mode variants)
-  warningBg: '#422006', warningText: '#FBBF24',
-  successBg: '#052E16', successText: '#4ADE80',
-  primaryBg: '#1E3A5F',
+  warningBg: '#2A1F06', warningText: '#FBBF24',
+  successBg: '#0A2A1F', successText: '#34D399',
+  primaryBg: '#0A1628',
 } as const;
 
 export type ThemeColors = typeof lightColors | typeof darkColors;
@@ -49,13 +57,13 @@ export type ThemeColors = typeof lightColors | typeof darkColors;
 export const tokens = {
   colors: lightColors,
   font: {
-    family: "'Inter', sans-serif",
+    family: "'Nunito Sans', sans-serif",
     size: { xs: 11, sm: 13, base: 14, lg: 16, xl: 18, xxl: 24 },
     weight: { regular: 400, medium: 500, semibold: 600, bold: 700 },
     lineHeight: { tight: 1.2, normal: 1.5, relaxed: 1.75 },
   },
   spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32 },
-  radius: { sm: 6, md: 8, lg: 12, full: 9999 },
+  radius: { sm: 4, md: 8, lg: 12, full: 9999 },
   extension: { width: 380, height: 520 },
   icon: { size: { sm: 16, md: 20, lg: 24 }, strokeWidth: 1.5 },
 } as const;

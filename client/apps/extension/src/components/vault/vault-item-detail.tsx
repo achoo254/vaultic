@@ -1,7 +1,7 @@
 // Screen 06: Credential Detail — view username, password, notes, folder
 import React, { useState } from 'react';
 import { tokens, VStack, HStack, Modal, Button, useTheme } from '@vaultic/ui';
-import { ArrowLeft, Pencil, Trash2, Globe, Folder } from 'lucide-react';
+import { IconArrowLeft, IconPencil, IconTrash, IconWorld, IconFolder } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { PasswordField } from '../common/password-field';
 import { CopyButton } from '../common/copy-button';
@@ -64,18 +64,18 @@ export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemD
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <button onClick={onBack} style={iconBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
+        <button onClick={onBack} style={iconBtn}><IconArrowLeft size={18} stroke={1.5} /></button>
         <span style={headerTitle}>{credential.name}</span>
         <div style={headerActions}>
-          <button onClick={onEdit} style={iconBtn} title="Edit"><Pencil size={16} strokeWidth={1.5} /></button>
-          <button onClick={() => setShowDeleteConfirm(true)} style={iconBtn} title="Delete"><Trash2 size={16} strokeWidth={1.5} /></button>
+          <button onClick={onEdit} style={iconBtn} title="Edit"><IconPencil size={16} stroke={1.5} /></button>
+          <button onClick={() => setShowDeleteConfirm(true)} style={iconBtn} title="Delete"><IconTrash size={16} stroke={1.5} /></button>
         </div>
       </div>
 
       {/* Item badge */}
       <div style={badgeSection}>
         <div style={avatarLg}>
-          <Globe size={24} strokeWidth={1.5} color={colors.primary} />
+          <IconWorld size={24} stroke={1.5} color={colors.primary} />
         </div>
         <div>
           <div style={nameStyle}>{credential.name}</div>
@@ -112,7 +112,7 @@ export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemD
             <>
               <div style={{ height: 1, backgroundColor: colors.border }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.sm }}>
-                <Folder size={16} strokeWidth={1.5} color={colors.secondary} />
+                <IconFolder size={16} stroke={1.5} color={colors.secondary} />
                 <span style={{ fontSize: tokens.font.size.base, color: colors.text, fontFamily: tokens.font.family }}>{folder.name}</span>
               </div>
             </>
@@ -125,7 +125,7 @@ export function VaultItemDetail({ itemId, onBack, onEdit, onDelete }: VaultItemD
       {/* Delete confirmation */}
       <Modal open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title={t('vault:item.deleteTitle')}>
         <VStack gap="md" align="center">
-          <Trash2 size={32} strokeWidth={1.5} color={colors.error} />
+          <IconTrash size={32} stroke={1.5} color={colors.error} />
           <div style={modalText}>{t('vault:item.deleteMessage', { name: credential.name })}</div>
           <HStack gap="md" style={{ width: '100%' }}>
             <Button variant="secondary" size="md" onClick={() => setShowDeleteConfirm(false)} style={{ flex: 1 }}>{t('common:cancel')}</Button>

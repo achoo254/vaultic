@@ -1,7 +1,7 @@
 // Copy to clipboard with auto-clear via background alarm (survives popup close)
 import React, { useState } from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
-import { Copy, Check } from 'lucide-react';
+import { IconCopy, IconCheck } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
 interface CopyButtonProps {
@@ -34,7 +34,7 @@ export function CopyButton({ text, size = 16 }: CopyButtonProps) {
 
   return (
     <button onClick={handleCopy} style={btnStyle} title={t('common:copy')}>
-      {copied ? <Check size={size} strokeWidth={1.5} /> : <Copy size={size} strokeWidth={1.5} />}
+      {copied ? <IconCheck size={size} stroke={1.5} /> : <IconCopy size={size} stroke={1.5} />}
     </button>
   );
 }
