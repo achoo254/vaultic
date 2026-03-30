@@ -17,6 +17,10 @@ export const lightColors = {
   badgeSuccessBg: '#DCFCE7', badgeSuccessText: '#166534',
   badgeWarningBg: '#FEF9C3', badgeWarningText: '#854D0E',
   badgeErrorBg: '#FEE2E2', badgeErrorText: '#991B1B',
+  // Semantic surface backgrounds + text (used by form warnings, modals, etc.)
+  warningBg: '#FEF3C7', warningText: '#92400E',
+  successBg: '#F0FDF4', successText: '#16A34A',
+  primaryBg: '#EFF6FF',
 } as const;
 
 export const darkColors = {
@@ -34,9 +38,13 @@ export const darkColors = {
   badgeSuccessBg: '#052E16', badgeSuccessText: '#4ADE80',
   badgeWarningBg: '#422006', badgeWarningText: '#FBBF24',
   badgeErrorBg: '#450A0A', badgeErrorText: '#F87171',
+  // Semantic surface backgrounds + text (dark mode variants)
+  warningBg: '#422006', warningText: '#FBBF24',
+  successBg: '#052E16', successText: '#4ADE80',
+  primaryBg: '#1E3A5F',
 } as const;
 
-export type ThemeColors = typeof lightColors;
+export type ThemeColors = typeof lightColors | typeof darkColors;
 
 export const tokens = {
   colors: lightColors,

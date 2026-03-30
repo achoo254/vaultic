@@ -16,6 +16,7 @@
     "clsx": "^2"
   },
   "devDependencies": {
+    "@types/chrome": "^0.0.268",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "typescript": "^5.7"

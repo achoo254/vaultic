@@ -15,8 +15,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "dist",
-    "rootDir": "src",
-    "types": ["vite/client"]
+    "rootDir": "src"
   },
   "exclude": ["node_modules", "dist"]
 }
