@@ -318,7 +318,7 @@ Strategic roadmap for post-MVP feature development. Prioritized by user value an
 - **MVP Plan:** `plans/dattqh/260324-2044-vaultic-mvp-implementation/plan.md`
 - **Architecture:** `docs/system-architecture.md`
 - **Security:** `docs/project-overview-pdr.md#security-considerations`
-- **Deployment:** `docker/docker-compose.yml`
+- **Deployment:** PM2 on CentOS 7 (`backend/ecosystem.config.cjs`)
 
 ---
 
