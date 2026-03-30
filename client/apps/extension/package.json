@@ -19,9 +19,11 @@
     "@vaultic/sync": "workspace:*",
     "@vaultic/types": "workspace:*",
     "@vaultic/ui": "workspace:*",
+    "i18next": "^26.0.2",
     "lucide-react": "^0.468",
     "react": "^19",
     "react-dom": "^19",
+    "react-i18next": "^17.0.1",
     "zustand": "^5"
   },
   "devDependencies": {

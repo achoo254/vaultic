@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Button, Input, tokens, useTheme } from '@vaultic/ui';
 import { Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/auth-store';
 import { getStyles } from './register-form.styles';
 import { UpgradeAccountModal } from './upgrade-account-modal';
@@ -15,6 +16,7 @@ interface RegisterFormProps {
 
 export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['auth', 'common']);
   const {
     formStyle, logoSection, logoText, headingStyle, fieldsSection,
     actionsSection, linkStyle, eyeToggleStyle, strengthBarContainer, strengthBar,
@@ -46,12 +48,12 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth:register.error.passwordMismatch'));
       setErrorField('confirm');
       return;
     }
     if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError(t('auth:register.error.passwordLength'));
       setErrorField('password');
       return;
     }
@@ -60,7 +62,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     try {
       await register(email, password, API_BASE_URL);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Registration failed';
+      const msg = err instanceof Error ? err.message : t('auth:register.error.failed');
       setError(msg);
       setErrorField(msg.toLowerCase().includes('email') ? 'email' : 'password');
     } finally {
@@ -72,16 +74,16 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     <form onSubmit={handleSubmit} style={formStyle}>
       <div style={logoSection}>
         <div style={logoText}>Vaultic</div>
-        <div style={headingStyle}>Create Account</div>
+        <div style={headingStyle}>{t('auth:register.title')}</div>
       </div>
 
       <div style={fieldsSection}>
         <Input
-          label="Email"
+          label={t('common:email')}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
+          placeholder={t('auth:login.placeholder.email')}
           error={errorField === 'email' ? error : undefined}
           required
         />
@@ -89,11 +91,11 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         <div>
           <div style={{ position: 'relative' }}>
             <Input
-              label="Master Password"
+              label={t('common:masterPassword')}
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Choose a strong password"
+              placeholder={t('auth:register.placeholder.password')}
               error={errorField === 'password' ? error : undefined}
               required
             />
@@ -120,11 +122,11 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         </div>
 
         <Input
-          label="Confirm Password"
+          label={t('common:confirmPassword')}
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm master password"
+          placeholder={t('auth:register.placeholder.confirm')}
           error={errorField === 'confirm' ? error : undefined}
           required
         />
@@ -138,11 +140,11 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           loading={loading}
           style={{ width: '100%' }}
         >
-          Create Account
+          {t('auth:register.createAccount')}
         </Button>
 
         <button type="button" onClick={onSwitchToLogin} style={linkStyle}>
-          Already have an account? Log in
+          {t('auth:register.alreadyHaveAccount')}
         </button>
       </div>
 

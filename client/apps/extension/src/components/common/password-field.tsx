@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
 import { Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { CopyButton } from './copy-button';
 
 interface PasswordFieldProps {
@@ -9,9 +10,12 @@ interface PasswordFieldProps {
   label?: string;
 }
 
-export function PasswordField({ value, label = 'Password' }: PasswordFieldProps) {
+export function PasswordField({ value, label }: PasswordFieldProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation('common');
   const [visible, setVisible] = useState(false);
+
+  const resolvedLabel = label ?? t('common:password');
 
   const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 2 };
   const labelStyle: React.CSSProperties = { fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family };
@@ -22,13 +26,17 @@ export function PasswordField({ value, label = 'Password' }: PasswordFieldProps)
 
   return (
     <div style={containerStyle}>
-      <div style={labelStyle}>{label}</div>
+      <div style={labelStyle}>{resolvedLabel}</div>
       <div style={rowStyle}>
         <span style={valueStyle}>
           {visible ? value : '••••••••••••'}
         </span>
         <div style={actionsStyle}>
-          <button onClick={() => setVisible(!visible)} style={iconBtn} title={visible ? 'Hide' : 'Show'}>
+          <button
+            onClick={() => setVisible(!visible)}
+            style={iconBtn}
+            title={visible ? 'Hide' : 'Show'}
+          >
             {visible ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
           </button>
           <CopyButton text={value} />

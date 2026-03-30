@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Input, VStack, HStack, Modal, Card, Textarea, tokens, useTheme } from '@vaultic/ui';
 import { ArrowLeft, Sparkles, RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { generatePassword } from '@vaultic/crypto';
 import { useVaultStore } from '../../stores/vault-store';
 import { FolderSelect } from './folder-select';
@@ -16,6 +17,7 @@ interface VaultItemFormProps {
 
 export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['vault', 'common']);
   const { items, addItem, updateItem } = useVaultStore();
   const existing = editId ? items.find((i) => i.id === editId) : null;
 
@@ -56,7 +58,7 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) { setError('Name is required'); return; }
+    if (!name.trim()) { setError(t('vault:form.nameRequired')); return; }
 
     setLoading(true);
     setError('');
@@ -76,7 +78,7 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
       }
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
+      setError(err instanceof Error ? err.message : t('vault:form.saveFailed'));
     } finally {
       setLoading(false);
     }
@@ -107,43 +109,43 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
     <div style={containerStyle}>
       <div style={headerStyle}>
         <button onClick={onBack} style={backBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
-        <span style={titleStyle}>{editId ? 'Edit Credential' : 'Add Credential'}</span>
+        <span style={titleStyle}>{editId ? t('vault:form.editTitle') : t('vault:form.addTitle')}</span>
       </div>
 
       <form onSubmit={handleSubmit} style={formStyle}>
         <FolderSelect value={folderId} onChange={setFolderId} />
-        <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. GitHub" required />
-        <Input label="URL" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="github.com" />
-        <Input label="Username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="user@email.com" />
+        <Input label={t('common:name')} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('vault:form.namePlaceholder')} required />
+        <Input label={t('common:url')} value={url} onChange={(e) => setUrl(e.target.value)} placeholder={t('vault:form.urlPlaceholder')} />
+        <Input label={t('common:username')} value={username} onChange={(e) => setUsername(e.target.value)} placeholder={t('vault:form.usernamePlaceholder')} />
 
         <div>
           <div style={passwordRow}>
             <div style={{ flex: 1 }}>
-              <Input label="Password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+              <Input label={t('common:password')} type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('vault:form.passwordPlaceholder')} />
             </div>
-            <button type="button" onClick={openGenModal} style={generateBtn} title="Generate">
-              <Sparkles size={14} strokeWidth={1.5} /> Generate
+            <button type="button" onClick={openGenModal} style={generateBtn} title={t('vault:form.generate')}>
+              <Sparkles size={14} strokeWidth={1.5} /> {t('vault:form.generate')}
             </button>
           </div>
         </div>
 
         <Textarea
-          label="Notes"
+          label={t('common:notes')}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Optional notes..."
+          placeholder={t('vault:form.notesPlaceholder')}
           rows={3}
         />
 
         {error && <div style={errorStyle}>{error}</div>}
 
         <Button type="submit" variant="primary" size="lg" loading={loading} style={{ width: '100%' }}>
-          {editId ? 'Save Changes' : 'Add Credential'}
+          {editId ? t('vault:form.saveChanges') : t('vault:form.addCredential')}
         </Button>
       </form>
 
       {/* Password Generator Modal */}
-      <Modal open={showGenModal} onClose={() => setShowGenModal(false)} title="Generate Password">
+      <Modal open={showGenModal} onClose={() => setShowGenModal(false)} title={t('vault:generator.generatePassword')}>
         <VStack gap="md">
           <Card variant="outlined" padding="sm" style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.sm, backgroundColor: colors.surface }}>
             <span style={{ flex: 1, fontFamily: 'monospace', fontSize: tokens.font.size.sm, color: colors.text, wordBreak: 'break-all' }}>{genPreview}</span>
@@ -153,18 +155,18 @@ export function VaultItemForm({ editId, onBack, onSaved }: VaultItemFormProps) {
           </Card>
 
           <HStack gap="md">
-            <span style={{ fontSize: tokens.font.size.base, color: colors.text, fontFamily: tokens.font.family }}>Length: {genLength}</span>
+            <span style={{ fontSize: tokens.font.size.base, color: colors.text, fontFamily: tokens.font.family }}>{t('vault:generator.length', { length: genLength })}</span>
             <input type="range" min={8} max={64} value={genLength} onChange={(e) => { setGenLength(+e.target.value); }} style={{ flex: 1 }} />
           </HStack>
 
-          <GenToggle label="Uppercase (A-Z)" checked={genUpper} onChange={setGenUpper} />
-          <GenToggle label="Lowercase (a-z)" checked={genLower} onChange={setGenLower} />
-          <GenToggle label="Numbers (0-9)" checked={genDigits} onChange={setGenDigits} />
-          <GenToggle label="Symbols (!@#$)" checked={genSymbols} onChange={setGenSymbols} />
+          <GenToggle label={t('vault:generator.uppercase')} checked={genUpper} onChange={setGenUpper} />
+          <GenToggle label={t('vault:generator.lowercase')} checked={genLower} onChange={setGenLower} />
+          <GenToggle label={t('vault:generator.numbers')} checked={genDigits} onChange={setGenDigits} />
+          <GenToggle label={t('vault:generator.symbols')} checked={genSymbols} onChange={setGenSymbols} />
 
           <HStack gap="sm" style={{ marginTop: tokens.spacing.sm }}>
-            <Button variant="secondary" size="md" onClick={regeneratePreview} style={{ flex: 1 }}>Regenerate</Button>
-            <Button variant="primary" size="md" onClick={applyGenerated} style={{ flex: 1 }}>Use Password</Button>
+            <Button variant="secondary" size="md" onClick={regeneratePreview} style={{ flex: 1 }}>{t('vault:generator.regenerate')}</Button>
+            <Button variant="primary" size="md" onClick={applyGenerated} style={{ flex: 1 }}>{t('vault:generator.usePassword')}</Button>
           </HStack>
         </VStack>
       </Modal>

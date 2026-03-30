@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
 import { Copy, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface CopyButtonProps {
   text: string;
@@ -10,6 +11,7 @@ interface CopyButtonProps {
 
 export function CopyButton({ text, size = 16 }: CopyButtonProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation('common');
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async (e: React.MouseEvent) => {
@@ -31,7 +33,7 @@ export function CopyButton({ text, size = 16 }: CopyButtonProps) {
   };
 
   return (
-    <button onClick={handleCopy} style={btnStyle} title="Copy">
+    <button onClick={handleCopy} style={btnStyle} title={t('common:copy')}>
       {copied ? <Check size={size} strokeWidth={1.5} /> : <Copy size={size} strokeWidth={1.5} />}
     </button>
   );

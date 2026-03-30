@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button, Input, tokens, useTheme } from '@vaultic/ui';
 import { Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/auth-store';
 import { getStyles } from './register-form.styles';
 
@@ -11,6 +12,7 @@ interface SetupPasswordFormProps {
 
 export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['auth', 'common']);
   const {
     formStyle, logoSection, logoText, headingStyle, fieldsSection,
     actionsSection, linkStyle, eyeToggleStyle, strengthBarContainer, strengthBar,
@@ -32,12 +34,12 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
     setErrorField(null);
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth:register.error.passwordMismatch'));
       setErrorField('confirm');
       return;
     }
     if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError(t('auth:register.error.passwordLength'));
       setErrorField('password');
       return;
     }
@@ -46,7 +48,7 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
     try {
       await setupOfflineVault(password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Setup failed');
+      setError(err instanceof Error ? err.message : t('auth:setup.error.failed'));
       setErrorField('password');
     } finally {
       setLoading(false);
@@ -67,22 +69,22 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
     <form onSubmit={handleSubmit} style={formStyle}>
       <div style={logoSection}>
         <div style={logoText}>Vaultic</div>
-        <div style={headingStyle}>Set Master Password</div>
+        <div style={headingStyle}>{t('auth:setup.title')}</div>
       </div>
 
       <div style={warningStyle}>
-        There is no password recovery. If you forget your master password, your vault data will be permanently lost.
+        {t('auth:setup.warning')}
       </div>
 
       <div style={fieldsSection}>
         <div>
           <div style={{ position: 'relative' }}>
             <Input
-              label="Master Password"
+              label={t('common:masterPassword')}
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Choose a strong password"
+              placeholder={t('auth:register.placeholder.password')}
               error={errorField === 'password' ? error : undefined}
               required
               autoFocus
@@ -110,11 +112,11 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
         </div>
 
         <Input
-          label="Confirm Password"
+          label={t('common:confirmPassword')}
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm master password"
+          placeholder={t('auth:register.placeholder.confirm')}
           error={errorField === 'confirm' ? error : undefined}
           required
         />
@@ -128,11 +130,11 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
           loading={loading}
           style={{ width: '100%' }}
         >
-          Create Vault
+          {t('auth:setup.createVault')}
         </Button>
 
         <button type="button" onClick={onSwitchToLogin} style={linkStyle}>
-          Have an account? Log in
+          {t('auth:setup.haveAccount')}
         </button>
       </div>
     </form>

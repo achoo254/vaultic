@@ -1,6 +1,10 @@
 // Extension popup — root component with offline-aware routing + bottom nav
 import React, { useEffect, useState } from 'react';
-import { tokens, ThemeProvider, useTheme } from '@vaultic/ui';
+import { tokens, ThemeProvider, useTheme, I18nProvider } from '@vaultic/ui';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n/i18n-config';
+import '../../i18n/i18n-types';
+import { pushPreferencesToServer } from '../../lib/sync-preferences';
 import { useAuthStore } from '../../stores/auth-store';
 import { SetupPasswordForm } from '../../components/auth/setup-password-form';
 import { LoginForm } from '../../components/auth/login-form';
@@ -83,8 +87,10 @@ export function App() {
 
   return (
     <ThemeProvider>
-      <AppShell view={view} setView={setView} activeTab={activeTab} setActiveTab={setActiveTab}
-        showBottomNav={showBottomNav} handleTabChange={handleTabChange} deleteItem={deleteItem} />
+      <I18nProvider onLanguageChange={(lang) => { i18n.changeLanguage(lang); pushPreferencesToServer({ language: lang }); }}>
+        <AppShell view={view} setView={setView} activeTab={activeTab} setActiveTab={setActiveTab}
+          showBottomNav={showBottomNav} handleTabChange={handleTabChange} deleteItem={deleteItem} />
+      </I18nProvider>
     </ThemeProvider>
   );
 }
@@ -94,6 +100,7 @@ function AppShell({ view, setView, activeTab, setActiveTab, showBottomNav, handl
   showBottomNav: boolean; handleTabChange: (t: NavTab) => void; deleteItem: (id: string) => Promise<void>;
 }) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['common']);
 
   const containerStyle: React.CSSProperties = {
     width: tokens.extension.width,
@@ -108,7 +115,7 @@ function AppShell({ view, setView, activeTab, setActiveTab, showBottomNav, handl
   return (
     <div style={containerStyle}>
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        {view.type === 'loading' && <CenterMessage text="Loading..." />}
+        {view.type === 'loading' && <CenterMessage text={t('common:loading')} />}
         {view.type === 'setup' && (
           <SetupPasswordForm onSwitchToLogin={() => setView({ type: 'login' })} />
         )}

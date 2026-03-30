@@ -2,12 +2,14 @@
 import React from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
 import { ArrowLeft, ShieldAlert, Copy, Timer, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useVaultStore } from '../../stores/vault-store';
 
 interface SecurityHealthProps { onBack: () => void; }
 
 export function SecurityHealth({ onBack }: SecurityHealthProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['settings', 'common']);
   const items = useVaultStore((s) => s.items);
 
   // Analyze passwords
@@ -30,7 +32,7 @@ export function SecurityHealth({ onBack }: SecurityHealthProps) {
           <ArrowLeft size={20} strokeWidth={1.5} />
         </button>
         <span style={{ fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family }}>
-          Security Health
+          {t('settings:health.title')}
         </span>
       </div>
 
@@ -50,7 +52,7 @@ export function SecurityHealth({ onBack }: SecurityHealthProps) {
             </text>
           </svg>
           <span style={{ fontSize: tokens.font.size.sm, fontWeight: tokens.font.weight.medium, color: colors.secondary, fontFamily: tokens.font.family }}>
-            Overall Score
+            {t('settings:health.overallScore')}
           </span>
         </div>
 
@@ -58,19 +60,22 @@ export function SecurityHealth({ onBack }: SecurityHealthProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <IssueCard
             icon={<ShieldAlert size={20} strokeWidth={1.5} color={colors.error} />}
-            label="Weak Passwords" desc={`${weak} passwords need strengthening`}
+            label={t('settings:health.weakPasswords')}
+            desc={t('settings:health.weakDesc', { count: weak })}
             count={weak} countColor={colors.error}
             bg="#FEF2F2" borderColor="#FECACA" darkBg="#450A0A" darkBorder="#7F1D1D"
           />
           <IssueCard
             icon={<Copy size={20} strokeWidth={1.5} color={colors.warning} />}
-            label="Reused Passwords" desc={`${reused} passwords used more than once`}
+            label={t('settings:health.reusedPasswords')}
+            desc={t('settings:health.reusedDesc', { count: reused })}
             count={reused} countColor={colors.warning}
             bg="#FFFBEB" borderColor="#FDE68A" darkBg="#422006" darkBorder="#78350F"
           />
           <IssueCard
             icon={<Timer size={20} strokeWidth={1.5} color="#0EA5E9" />}
-            label="Old Passwords" desc="Not changed in 6+ months"
+            label={t('settings:health.oldPasswords')}
+            desc={t('settings:health.oldDesc')}
             count={0} countColor="#0EA5E9"
             bg="#F0F9FF" borderColor="#BAE6FD" darkBg="#0C4A6E" darkBorder="#075985"
           />
@@ -81,10 +86,10 @@ export function SecurityHealth({ onBack }: SecurityHealthProps) {
           display: 'flex', justifyContent: 'space-between', padding: `${tokens.spacing.md}px 0`,
           borderTop: `1px solid ${colors.border}`,
         }}>
-          <SummaryItem label="Total" value={total} color={colors.text} />
-          <SummaryItem label="Strong" value={strong} color={colors.success} />
-          <SummaryItem label="Medium" value={total - strong - weak} color={colors.warning} />
-          <SummaryItem label="Weak" value={weak} color={colors.error} />
+          <SummaryItem label={t('settings:health.total')} value={total} color={colors.text} />
+          <SummaryItem label={t('settings:health.strong')} value={strong} color={colors.success} />
+          <SummaryItem label={t('settings:health.medium')} value={total - strong - weak} color={colors.warning} />
+          <SummaryItem label={t('settings:health.weak')} value={weak} color={colors.error} />
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@
 import React from 'react';
 import { tokens, Modal, Button, useTheme } from '@vaultic/ui';
 import { Cloud, ShieldCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface EnableSyncModalProps {
   open: boolean;
@@ -11,6 +12,7 @@ interface EnableSyncModalProps {
 
 export function EnableSyncModal({ open, onClose, onConfirm }: EnableSyncModalProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['settings', 'common']);
 
   return (
     <Modal open={open} onClose={onClose} style={{ padding: tokens.spacing.xxl, maxWidth: 320 }}>
@@ -29,7 +31,7 @@ export function EnableSyncModal({ open, onClose, onConfirm }: EnableSyncModalPro
           fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.bold,
           color: colors.text, fontFamily: tokens.font.family,
         }}>
-          Enable Cloud Sync?
+          {t('settings:sync.enableModal.title')}
         </div>
 
         {/* Description */}
@@ -38,7 +40,7 @@ export function EnableSyncModal({ open, onClose, onConfirm }: EnableSyncModalPro
           fontFamily: tokens.font.family, lineHeight: tokens.font.lineHeight.normal,
           textAlign: 'center', width: 272,
         }}>
-          Your encrypted vault will be stored on the server. Only you can decrypt it with your master password.
+          {t('settings:sync.enableModal.description')}
         </div>
 
         {/* Warning badge */}
@@ -53,17 +55,17 @@ export function EnableSyncModal({ open, onClose, onConfirm }: EnableSyncModalPro
             fontSize: tokens.font.size.xs, fontWeight: tokens.font.weight.medium,
             color: colors.badgeWarningText, fontFamily: tokens.font.family,
           }}>
-            Zero-knowledge: server cannot read your data
+            {t('settings:sync.enableModal.zeroKnowledge')}
           </span>
         </div>
 
         {/* Buttons */}
         <div style={{ display: 'flex', gap: tokens.spacing.md, width: '100%' }}>
           <Button variant="secondary" size="md" onClick={onClose} style={{ flex: 1, height: 40 }}>
-            Cancel
+            {t('common:cancel')}
           </Button>
           <Button variant="primary" size="md" onClick={onConfirm} style={{ flex: 1, height: 40 }}>
-            Enable
+            {t('common:enable')}
           </Button>
         </div>
       </div>

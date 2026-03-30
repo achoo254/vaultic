@@ -6,6 +6,7 @@ import { IndexedDBStore } from '@vaultic/storage';
 import { useAuthStore } from '../../stores/auth-store';
 import { fetchWithAuth } from '../../lib/fetch-with-auth';
 import { createSyncEngine } from '../../lib/create-sync-engine';
+import { pullPreferencesFromServer, pushPreferencesToServer } from '../../lib/sync-preferences';
 
 export interface SyncSettingsState {
   syncEnabled: boolean;
@@ -68,6 +69,8 @@ export function useSyncSettings(saveSetting: (key: string, value: number | boole
       const result = await engine.sync();
       setSyncStatus(`Synced (↑${result.pushed} ↓${result.pulled})`);
       setLastSyncedAt(new Date().toISOString());
+      // Pull preferences (language/theme) from server after sync
+      pullPreferencesFromServer().catch(() => {});
     } catch (err) {
       console.error('[SyncNow] error:', err);
       setSyncStatus(err instanceof Error ? `Failed: ${err.message}` : 'Sync failed');
@@ -87,6 +90,8 @@ export function useSyncSettings(saveSetting: (key: string, value: number | boole
       const result = await engine.sync();
       setSyncStatus(`Synced (↑${result.pushed} ↓${result.pulled})`);
       setLastSyncedAt(new Date().toISOString());
+      // Push current preferences to server on first sync enable
+      pushPreferencesToServer().catch(() => {});
     } catch (err) {
       console.error('[EnableSync] error:', err);
       setSyncStatus(err instanceof Error ? `Failed: ${err.message}` : 'Sync failed');

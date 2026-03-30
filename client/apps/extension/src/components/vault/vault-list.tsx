@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
 import { Lock, Settings, Plus, FolderOpen } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { AppHeader } from '../common/app-header';
 import { useAuthStore } from '../../stores/auth-store';
 import { useVaultStore, useFilteredItems } from '../../stores/vault-store';
@@ -21,6 +22,7 @@ interface VaultListProps {
 
 export function VaultList({ onItemClick, onAddItem, onManageFolders, onSettings }: VaultListProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['vault', 'common']);
   const lockVault = useAuthStore((s) => s.lock);
   const { items, searchQuery, setSearchQuery, loadVault, loading } = useVaultStore();
   const filtered = useFilteredItems();
@@ -44,10 +46,6 @@ export function VaultList({ onItemClick, onAddItem, onManageFolders, onSettings 
     color: colors.secondary, fontFamily: tokens.font.family,
     padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px`,
     textTransform: 'uppercase' as const, letterSpacing: 0.5,
-  };
-  const centerStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    height: '100%', color: colors.secondary, fontFamily: tokens.font.family,
   };
   const emptySearchStyle: React.CSSProperties = {
     textAlign: 'center', padding: tokens.spacing.xxl,
@@ -118,24 +116,23 @@ export function VaultList({ onItemClick, onAddItem, onManageFolders, onSettings 
 
       <div style={scrollStyle}>
         {suggested.length > 0 && (
-          <Section title="Suggested" items={suggested} onItemClick={onItemClick} />
+          <Section title={t('vault:list.suggested')} items={suggested} onItemClick={onItemClick} />
         )}
 
         {!searchQuery && recent.length > 0 && (
-          <Section title="Recent" items={recent.filter((i) => !suggestedIds.has(i.id))} onItemClick={onItemClick} />
+          <Section title={t('vault:list.recent')} items={recent.filter((i) => !suggestedIds.has(i.id))} onItemClick={onItemClick} />
         )}
 
         <Section
-          title={searchQuery ? 'Results' : 'All Items'}
+          title={searchQuery ? t('vault:list.results') : t('vault:list.allItems')}
           items={filtered.filter((i) => !suggestedIds.has(i.id) && (!recentIds.has(i.id) || searchQuery))}
           onItemClick={onItemClick}
         />
 
         {filtered.length === 0 && searchQuery && (
-          <div style={emptySearchStyle}>No items found for "{searchQuery}"</div>
+          <div style={emptySearchStyle}>{t('vault:list.noItemsFound', { query: searchQuery })}</div>
         )}
       </div>
-
     </div>
   );
 }

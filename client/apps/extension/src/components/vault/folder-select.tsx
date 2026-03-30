@@ -1,6 +1,7 @@
 // Folder selector dropdown — used in vault-item-form to assign items to folders
 import React from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
+import { useTranslation } from 'react-i18next';
 import { useVaultStore } from '../../stores/vault-store';
 
 interface FolderSelectProps {
@@ -10,6 +11,7 @@ interface FolderSelectProps {
 
 export function FolderSelect({ value, onChange }: FolderSelectProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['vault', 'common']);
   const { folders } = useVaultStore();
 
   if (folders.length === 0) return null;
@@ -40,13 +42,13 @@ export function FolderSelect({ value, onChange }: FolderSelectProps) {
 
   return (
     <div style={wrapperStyle}>
-      <label style={labelStyle}>FOLDER</label>
+      <label style={labelStyle}>{String(t('common:folder')).toUpperCase()}</label>
       <select
         style={selectStyle}
         value={value || ''}
         onChange={(e) => onChange(e.target.value || undefined)}
       >
-        <option value="">No folder</option>
+        <option value="">{t('common:noFolder')}</option>
         {folders.map((f) => (
           <option key={f.id} value={f.id}>
             {f.name}

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button, tokens, useTheme } from '@vaultic/ui';
 import { ArrowLeft, CircleCheck, Copy, Check, Clock, Eye } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ShareLinkResultProps {
   shareUrl: string;
@@ -13,6 +14,7 @@ interface ShareLinkResultProps {
 
 export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone }: ShareLinkResultProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['share', 'common']);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -23,9 +25,11 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
   };
 
   const expiryText = ttlHours
-    ? ttlHours >= 168 ? '7 days' : ttlHours >= 24 ? '24 hours' : `${ttlHours} hour(s)`
-    : 'No expiry';
-  const viewsText = maxViews ? `${maxViews} view${maxViews > 1 ? 's' : ''}` : 'Unlimited views';
+    ? ttlHours >= 168 ? t('share:options.ttl.7d') : ttlHours >= 24 ? t('share:options.ttl.24h') : `${ttlHours} hour(s)`
+    : t('share:link.noExpiry');
+  const viewsText = maxViews
+    ? t(maxViews > 1 ? 'share:link.viewCount_other' : 'share:link.viewCount', { count: maxViews })
+    : t('share:link.unlimitedViews');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -38,7 +42,7 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
           <ArrowLeft size={20} strokeWidth={1.5} />
         </button>
         <span style={{ fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family }}>
-          Link Created
+          {t('share:link.title')}
         </span>
       </div>
 
@@ -56,7 +60,7 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
           fontSize: 20, fontWeight: tokens.font.weight.bold, color: colors.text,
           fontFamily: tokens.font.family, textAlign: 'center',
         }}>
-          Secure Link Created!
+          {t('share:link.success')}
         </div>
 
         {/* Link box — design: fill #F4F4F5, height 48, copy icon blue */}
@@ -80,7 +84,7 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
 
         {/* Copy button — primary, height 44 */}
         <Button variant="primary" size="lg" onClick={handleCopy} style={{ width: '100%', height: 44, gap: 8 }}>
-          {copied ? 'Copied!' : 'Copy Link'}
+          {copied ? t('share:link.copied') : t('share:link.copyLink')}
         </Button>
 
         {warning && (
@@ -98,18 +102,18 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
           display: 'flex', flexDirection: 'column', gap: 8,
         }}>
           <div style={{ fontSize: 12, fontWeight: tokens.font.weight.semibold, color: colors.secondary, fontFamily: tokens.font.family }}>
-            This link will expire:
+            {t('share:link.expireTitle')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: colors.text, fontFamily: tokens.font.family }}>
             <Clock size={14} strokeWidth={1.5} color={colors.secondary} />
-            After {expiryText}
+            {t('share:link.afterTime', { time: expiryText })}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: colors.text, fontFamily: tokens.font.family }}>
             <Eye size={14} strokeWidth={1.5} color={colors.secondary} />
-            Or after {viewsText}
+            {t('share:link.afterViews', { views: viewsText })}
           </div>
           <div style={{ fontSize: 11, fontWeight: tokens.font.weight.medium, color: '#A1A1AA', fontFamily: tokens.font.family }}>
-            Whichever comes first
+            {t('share:link.whicheverFirst')}
           </div>
         </div>
 
@@ -119,7 +123,7 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
           background: 'none', cursor: 'pointer', fontSize: 14, fontWeight: tokens.font.weight.medium,
           color: colors.text, fontFamily: tokens.font.family, display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          Done
+          {t('common:done')}
         </button>
       </div>
     </div>

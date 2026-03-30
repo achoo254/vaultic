@@ -1,6 +1,7 @@
 // Horizontal folder filter bar — sits under search bar in vault list
 import React from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
+import { useTranslation } from 'react-i18next';
 import { useVaultStore } from '../../stores/vault-store';
 
 interface FolderBarProps {
@@ -9,6 +10,7 @@ interface FolderBarProps {
 
 export function FolderBar({ onManageFolders }: FolderBarProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['vault', 'common']);
   const { folders, items, selectedFolder, setSelectedFolder } = useVaultStore();
 
   if (folders.length === 0) return null;
@@ -60,7 +62,7 @@ export function FolderBar({ onManageFolders }: FolderBarProps) {
           style={chipStyle(!selectedFolder)}
           onClick={() => setSelectedFolder(null)}
         >
-          All ({allCount})
+          {t('vault:folder.all', { count: allCount })}
         </button>
 
         {/* Folder chips */}

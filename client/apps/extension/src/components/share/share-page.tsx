@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button, VStack, Checkbox, Textarea, ToggleGroup, tokens, useTheme } from '@vaultic/ui';
 import { ArrowLeft, Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { estimateFragmentSize, MAX_FRAGMENT_LENGTH } from '@vaultic/crypto';
 import { ShareOptions } from './share-options';
 import { ShareLinkResult } from './share-link-result';
@@ -14,17 +15,13 @@ import { fetchWithAuth } from '../../lib/fetch-with-auth';
 const SHARE_BASE_URL = import.meta.env.VITE_SHARE_URL || 'http://localhost:8080/s';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
-const MODE_OPTIONS = [
-  { value: 'vault' as const, label: 'From Vault' },
-  { value: 'quick' as const, label: 'Quick Share' },
-];
-
 interface SharePageProps {
   onBack?: () => void;
 }
 
 export function SharePage({ onBack }: SharePageProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation(['share', 'common']);
   const [mode, setMode] = useState<'vault' | 'quick'>('vault');
   const [ttlHours, setTtlHours] = useState<number | null>(24);
   const [maxViews, setMaxViews] = useState<number | null>(1);
@@ -43,6 +40,12 @@ export function SharePage({ onBack }: SharePageProps) {
   const items = useVaultStore((s) => s.items);
   const authMode = useAuthStore((s) => s.mode);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+
+  // Mode options defined inside component to access t()
+  const MODE_OPTIONS = [
+    { value: 'vault' as const, label: t('share:mode.fromVault') },
+    { value: 'quick' as const, label: t('share:mode.quickShare') },
+  ];
 
   // Build plaintext from current selection
   const getPlaintext = (): string | null => {
@@ -65,11 +68,11 @@ export function SharePage({ onBack }: SharePageProps) {
   const handleGenerate = async () => {
     setError('');
     if (!plaintext) {
-      setError(mode === 'vault' ? 'Select a credential' : 'Enter text to share');
+      setError(mode === 'vault' ? t('share:error.selectCredential') : t('share:error.enterText'));
       return;
     }
     if (overLimit) {
-      setError('Data too large for URL share. Reduce notes or fields.');
+      setError(t('share:error.tooLarge'));
       return;
     }
 
@@ -109,10 +112,10 @@ export function SharePage({ onBack }: SharePageProps) {
       const shareUrl = `${SHARE_BASE_URL}/${shareId}#${fragment}`;
       setResult({
         url: shareUrl, ttl: ttlHours, views: maxViews,
-        warning: metadataFailed ? 'Link created but access controls (expiry/view limit) could not be set.' : undefined,
+        warning: metadataFailed ? t('share:error.metadataWarning') : undefined,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Share failed');
+      setError(err instanceof Error ? err.message : t('share:error.shareFailed'));
     } finally {
       setLoading(false);
     }
@@ -124,7 +127,6 @@ export function SharePage({ onBack }: SharePageProps) {
   };
   const backBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: colors.text, padding: 4, display: 'flex', alignItems: 'center' };
   const headerTitle: React.CSSProperties = { fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family };
-  // Source card with avatar icon matching design screen 13
   const sourceCard: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
     border: `1px solid ${colors.border}`, borderRadius: 10, height: 56,
@@ -170,7 +172,7 @@ export function SharePage({ onBack }: SharePageProps) {
       {/* Header — design screen 13: arrow-left + "Secure Share" */}
       <div style={headerStyle}>
         <button onClick={onBack} style={backBtn}><ArrowLeft size={20} strokeWidth={1.5} /></button>
-        <span style={headerTitle}>Secure Share</span>
+        <span style={headerTitle}>{t('share:title')}</span>
       </div>
 
       <VStack gap="lg" style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
@@ -180,7 +182,7 @@ export function SharePage({ onBack }: SharePageProps) {
           <VStack gap="sm">
             {!selectedItem ? (
               <VStack gap="xs" style={{ maxHeight: 150, overflowY: 'auto' }}>
-                {items.length === 0 && <div style={emptyStyle}>No items in vault</div>}
+                {items.length === 0 && <div style={emptyStyle}>{t('share:vault.noItems')}</div>}
                 {items.slice(0, 10).map((item) => (
                   <button key={item.id} onClick={() => setSelectedItem(item)} style={itemBtn}>
                     <span style={itemName}>{item.credential.name}</span>
@@ -199,25 +201,25 @@ export function SharePage({ onBack }: SharePageProps) {
                     <span style={sourceName}>{selectedItem.credential.name}</span>
                     <span style={sourceUser}>{selectedItem.credential.username}</span>
                   </div>
-                  <button onClick={() => setSelectedItem(null)} style={changeBtn}>Change</button>
+                  <button onClick={() => setSelectedItem(null)} style={changeBtn}>{t('share:vault.change')}</button>
                 </div>
                 {/* Checkboxes with SHARE label */}
-                <div style={sectionLabel}>SHARE</div>
-                <Checkbox checked={shareUsername} onChange={setShareUsername} label="Username" />
-                <Checkbox checked={sharePassword} onChange={setSharePassword} label="Password" />
+                <div style={sectionLabel}>{t('share:vault.shareLabel')}</div>
+                <Checkbox checked={shareUsername} onChange={setShareUsername} label={t('share:vault.username')} />
+                <Checkbox checked={sharePassword} onChange={setSharePassword} label={t('share:vault.password')} />
               </VStack>
             )}
           </VStack>
         ) : (
           <VStack gap="sm">
             <div style={{ fontSize: 13, color: colors.secondary, fontFamily: tokens.font.family, lineHeight: 1.4 }}>
-              Share any secret securely. Not saved to vault.
+              {t('share:quick.description')}
             </div>
-            <div style={sectionLabel}>SECRET CONTENT</div>
+            <div style={sectionLabel}>{t('share:quick.contentLabel')}</div>
             <Textarea
               value={quickText}
               onChange={(e) => setQuickText(e.target.value)}
-              placeholder={'Paste any secret here...\ne.g. API keys, credentials'}
+              placeholder={t('share:quick.placeholder')}
               rows={5}
             />
           </VStack>
@@ -229,14 +231,14 @@ export function SharePage({ onBack }: SharePageProps) {
         {plaintextBytes > 0 && (
           <div style={{ fontSize: tokens.font.size.xs, color: overLimit ? colors.error : colors.secondary, fontFamily: tokens.font.family }}>
             ~{(estimatedSize / 1000).toFixed(1)} KB / {(MAX_FRAGMENT_LENGTH / 1000).toFixed(0)} KB
-            {overLimit && ' — too large'}
+            {overLimit && ` — ${t('share:options.tooLarge')}`}
           </div>
         )}
 
         {error && <div style={errorStyle}>{error}</div>}
 
         <Button variant="primary" size="lg" loading={loading} onClick={handleGenerate} disabled={overLimit} style={{ width: '100%', height: 44 }}>
-          Generate Secure Link
+          {t('share:generate')}
         </Button>
       </VStack>
     </div>
