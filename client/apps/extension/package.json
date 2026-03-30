@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "wxt",
     "dev:dattqh": "wxt --mode dattqh",
+    "dev:staging": "wxt --mode staging",
     "build": "wxt build",
+    "build:staging": "wxt build --mode staging",
+    "build:production": "wxt build --mode production",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
