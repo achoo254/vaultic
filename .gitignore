@@ -6,7 +6,7 @@
 
 # Build artifacts
 target/
-packages/
+/packages/
 
 # Node.js
 node_modules/
@@ -19,7 +19,6 @@ dist/
 .env
 .env.*
 !.env.example
-!.env.dattqh
 
 # Claude Code session data
 .claude/session-state/archive/

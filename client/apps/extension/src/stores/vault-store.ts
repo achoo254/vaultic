@@ -6,12 +6,22 @@ import type { VaultItem, Folder, LoginCredential, ItemType } from '@vaultic/type
 import { IndexedDBStore, IndexedDBSyncQueue } from '@vaultic/storage';
 import { getEncryptionKey } from '../lib/session-storage';
 import { encryptVaultItem, decryptVaultItem, encryptFolderName, decryptFolderName } from '../lib/vault-crypto';
+import { getDeviceId } from '@vaultic/sync';
 import { useAuthStore } from './auth-store';
 
 const store = new IndexedDBStore();
 const syncQueue = new IndexedDBSyncQueue();
 
 const getUserId = () => useAuthStore.getState().getCurrentUserId();
+
+/** Trigger background sync after CRUD (non-blocking, fire-and-forget). */
+function triggerSyncNow(): void {
+  chrome.storage.local.get('sync_enabled').then(({ sync_enabled }) => {
+    if (sync_enabled) {
+      chrome.runtime.sendMessage({ type: 'SYNC_NOW' }).catch(() => {});
+    }
+  });
+}
 
 /** Cached decrypted item for UI display. */
 export interface DecryptedVaultItem {
@@ -138,7 +148,7 @@ export const useVaultStore = create<VaultStoreType>((set, get) => ({
       folder_id: folderId,
       item_type: 'login' as ItemType,
       encrypted_data: encrypted,
-      device_id: '',
+      device_id: await getDeviceId(),
       version: 1,
       created_at: now,
       updated_at: now,
@@ -153,6 +163,7 @@ export const useVaultStore = create<VaultStoreType>((set, get) => ({
       action: 'create',
       timestamp: Date.now(),
     });
+    triggerSyncNow();
 
     // Update UI state
     const items = [...get().items, {
@@ -190,6 +201,7 @@ export const useVaultStore = create<VaultStoreType>((set, get) => ({
       action: 'update',
       timestamp: Date.now(),
     });
+    triggerSyncNow();
 
     set({
       items: get().items.map((i) =>
@@ -214,6 +226,7 @@ export const useVaultStore = create<VaultStoreType>((set, get) => ({
       action: 'delete',
       timestamp: Date.now(),
     });
+    triggerSyncNow();
 
     set({ items: get().items.filter((i) => i.id !== id) });
   },
@@ -242,6 +255,7 @@ export const useVaultStore = create<VaultStoreType>((set, get) => ({
       action: 'create',
       timestamp: Date.now(),
     });
+    triggerSyncNow();
 
     set({ folders: [...get().folders, { id, name, itemCount: 0 }] });
   },
@@ -269,6 +283,7 @@ export const useVaultStore = create<VaultStoreType>((set, get) => ({
       i.folder_id === id ? { ...i, folder_id: undefined } : i,
     );
     set({ items, folders: get().folders.filter((f) => f.id !== id) });
+    triggerSyncNow();
   },
 }));
 

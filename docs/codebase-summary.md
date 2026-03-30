@@ -70,13 +70,17 @@ vaultic/
 │   │       │   │   │   ├── index.html
 │   │       │   │   │   ├── main.tsx
 │   │       │   │   │   └── app.tsx
-│   │       │   │   ├── background.ts # Service worker
+│   │       │   │   ├── background/   # Service worker
+│   │       │   │   │   ├── index.ts
+│   │       │   │   │   └── sync-alarm-handler.ts # 3-min periodic sync
 │   │       │   │   └── content.ts    # Form detection (Phase 6)
 │   │       │   ├── components/
 │   │       │   ├── assets/
 │   │       │   └── utils/
 │   │       ├── wxt.config.ts
 │   │       └── package.json
+│   │       ├── src/lib/
+│   │       │   └── create-sync-engine.ts # Sync engine factory
 │   │
 │   └── packages/
 │       ├── api/                  # @vaultic/api package
@@ -104,9 +108,9 @@ vaultic/
 │       │
 │       ├── sync/                 # @vaultic/sync package
 │       │   ├── src/
-│       │   │   ├── sync-engine.ts # Delta sync coordinator
+│       │   │   ├── sync-engine.ts # Delta sync (pagination, mutex, LWW merge)
 │       │   │   ├── conflict-resolver.ts # LWW resolution
-│       │   │   └── device.ts     # Device tracking
+│       │   │   └── device.ts     # Async device ID generation
 │       │   └── package.json
 │       │
 │       └── ui/                   # @vaultic/ui package
@@ -261,10 +265,12 @@ NODE_ENV=development|production
 
 ### Delta Sync (when enabled, user-scoped)
 - Client queues changes locally (per userId)
-- Push: send encrypted deltas with userId, timestamp, version
-- Pull: receive deltas filtered by userId, merge with LWW resolution
+- Auto-sync triggers: periodic alarm (3 min base, exponential backoff on failure up to 30 min), CRUD operations (real-time push), vault unlock (pull + merge)
+- Push: send encrypted deltas with userId, timestamp, version via device ID (async, persisted in chrome.storage.local)
+- Pull: receive deltas filtered by userId with cursor-based pagination, merge with LWW resolution
 - Sync state persisted in IndexedDB (separate per user)
 - SyncQueue requires userId parameter for all operations
+- Concurrent sync prevented by mutex (_isSyncing flag)
 
 ### JWT Token Flow
 1. Register: hash password, return tokens

@@ -3,15 +3,19 @@
 import { initAutoLock, checkAutoLock, recordActivity, listenAutoLockChanges } from './background/auto-lock-handler';
 import { clearClipboardViaTab, scheduleClipboardClear } from './background/clipboard-handler';
 import { getMatchingCredentials, handleCapturedCredential, saveCredential, fillCredentialById } from './background/credential-handler';
+import { initSyncAlarm, handleSyncAlarm, listenSyncSettingsChanges } from './background/sync-alarm-handler';
 
 export default defineBackground(() => {
   initAutoLock();
   listenAutoLockChanges();
+  initSyncAlarm();
+  listenSyncSettingsChanges();
 
-  // Alarm handler for auto-lock check + clipboard clear
+  // Alarm handler for auto-lock check + clipboard clear + sync
   browser.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name === 'auto-lock-check') await checkAutoLock();
     if (alarm.name === 'clear-clipboard') await clearClipboardViaTab();
+    if (alarm.name === 'vaultic-sync') await handleSyncAlarm();
   });
 
   // Message router for popup and content scripts
@@ -46,6 +50,10 @@ async function handleMessage(
     case 'FILL_CREDENTIAL': {
       const tabId = sender?.tab?.id;
       if (tabId !== undefined) await fillCredentialById(msg.credentialId as string, tabId);
+      return { ok: true };
+    }
+    case 'SYNC_NOW': {
+      await handleSyncAlarm();
       return { ok: true };
     }
     default:

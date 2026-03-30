@@ -140,6 +140,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     await storeEncryptionKeyBytes(rawBytes);
     set({ isLocked: false, vaultState: 'unlocked' });
+
+    // Trigger background sync after unlock (non-blocking)
+    chrome.storage.local.get('sync_enabled').then(({ sync_enabled }) => {
+      if (sync_enabled) {
+        chrome.runtime.sendMessage({ type: 'SYNC_NOW' }).catch(() => {});
+      }
+    });
   },
 
   lock: async () => {
