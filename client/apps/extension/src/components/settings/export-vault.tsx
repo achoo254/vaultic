@@ -8,7 +8,7 @@ interface ExportVaultProps { onBack: () => void; }
 
 export function ExportVault({ onBack }: ExportVaultProps) {
   const { colors } = useTheme();
-  const [format, setFormat] = useState<'encrypted' | 'csv'>('encrypted');
+  const [format, setFormat] = useState<'json' | 'csv'>('json');
   const [loading, setLoading] = useState(false);
   const items = useVaultStore((s) => s.items);
 
@@ -31,6 +31,7 @@ export function ExportVault({ onBack }: ExportVaultProps) {
         filename = 'vaultic-export.csv';
         mimeType = 'text/csv';
       } else {
+        // json format — plaintext, warn user before download
         content = JSON.stringify({ version: 1, exported_at: new Date().toISOString(), items: items.map((i) => i.credential) }, null, 2);
         filename = 'vaultic-export.json';
         mimeType = 'application/json';
@@ -55,7 +56,7 @@ export function ExportVault({ onBack }: ExportVaultProps) {
   const optionActive: React.CSSProperties = { ...optionBtn, borderColor: colors.primary, backgroundColor: 'rgba(37,99,235,0.05)' };
   const optionLabel: React.CSSProperties = { fontSize: tokens.font.size.base, fontWeight: tokens.font.weight.medium, color: colors.text, fontFamily: tokens.font.family };
   const optionHint: React.CSSProperties = { fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family };
-  const warningStyle: React.CSSProperties = { backgroundColor: '#fef3c7', padding: tokens.spacing.md, borderRadius: tokens.radius.md, fontSize: tokens.font.size.sm, color: '#92400e', fontFamily: tokens.font.family, display: 'flex', alignItems: 'center', gap: 6 };
+  const warningStyle: React.CSSProperties = { backgroundColor: colors.warningBg, padding: tokens.spacing.md, borderRadius: tokens.radius.md, fontSize: tokens.font.size.sm, color: colors.warningText, fontFamily: tokens.font.family, display: 'flex', alignItems: 'center', gap: 6 };
 
   return (
     <div style={containerStyle}>
@@ -68,10 +69,10 @@ export function ExportVault({ onBack }: ExportVaultProps) {
         <div style={descStyle}>Export your vault data to a file</div>
 
         <HStack gap="sm">
-          <label style={format === 'encrypted' ? optionActive : optionBtn}>
-            <input type="radio" name="format" checked={format === 'encrypted'} onChange={() => setFormat('encrypted')} style={{ display: 'none' }} />
-            <span style={optionLabel}>Encrypted (.json)</span>
-            <span style={optionHint}>Recommended</span>
+          <label style={format === 'json' ? optionActive : optionBtn}>
+            <input type="radio" name="format" checked={format === 'json'} onChange={() => setFormat('json')} style={{ display: 'none' }} />
+            <span style={optionLabel}>JSON (.json)</span>
+            <span style={optionHint}>Plaintext</span>
           </label>
           <label style={format === 'csv' ? optionActive : optionBtn}>
             <input type="radio" name="format" checked={format === 'csv'} onChange={() => setFormat('csv')} style={{ display: 'none' }} />
@@ -79,6 +80,12 @@ export function ExportVault({ onBack }: ExportVaultProps) {
             <span style={optionHint}>Unencrypted</span>
           </label>
         </HStack>
+
+        {format === 'json' && (
+          <div style={warningStyle}>
+            <AlertTriangle size={14} strokeWidth={1.5} style={{ flexShrink: 0 }} /> JSON exports are unencrypted. Handle with care.
+          </div>
+        )}
 
         {format === 'csv' && (
           <div style={warningStyle}>

@@ -7,6 +7,7 @@ export interface IUser {
   authHash: string;
   encryptedSymmetricKey: string | null;
   argon2Params: { m: number; t: number; p: number };
+  tokenVersion: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,6 +22,7 @@ const userSchema = new Schema<IUser>(
       type: { m: Number, t: Number, p: Number },
       default: { m: 65536, t: 3, p: 4 },
     },
+    tokenVersion: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

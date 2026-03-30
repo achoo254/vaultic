@@ -4,13 +4,14 @@ Strategic roadmap for post-MVP feature development. Prioritized by user value an
 
 ---
 
-## Current Status: v0.2.0 (Backend Migrated)
+## Current Status: v0.3.1 (Security Audit Fixes Complete)
 
-**Release Date:** 2026-03-27
-**Completion:** MVP complete (v0.1.0) + backend migration to Node.js/Express/MongoDB
-**User Base:** Beta — ready for individual users
-**Stability:** Production-ready (no known critical bugs)
+**Release Date:** 2026-03-30
+**Completion:** MVP (v0.1.0) + Backend migration (v0.2.0) + Security audit fixes (v0.3.1)
+**User Base:** Beta — ready for individual users with enhanced security
+**Stability:** Production-ready (18 security items fixed, all tests passing)
 **Server:** Node.js 22 + Express 4 (migrated from Rust/Axum)
+**Key improvements:** Token revocation, non-extractable keys, multi-account isolation, improved sync reliability
 
 ---
 

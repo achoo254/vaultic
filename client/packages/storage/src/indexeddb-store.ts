@@ -3,7 +3,7 @@
 
 import type { VaultItem, Folder } from '@vaultic/types';
 import type { VaultStore } from './vault-store';
-import { openDB, ITEMS_STORE, FOLDERS_STORE, META_STORE } from './indexeddb-open';
+import { openDB, resetDBCache, ITEMS_STORE, FOLDERS_STORE, META_STORE } from './indexeddb-open';
 
 /** Generic IDB transaction helper. */
 async function withStore<T>(
@@ -51,6 +51,15 @@ export class IndexedDBStore implements VaultStore {
   }
 
   async putItem(item: VaultItem): Promise<void> {
+    if (!item.user_id) {
+      throw new Error('putItem requires item.user_id to be set');
+    }
+    const existing = await withStore<VaultItem | undefined>(
+      ITEMS_STORE, 'readonly', (s) => s.get(item.id),
+    );
+    if (existing && existing.user_id && existing.user_id !== item.user_id) {
+      throw new Error('Cannot overwrite item belonging to different user');
+    }
     await withStore(ITEMS_STORE, 'readwrite', (s) => s.put(item));
   }
 
@@ -84,6 +93,15 @@ export class IndexedDBStore implements VaultStore {
   }
 
   async putFolder(folder: Folder): Promise<void> {
+    if (!folder.user_id) {
+      throw new Error('putFolder requires folder.user_id to be set');
+    }
+    const existing = await withStore<Folder | undefined>(
+      FOLDERS_STORE, 'readonly', (s) => s.get(folder.id),
+    );
+    if (existing && existing.user_id && existing.user_id !== folder.user_id) {
+      throw new Error('Cannot overwrite folder belonging to different user');
+    }
     await withStore(FOLDERS_STORE, 'readwrite', (s) => s.put(folder));
   }
 
@@ -125,7 +143,7 @@ export class IndexedDBStore implements VaultStore {
     tx.objectStore(FOLDERS_STORE).clear();
     tx.objectStore(META_STORE).clear();
     return new Promise((resolve, reject) => {
-      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.oncomplete = () => { db.close(); resetDBCache(); resolve(); };
       tx.onerror = () => reject(tx.error);
     });
   }

@@ -3,6 +3,7 @@
 
 import type { DetectedForm } from './form-detector';
 import { fillLoginForm } from './field-filler';
+import { escapeHtml } from './utils/escape-html';
 
 /** Replace dropdown content with inline add-credential form. */
 export function showInlineAddForm(dropdown: HTMLElement, form: DetectedForm): void {
@@ -81,6 +82,3 @@ export function showInlineAddForm(dropdown: HTMLElement, form: DetectedForm): vo
   passInput.addEventListener('keydown', handleEnter);
 }
 
-function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}

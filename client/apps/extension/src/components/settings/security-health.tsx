@@ -17,7 +17,7 @@ export function SecurityHealth({ onBack }: SecurityHealthProps) {
   const reused = total - new Set(passwords).size;
   const strong = total - weak;
   const score = total > 0 ? Math.round(((total - weak - reused) / total) * 100) : 100;
-  const scoreColor = score >= 80 ? '#22C55E' : score >= 50 ? '#F59E0B' : '#EF4444';
+  const scoreColor = score >= 80 ? colors.success : score >= 50 ? colors.warning : colors.error;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -57,15 +57,15 @@ export function SecurityHealth({ onBack }: SecurityHealthProps) {
         {/* Issue cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <IssueCard
-            icon={<ShieldAlert size={20} strokeWidth={1.5} color="#EF4444" />}
+            icon={<ShieldAlert size={20} strokeWidth={1.5} color={colors.error} />}
             label="Weak Passwords" desc={`${weak} passwords need strengthening`}
-            count={weak} countColor="#EF4444"
+            count={weak} countColor={colors.error}
             bg="#FEF2F2" borderColor="#FECACA" darkBg="#450A0A" darkBorder="#7F1D1D"
           />
           <IssueCard
-            icon={<Copy size={20} strokeWidth={1.5} color="#F59E0B" />}
+            icon={<Copy size={20} strokeWidth={1.5} color={colors.warning} />}
             label="Reused Passwords" desc={`${reused} passwords used more than once`}
-            count={reused} countColor="#F59E0B"
+            count={reused} countColor={colors.warning}
             bg="#FFFBEB" borderColor="#FDE68A" darkBg="#422006" darkBorder="#78350F"
           />
           <IssueCard
@@ -82,9 +82,9 @@ export function SecurityHealth({ onBack }: SecurityHealthProps) {
           borderTop: `1px solid ${colors.border}`,
         }}>
           <SummaryItem label="Total" value={total} color={colors.text} />
-          <SummaryItem label="Strong" value={strong} color="#22C55E" />
-          <SummaryItem label="Medium" value={total - strong - weak} color="#F59E0B" />
-          <SummaryItem label="Weak" value={weak} color="#EF4444" />
+          <SummaryItem label="Strong" value={strong} color={colors.success} />
+          <SummaryItem label="Medium" value={total - strong - weak} color={colors.warning} />
+          <SummaryItem label="Weak" value={weak} color={colors.error} />
         </div>
       </div>
     </div>
@@ -116,10 +116,11 @@ function IssueCard({ icon, label, desc, count, countColor, bg, borderColor, dark
 }
 
 function SummaryItem({ label, value, color }: { label: string; value: number; color: string }) {
+  const { colors } = useTheme();
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ fontSize: tokens.font.size.xl, fontWeight: tokens.font.weight.bold, color, fontFamily: tokens.font.family }}>{value}</div>
-      <div style={{ fontSize: tokens.font.size.xs, color: '#71717A', fontFamily: tokens.font.family }}>{label}</div>
+      <div style={{ fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family }}>{label}</div>
     </div>
   );
 }
