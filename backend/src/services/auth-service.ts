@@ -4,8 +4,12 @@ import { createAccessToken, createRefreshToken, verifyToken } from "../utils/jwt
 import { envConfig } from "../config/env-config.js";
 import { AppError } from "../utils/app-error.js";
 
-function hashForStorage(authHash: string): string {
-  return createHmac("sha256", envConfig.jwtSecret).update(authHash).digest("hex");
+/**
+ * HMAC-SHA256 server-side hash of the client's authHash.
+ * Accepts optional key param to support lazy rehash during migration from jwtSecret to authHashKey.
+ */
+function hashForStorage(authHash: string, key: string = envConfig.authHashKey): string {
+  return createHmac("sha256", key).update(authHash).digest("hex");
 }
 
 function verifyHash(provided: string, stored: string): boolean {
@@ -21,31 +25,48 @@ export async function register(
   encryptedSymmetricKey?: string,
   argon2Params?: { m: number; t: number; p: number },
 ) {
-  const existing = await User.findOne({ email: email.toLowerCase().trim() });
-  if (existing) throw AppError.conflict("email already registered");
-
+  // Remove pre-check TOCTOU race — rely on unique index + catch duplicate key error
   const serverHash = hashForStorage(authHash);
-  const user = await User.create({
-    email,
-    authHash: serverHash,
-    encryptedSymmetricKey: encryptedSymmetricKey ?? null,
-    ...(argon2Params && { argon2Params }),
-  });
-
-  return { user_id: user._id };
+  try {
+    const user = await User.create({
+      email,
+      authHash: serverHash,
+      encryptedSymmetricKey: encryptedSymmetricKey ?? null,
+      ...(argon2Params && { argon2Params }),
+    });
+    return { user_id: user._id };
+  } catch (err: unknown) {
+    // MongoDB duplicate key error code
+    if ((err as { code?: number }).code === 11000) {
+      throw AppError.conflict("email already registered");
+    }
+    throw err;
+  }
 }
 
 export async function login(email: string, authHash: string) {
   const user = await User.findOne({ email: email.toLowerCase().trim() });
   if (!user) throw AppError.unauthorized("invalid credentials");
 
-  const providedHash = hashForStorage(authHash);
-  if (!verifyHash(providedHash, user.authHash)) {
+  // Compute hash with new dedicated key
+  const hashNew = hashForStorage(authHash, envConfig.authHashKey);
+  const matchNew = verifyHash(hashNew, user.authHash);
+
+  // Lazy rehash: check legacy hash (jwtSecret) for accounts hashed before key separation
+  const matchLegacy = !matchNew && verifyHash(hashForStorage(authHash, envConfig.jwtSecret), user.authHash);
+
+  if (!matchNew && !matchLegacy) {
     throw AppError.unauthorized("invalid credentials");
   }
 
-  const accessToken = createAccessToken(user._id, envConfig.jwtSecret, envConfig.accessTokenTtlMin);
-  const refreshToken = createRefreshToken(user._id, envConfig.jwtSecret, envConfig.refreshTokenTtlDays);
+  // Upgrade stored hash to new key on first login after migration
+  if (matchLegacy) {
+    user.authHash = hashForStorage(authHash, envConfig.authHashKey);
+    await user.save();
+  }
+
+  const accessToken = createAccessToken(user._id, envConfig.jwtSecret, envConfig.accessTokenTtlMin, user.tokenVersion);
+  const refreshToken = createRefreshToken(user._id, envConfig.jwtSecret, envConfig.refreshTokenTtlDays, user.tokenVersion);
 
   return {
     access_token: accessToken,
@@ -60,7 +81,13 @@ export async function refresh(refreshTokenStr: string) {
     throw AppError.unauthorized("expected refresh token");
   }
 
-  const accessToken = createAccessToken(payload.sub, envConfig.jwtSecret, envConfig.accessTokenTtlMin);
+  // Validate tokenVersion against DB — rejects revoked tokens
+  const user = await User.findById(payload.sub).select("tokenVersion");
+  if (!user || payload.tokenVersion !== user.tokenVersion) {
+    throw AppError.unauthorized("token revoked");
+  }
+
+  const accessToken = createAccessToken(payload.sub, envConfig.jwtSecret, envConfig.accessTokenTtlMin, user.tokenVersion);
   return { access_token: accessToken };
 }
 
@@ -92,10 +119,20 @@ export async function changePassword(
   }
 
   user.authHash = hashForStorage(newAuthHash);
+  // Increment tokenVersion to revoke all existing tokens on password change
+  user.tokenVersion = (user.tokenVersion ?? 0) + 1;
   if (newEncryptedSymmetricKey !== undefined) {
     user.encryptedSymmetricKey = newEncryptedSymmetricKey;
   }
   await user.save();
 
-  return { message: "password updated" };
+  // Issue new tokens with updated tokenVersion
+  const accessToken = createAccessToken(user._id, envConfig.jwtSecret, envConfig.accessTokenTtlMin, user.tokenVersion);
+  const refreshToken = createRefreshToken(user._id, envConfig.jwtSecret, envConfig.refreshTokenTtlDays, user.tokenVersion);
+
+  return {
+    message: "password updated",
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  };
 }

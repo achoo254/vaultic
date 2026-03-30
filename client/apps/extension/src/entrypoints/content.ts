@@ -6,7 +6,7 @@ import { captureCredentials } from '../content/credential-capture';
 import { showSaveBanner } from '../content/save-banner';
 
 export default defineContentScript({
-  matches: ['<all_urls>'],
+  matches: ['http://*/*', 'https://*/*'],
   runAt: 'document_idle',
 
   main() {

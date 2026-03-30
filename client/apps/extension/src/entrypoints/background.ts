@@ -2,7 +2,7 @@
 
 import { initAutoLock, checkAutoLock, recordActivity, listenAutoLockChanges } from './background/auto-lock-handler';
 import { clearClipboardViaTab, scheduleClipboardClear } from './background/clipboard-handler';
-import { getMatchingCredentials, handleCapturedCredential, saveCredential } from './background/credential-handler';
+import { getMatchingCredentials, handleCapturedCredential, saveCredential, fillCredentialById } from './background/credential-handler';
 
 export default defineBackground(() => {
   initAutoLock();
@@ -15,8 +15,8 @@ export default defineBackground(() => {
   });
 
   // Message router for popup and content scripts
-  browser.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-    handleMessage(msg).then(sendResponse).catch(() => sendResponse(null));
+  browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    handleMessage(msg, sender).then(sendResponse).catch(() => sendResponse(null));
     return true;
   });
 
@@ -24,7 +24,10 @@ export default defineBackground(() => {
 });
 
 /** Route messages from popup and content scripts. */
-async function handleMessage(msg: { type: string; [key: string]: unknown }) {
+async function handleMessage(
+  msg: { type: string; [key: string]: unknown },
+  sender?: chrome.runtime.MessageSender,
+) {
   switch (msg.type) {
     case 'lock': {
       await chrome.storage.session.remove('enc_key');
@@ -40,6 +43,11 @@ async function handleMessage(msg: { type: string; [key: string]: unknown }) {
       return handleCapturedCredential(msg.data as { url: string; username: string; password: string; name: string });
     case 'SAVE_CREDENTIAL':
       return saveCredential(msg.data as { url: string; username: string; password: string; name: string });
+    case 'FILL_CREDENTIAL': {
+      const tabId = sender?.tab?.id;
+      if (tabId !== undefined) await fillCredentialById(msg.credentialId as string, tabId);
+      return { ok: true };
+    }
     default:
       return null;
   }

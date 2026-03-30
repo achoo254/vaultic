@@ -2,6 +2,7 @@
 
 import { IndexedDBStore, IndexedDBSyncQueue } from '@vaultic/storage';
 import { decrypt } from '@vaultic/crypto';
+import { ItemType } from '@vaultic/types';
 import { getEncKey, extractDomain } from './crypto-helpers';
 import { getVaultConfig } from '../../lib/session-storage';
 
@@ -13,7 +14,7 @@ async function getCurrentUserId(): Promise<string> {
   return config?.mode === 'online' && config.userId ? config.userId : 'local';
 }
 
-/** Get decrypted credentials matching a URL. */
+/** Get credentials matching a URL — password intentionally excluded to avoid crossing message boundary. */
 export async function getMatchingCredentials(url: string) {
   const key = await getEncKey();
   if (!key) return { matches: [] };
@@ -21,18 +22,17 @@ export async function getMatchingCredentials(url: string) {
   const store = new IndexedDBStore();
   const userId = await getCurrentUserId();
   const items = await store.getAllItems(userId);
-  const matches: Array<{ id: string; name: string; username: string; password: string }> = [];
+  const matches: Array<{ id: string; name: string; username: string }> = [];
 
   for (const item of items) {
     try {
       const json = await decrypt(key, item.encrypted_data);
       const cred = JSON.parse(json);
-      if (cred.url && url.includes(extractDomain(cred.url))) {
+      if (cred.url && extractDomain(url) === extractDomain(cred.url)) {
         matches.push({
           id: item.id,
           name: cred.name || cred.url,
           username: cred.username || '',
-          password: cred.password || '',
         });
       }
     } catch {
@@ -41,6 +41,48 @@ export async function getMatchingCredentials(url: string) {
   }
 
   return { matches };
+}
+
+/** Decrypt and inject credentials into the active tab via scripting API.
+ *  Plaintext password never crosses the message boundary — stays in background worker. */
+export async function fillCredentialById(credentialId: string, tabId: number): Promise<void> {
+  const key = await getEncKey();
+  if (!key) return;
+
+  const store = new IndexedDBStore();
+  const userId = await getCurrentUserId();
+  const item = await store.getItem(userId, credentialId);
+  if (!item) return;
+
+  const json = await decrypt(key, item.encrypted_data);
+  const cred = JSON.parse(json);
+
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    func: (username: string, password: string) => {
+      const inputs = document.querySelectorAll('input');
+      let userField: HTMLInputElement | null = null;
+      let passField: HTMLInputElement | null = null;
+      for (const input of inputs) {
+        const type = input.type.toLowerCase();
+        const name = (input.name + input.id + (input.autocomplete || '')).toLowerCase();
+        if (type === 'password' || name.includes('pass')) passField = input;
+        else if (
+          type === 'email' || type === 'text' ||
+          name.includes('user') || name.includes('email') || name.includes('login')
+        ) userField = input;
+      }
+      const setNativeValue = (el: HTMLInputElement, val: string) => {
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+        setter?.call(el, val);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      if (userField) setNativeValue(userField, username);
+      if (passField) setNativeValue(passField, password);
+    },
+    args: [cred.username || '', cred.password || ''],
+  });
 }
 
 /** Handle a captured credential — check if new or updated, notify content script. */
@@ -59,7 +101,7 @@ export async function handleCapturedCredential(data: {
     try {
       const json = await decrypt(key, item.encrypted_data);
       const cred = JSON.parse(json);
-      if (cred.url && data.url.includes(extractDomain(cred.url)) && cred.username === data.username) {
+      if (cred.url && extractDomain(data.url) === extractDomain(cred.url) && cred.username === data.username) {
         if (cred.password === data.password) return; // Unchanged
         isUpdate = true;
         break;
@@ -122,7 +164,7 @@ export async function saveCredential(data: {
   await store.putItem({
     id,
     user_id: userId,
-    item_type: 'login' as never,
+    item_type: ItemType.Login,
     encrypted_data: encrypted,
     device_id: '',
     version: 1,

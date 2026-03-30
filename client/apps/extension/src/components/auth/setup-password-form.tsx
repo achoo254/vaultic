@@ -54,11 +54,11 @@ export function SetupPasswordForm({ onSwitchToLogin }: SetupPasswordFormProps) {
   };
 
   const warningStyle: React.CSSProperties = {
-    backgroundColor: '#fef3c7',
+    backgroundColor: colors.warningBg,
     borderRadius: 8,
     padding: '10px 14px',
     fontSize: tokens.font.size.xs,
-    color: '#92400e',
+    color: colors.warningText,
     fontFamily: tokens.font.family,
     lineHeight: 1.4,
   };

@@ -12,6 +12,9 @@ import { shareRouter, sharePageRouter } from "./routes/share-route.js";
 
 const app = express();
 
+// Trust first proxy hop — required for correct IP/protocol behind nginx/load balancer
+app.set('trust proxy', 1);
+
 // 1. Request logger (first — logs all requests)
 app.use(requestLogger);
 

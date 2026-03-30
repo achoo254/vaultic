@@ -16,7 +16,7 @@ export class IndexedDBSyncQueue implements SyncQueue {
     });
   }
 
-  async dequeueAll(userId: string): Promise<SyncQueueEntry[]> {
+  async getPending(userId: string): Promise<SyncQueueEntry[]> {
     const db = await openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(QUEUE_STORE, 'readonly');

@@ -2,12 +2,14 @@ import type { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../utils/jwt-utils.js";
 import { envConfig } from "../config/env-config.js";
 import { AppError } from "../utils/app-error.js";
+import { User } from "../models/user-model.js";
 
 /**
  * JWT Bearer token extraction + validation.
+ * Validates tokenVersion against DB to support token revocation.
  * Sets req.userId on success.
  */
-export function authRequired(req: Request, _res: Response, next: NextFunction) {
+export async function authRequired(req: Request, _res: Response, next: NextFunction) {
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) {
     throw AppError.unauthorized("missing token");
@@ -19,6 +21,13 @@ export function authRequired(req: Request, _res: Response, next: NextFunction) {
     if (payload.tokenType !== "access") {
       throw AppError.unauthorized("expected access token");
     }
+
+    // DB check: verify tokenVersion to detect revoked tokens (e.g. after password change)
+    const user = await User.findById(payload.sub).select("tokenVersion");
+    if (!user || payload.tokenVersion !== user.tokenVersion) {
+      throw AppError.unauthorized("token revoked");
+    }
+
     req.userId = payload.sub;
     next();
   } catch (err) {

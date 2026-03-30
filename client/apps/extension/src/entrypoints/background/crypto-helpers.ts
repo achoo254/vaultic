@@ -6,7 +6,7 @@ export async function getEncKey(): Promise<CryptoKey | null> {
   if (!result.enc_key) return null;
   return crypto.subtle.importKey(
     'raw', new Uint8Array(result.enc_key),
-    { name: 'AES-GCM' }, true, ['encrypt', 'decrypt'],
+    { name: 'AES-GCM' }, false, ['encrypt', 'decrypt'],
   );
 }
 

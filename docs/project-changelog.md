@@ -14,6 +14,48 @@ All notable changes to the Vaultic project are documented here. Format follows [
 
 ---
 
+## [0.3.1] - 2026-03-30
+
+### Security Audit Fixes — Full Sweep (18 Items)
+
+#### Backend Security
+- **tokenVersion JWT revocation:** Added `tokenVersion` field to User model. Tokens embed version; deleted/revoked tokens rejected on refresh and access.
+- **Separate AUTH_HASH_KEY:** New env var `AUTH_HASH_KEY` (distinct from JWT_SECRET) for HMAC-SHA256 auth hash storage. Lazy migration for legacy hashes.
+- **Trust proxy for rate limiter:** Set `app.set('trust proxy', 1)` to correctly identify client IP behind nginx.
+- **Registration TOCTOU fix:** Replaced findOne+create race condition with atomic create and E11000 unique index conflict handling.
+- **bulkWrite error handling:** Changed `ordered: true` → `ordered: false`, added try/catch for `MongoBulkWriteError` to handle partial failures gracefully.
+
+#### Extension Authentication & Crypto
+- **Register-first upgrade flow:** Fixed `upgradeToOnline()` to register + login BEFORE re-encryption. Prevents irrecoverable vault corruption if registration fails mid-flight.
+- **Remove auth_hash from storage:** No longer storing server auth hash in `chrome.storage.local`. Auth hash only lives in session during login; verifier stored in VaultConfig.
+- **Non-extractable CryptoKey:** Set `extractable: false` on encryption key. Raw bytes stored separately in session for key persistence. Added `deriveEncryptionKeyWithBytes()` returning both key and raw bytes.
+
+#### Content Scripts & Autofill
+- **Restrict content script matches:** Changed from `<all_urls>` to `http://*/*, https://*/*` to prevent injection on privileged browser pages.
+- **Fix domain matching:** Changed from substring matching (`url.includes(extractDomain(...))`) to exact domain comparison. Prevents `evil.com` matching `not-evil.com`.
+- **Fill-by-ID pattern:** Background decrypts passwords directly via `chrome.scripting.executeScript` instead of sending plaintext over message passing. Content script never receives decrypted password.
+- **Fix encrypted export:** Renamed misleading "Encrypted (.json)" label to "JSON (.json)" with "Plaintext" hint. Actually plaintext JSON of decrypted credentials (true export feature deferred).
+
+#### Storage & Sync Integrity
+- **userId write validation:** Added checks on `putItem()` and `putFolder()` to reject writes if item belongs to different user. Prevents multi-account data contamination.
+- **Sync error handling:** Wrapped push and pull phases in separate try/catch blocks. Returns error status on failure; queued items preserved for retry.
+- **LWW timestamp comparison:** Fixed to use `new Date(timestamp).getTime()` instead of string comparison. Handles timezone variants (`Z` vs `+00:00`) correctly.
+- **Reset dbPromise after clear():** Call `resetDBCache()` after closing DB connection. Ensures subsequent operations get fresh DB connection instead of stale promise.
+
+#### Code Quality & DRY
+- **Modularization (7 new files):**
+  - `stores/upgrade-to-online.ts` — extracted 60+ line upgrade flow
+  - `lib/encoding-utils.ts` — shared `uint8ToBase64`, `base64ToUint8`, `computeVerifier`
+  - `content/utils/escape-html.ts` — deduplicated 3x escapeHtml implementations
+  - Plus refactored component extractions (sync settings hook, theme selector, account section)
+- **Design tokens:** Added semantic colors (success, warning, danger, warningBg, warningText) to design-tokens.ts
+- **Replace hardcoded colors:** Updated 12+ component color values to use design tokens (security-health, upgrade-account-modal, setup-password-form, export-vault, share-page)
+- **Fix itemType mismatch:** Changed default from `1` (number) to `'login'` (string) for consistency with `ItemType` enum
+
+**Summary:** 18 security findings fixed across 5 parallel-safe phases. Backend: JWT revocation, key separation, DB atomicity. Extension: register-first upgrade, no credential storage, non-extractable keys. Content: domain matching, fill-by-ID. Storage/sync: userId isolation, error handling, correct conflict resolution. Code quality: 7 new modules, design tokens, DRY utilities.
+
+---
+
 ## [0.3.0] - 2026-03-28
 
 ### Offline-First Login & Hybrid Share Architecture

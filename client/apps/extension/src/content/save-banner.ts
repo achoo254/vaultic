@@ -35,6 +35,8 @@ const BANNER_CSS = `
 const SHIELD_SVG = `<svg class="vaultic-sb-icon" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>`;
 const CLOSE_SVG = `<svg class="vaultic-sb-close" viewBox="0 0 24 24" fill="none" stroke="#A1A1AA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
 
+import { escapeHtml } from './utils/escape-html';
+
 /** Show a save password banner as a floating card at top-right of page. */
 export function showSaveBanner(
   site: string,
@@ -93,6 +95,3 @@ export function showSaveBanner(
   setTimeout(remove, 15000);
 }
 
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}

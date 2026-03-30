@@ -147,7 +147,7 @@ export function SharePage({ onBack }: SharePageProps) {
   const itemName: React.CSSProperties = { fontSize: tokens.font.size.base, color: colors.text, fontWeight: tokens.font.weight.medium };
   const itemUser: React.CSSProperties = { fontSize: tokens.font.size.sm, color: colors.secondary };
   const sectionLabel: React.CSSProperties = {
-    fontSize: 11, fontWeight: tokens.font.weight.semibold, color: '#A1A1AA',
+    fontSize: 11, fontWeight: tokens.font.weight.semibold, color: colors.secondary,
     letterSpacing: 1, textTransform: 'uppercase', fontFamily: tokens.font.family,
   };
   const errorStyle: React.CSSProperties = { color: colors.error, fontSize: tokens.font.size.sm, fontFamily: tokens.font.family };

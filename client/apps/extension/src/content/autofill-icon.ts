@@ -2,12 +2,12 @@
 // Design: Screen 11 — Autofill Dropdown
 
 import type { DetectedForm } from './form-detector';
-import { fillLoginForm } from './field-filler';
 import { showInlineAddForm } from './autofill-inline-add-form';
 import {
   ICON_SIZE, DROPDOWN_CSS,
   SHIELD_SVG, GLOBE_SVG, CLOSE_SVG, PLUS_SVG,
 } from './autofill-dropdown-styles';
+import { escapeHtml } from './utils/escape-html';
 
 /** Inject the Vaultic autofill icon near a form's input. */
 export function injectAutofillIcon(form: DetectedForm): void {
@@ -69,7 +69,7 @@ async function showDropdown(shadow: ShadowRoot, wrapper: HTMLElement, form: Dete
   const currentUrl = window.location.hostname;
   try {
     const response = await browser.runtime.sendMessage({ type: 'GET_MATCHES', url: currentUrl });
-    const matches: Array<{ id: string; name: string; username: string; password: string }> = response?.matches || [];
+    const matches: Array<{ id: string; name: string; username: string }> = response?.matches || [];
 
     // Clear loading
     dropdown.querySelector('.vaultic-empty')?.remove();
@@ -94,7 +94,8 @@ async function showDropdown(shadow: ShadowRoot, wrapper: HTMLElement, form: Dete
           </div>
         `;
         item.addEventListener('click', () => {
-          fillLoginForm(form.usernameInput, form.passwordInput, match.username, match.password);
+          // Send fill request to background — plaintext password never crosses this boundary
+          browser.runtime.sendMessage({ type: 'FILL_CREDENTIAL', credentialId: match.id }).catch(() => {});
           dropdown.remove();
         });
         dropdown.appendChild(item);
@@ -125,6 +126,3 @@ async function showDropdown(shadow: ShadowRoot, wrapper: HTMLElement, form: Dete
   setTimeout(() => document.addEventListener('click', closeHandler), 0);
 }
 
-function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}

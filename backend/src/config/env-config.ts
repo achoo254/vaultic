@@ -5,6 +5,7 @@ dotenv.config();
 export const envConfig = {
   mongodbUri: requireEnv("MONGODB_URI"),
   jwtSecret: requireEnv("JWT_SECRET"),
+  authHashKey: requireEnv("AUTH_HASH_KEY"),
   serverPort: parseInt(process.env["SERVER_PORT"] ?? "8080", 10),
   accessTokenTtlMin: parseInt(process.env["ACCESS_TOKEN_TTL_MIN"] ?? "15", 10),
   refreshTokenTtlDays: parseInt(process.env["REFRESH_TOKEN_TTL_DAYS"] ?? "7", 10),

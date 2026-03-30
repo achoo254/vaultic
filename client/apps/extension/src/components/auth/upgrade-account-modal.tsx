@@ -45,9 +45,9 @@ export function UpgradeAccountModal({ open, onClose }: UpgradeAccountModalProps)
   return (
     <Modal open={open} onClose={onClose}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {/* Icon — design: user-plus in #EFF6FF circle */}
+        {/* Icon — design: user-plus in primaryBg circle */}
         <div style={{
-          width: 48, height: 48, borderRadius: 24, backgroundColor: '#EFF6FF',
+          width: 48, height: 48, borderRadius: 24, backgroundColor: colors.primaryBg,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <UserPlus size={24} strokeWidth={1.5} color={colors.primary} />
@@ -63,7 +63,7 @@ export function UpgradeAccountModal({ open, onClose }: UpgradeAccountModalProps)
 
         {/* Email field */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ fontSize: 11, fontWeight: tokens.font.weight.semibold, color: '#A1A1AA', letterSpacing: 1, fontFamily: tokens.font.family }}>
+          <span style={{ fontSize: 11, fontWeight: tokens.font.weight.semibold, color: colors.secondary, letterSpacing: 1, fontFamily: tokens.font.family }}>
             EMAIL
           </span>
           <Input
@@ -78,7 +78,7 @@ export function UpgradeAccountModal({ open, onClose }: UpgradeAccountModalProps)
 
         {/* Password field — re-enter current master password */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ fontSize: 11, fontWeight: tokens.font.weight.semibold, color: '#A1A1AA', letterSpacing: 1, fontFamily: tokens.font.family }}>
+          <span style={{ fontSize: 11, fontWeight: tokens.font.weight.semibold, color: colors.secondary, letterSpacing: 1, fontFamily: tokens.font.family }}>
             MASTER PASSWORD
           </span>
           <Input
@@ -94,10 +94,10 @@ export function UpgradeAccountModal({ open, onClose }: UpgradeAccountModalProps)
         {/* Vault preserved badge — design: green bg, shield-check icon */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px',
-          backgroundColor: '#F0FDF4', borderRadius: 8,
+          backgroundColor: colors.successBg, borderRadius: 8,
         }}>
-          <ShieldCheck size={16} strokeWidth={1.5} color="#16A34A" style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: 11, fontWeight: tokens.font.weight.medium, color: '#16A34A', fontFamily: tokens.font.family }}>
+          <ShieldCheck size={16} strokeWidth={1.5} color={colors.successText} style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: 11, fontWeight: tokens.font.weight.medium, color: colors.successText, fontFamily: tokens.font.family }}>
             Your vault data will be preserved
           </span>
         </div>
