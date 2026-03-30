@@ -1,7 +1,7 @@
 // Search bar with magnifier icon for vault items
 import React from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
-import { Search, X } from 'lucide-react';
+import { IconSearch, IconX } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
 interface SearchBarProps {
@@ -29,7 +29,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
 
   return (
     <div style={containerStyle}>
-      <Search size={16} strokeWidth={1.5} color={colors.secondary} />
+      <IconSearch size={16} stroke={1.5} color={colors.secondary} />
       <input
         type="text"
         value={value}
@@ -39,7 +39,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
       />
       {value && (
         <button onClick={() => onChange('')} style={clearBtn}>
-          <X size={14} strokeWidth={1.5} />
+          <IconX size={14} stroke={1.5} />
         </button>
       )}
     </div>

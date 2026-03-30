@@ -1,6 +1,6 @@
 /* Global styles for extension popup */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700&display=swap');
 
 *,
 *::before,
@@ -11,7 +11,7 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   width: 380px;
@@ -27,7 +27,7 @@ input, textarea, select {
 }
 
 input::placeholder, textarea::placeholder {
-  color: #A1A1AA;
+  color: #8B949E;
 }
 
 /* Remove browser autofill background override */
@@ -44,17 +44,17 @@ input:-webkit-autofill {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D4D4D8;
+  background: #D0DAE6;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #A1A1AA;
+  background: #8B949E;
 }
 
 /* Firefox thin scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #D4D4D8 transparent;
+  scrollbar-color: #D0DAE6 transparent;
 }
 
 /* Spin animation for sync icon */

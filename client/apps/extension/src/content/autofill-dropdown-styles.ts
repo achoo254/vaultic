@@ -19,7 +19,7 @@ export const DROPDOWN_CSS = `
     background: #fff; border-radius: 10px; padding: 8px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.09);
     z-index: 2147483647; margin-top: 4px;
-    font-family: 'Inter', -apple-system, sans-serif;
+    font-family: 'Nunito Sans', -apple-system, sans-serif;
     display: flex; flex-direction: column; gap: 4px;
   }
 
@@ -73,7 +73,7 @@ export const DROPDOWN_CSS = `
   .vaultic-add-form input {
     width: 100%; box-sizing: border-box;
     padding: 8px 10px; border: 1px solid #E4E4E7; border-radius: 6px;
-    font-size: 13px; font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 13px; font-family: 'Nunito Sans', -apple-system, sans-serif;
     color: #18181B; background: #FAFAFA; outline: none;
   }
   .vaultic-add-form input:focus { border-color: #2563EB; background: #fff; }
@@ -82,7 +82,7 @@ export const DROPDOWN_CSS = `
   .vaultic-add-btns button {
     flex: 1; padding: 8px; border-radius: 6px; border: none;
     font-size: 12px; font-weight: 500; cursor: pointer;
-    font-family: 'Inter', -apple-system, sans-serif;
+    font-family: 'Nunito Sans', -apple-system, sans-serif;
   }
   .vaultic-btn-cancel { background: #F4F4F5; color: #71717A; }
   .vaultic-btn-cancel:hover { background: #E4E4E7; }

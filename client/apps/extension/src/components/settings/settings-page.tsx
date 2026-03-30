@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { tokens, Modal, Button, useTheme, useI18n } from '@vaultic/ui';
 import type { ThemeMode, Language } from '@vaultic/ui';
-import { ArrowLeft, Timer, Clipboard, Cloud, Download, Upload, User, LogOut, Sun, Moon, Monitor, RefreshCw, Clock, Languages } from 'lucide-react';
+import { IconArrowLeft, IconClock, IconClipboard, IconCloud, IconDownload, IconUpload, IconUser, IconLogout, IconSun, IconMoon, IconDeviceDesktop, IconRefresh, IconLanguage } from '@tabler/icons-react';
 import { languageLabels, supportedLanguages } from '../../i18n/i18n-config';
 import { pushPreferencesToServer } from '../../lib/sync-preferences';
 import { useTranslation } from 'react-i18next';
@@ -36,10 +36,10 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
   const isOnline = mode === 'online';
 
   // Theme options defined inside component to access t()
-  const THEME_OPTIONS: { value: ThemeMode; label: string; Icon: React.FC<{ size: number; strokeWidth: number; color?: string }> }[] = [
-    { value: 'light', label: t('settings:theme.light'), Icon: Sun },
-    { value: 'dark', label: t('settings:theme.dark'), Icon: Moon },
-    { value: 'system', label: t('settings:theme.system'), Icon: Monitor },
+  const THEME_OPTIONS: { value: ThemeMode; label: string; Icon: React.FC<{ size: number; stroke: number; color?: string }> }[] = [
+    { value: 'light', label: t('settings:theme.light'), Icon: IconSun },
+    { value: 'dark', label: t('settings:theme.dark'), Icon: IconMoon },
+    { value: 'system', label: t('settings:theme.system'), Icon: IconDeviceDesktop },
   ];
 
   const saveSetting = (key: string, value: number | boolean) => {
@@ -66,7 +66,7 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <button onClick={onBack} style={backBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
+        <button onClick={onBack} style={backBtn}><IconArrowLeft size={18} stroke={1.5} /></button>
         <span style={titleStyle}>{t('settings:title')}</span>
       </div>
 
@@ -85,7 +85,7 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
                 color: isActive ? colors.text : colors.secondary,
                 fontFamily: tokens.font.family, fontSize: tokens.font.size.xs, fontWeight: tokens.font.weight.medium,
               }}>
-                <opt.Icon size={16} strokeWidth={1.5} />
+                <opt.Icon size={16} stroke={1.5} />
                 {opt.label}
               </button>
             );
@@ -94,7 +94,7 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
 
         {/* Language */}
         <SectionHeader title={t('settings:language')} />
-        <SettingRow icon={<Languages size={18} strokeWidth={1.5} color={colors.secondary} />} label={t('settings:language.display')}>
+        <SettingRow icon={<IconLanguage size={18} stroke={1.5} color={colors.secondary} />} label={t('settings:language.display')}>
           <select value={language} onChange={(e) => setLanguage(e.target.value as Language)} style={selectStyle}>
             {supportedLanguages.map((lang) => (
               <option key={lang} value={lang}>{languageLabels[lang].nativeLabel}</option>
@@ -104,7 +104,7 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
 
         {/* Security */}
         <SectionHeader title={t('settings:security')} />
-        <SettingRow icon={<Timer size={18} strokeWidth={1.5} color={colors.secondary} />} label={t('settings:security.autoLock')}>
+        <SettingRow icon={<IconClock size={18} stroke={1.5} color={colors.secondary} />} label={t('settings:security.autoLock')}>
           <select value={autoLockMin} onChange={(e) => { const v = +e.target.value; setAutoLockMin(v); saveSetting('auto_lock_min', v); }} style={selectStyle}>
             <option value={1}>{t('settings:security.autoLock.1min')}</option>
             <option value={5}>{t('settings:security.autoLock.5min')}</option>
@@ -113,7 +113,7 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
             <option value={60}>{t('settings:security.autoLock.1hour')}</option>
           </select>
         </SettingRow>
-        <SettingRow icon={<Clipboard size={18} strokeWidth={1.5} color={colors.secondary} />} label={t('settings:security.clipboardClear')}>
+        <SettingRow icon={<IconClipboard size={18} stroke={1.5} color={colors.secondary} />} label={t('settings:security.clipboardClear')}>
           <select value={clipboardClearSec} onChange={(e) => { const v = +e.target.value; setClipboardClearSec(v); saveSetting('clipboard_clear_sec', v); }} style={selectStyle}>
             <option value={10}>{t('settings:security.clipboard.10sec')}</option>
             <option value={30}>{t('settings:security.clipboard.30sec')}</option>
@@ -128,7 +128,7 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
             <SectionHeader title={t('settings:sync.title')} />
             <div style={{ ...rowStyle, borderBottom: syncEnabled && lastSyncedAt ? 'none' : `1px solid ${colors.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.sm }}>
-                <Cloud size={18} strokeWidth={1.5} color={colors.secondary} />
+                <IconCloud size={18} stroke={1.5} color={colors.secondary} />
                 <div>
                   <div style={rowLabel}>{t('settings:sync.enable')}</div>
                   <div style={rowHint}>{syncEnabled ? t('settings:sync.statusSynced') : syncStatus}</div>
@@ -145,7 +145,7 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
                 paddingLeft: `${tokens.spacing.lg + 18 + tokens.spacing.sm}px`,
                 borderBottom: `1px solid ${colors.border}`,
               }}>
-                <Clock size={14} strokeWidth={1.5} color={colors.secondary} />
+                <IconClock size={14} stroke={1.5} color={colors.secondary} />
                 <span style={{ fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family }}>
                   {t('settings:sync.lastSynced', { time: formatSyncDate(lastSyncedAt) })}
                 </span>
@@ -156,7 +156,7 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
                 ...linkRow, color: isSyncing ? colors.secondary : colors.primary,
                 opacity: isSyncing ? 0.6 : 1, cursor: isSyncing ? 'not-allowed' : 'pointer',
               }}>
-                <RefreshCw size={18} strokeWidth={1.5} style={{
+                <IconRefresh size={18} stroke={1.5} style={{
                   animation: isSyncing ? 'spin 1s linear infinite' : 'none',
                 }} />
                 {isSyncing ? t('settings:sync.syncing') : t('settings:sync.syncNow')}
@@ -168,10 +168,10 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
         {/* Data */}
         <SectionHeader title={t('settings:data')} />
         <button onClick={onExport} style={linkRow}>
-          <Download size={18} strokeWidth={1.5} color={colors.primary} /> {t('settings:data.export')}
+          <IconDownload size={18} stroke={1.5} color={colors.primary} /> {t('settings:data.export')}
         </button>
         <button onClick={onImport} style={linkRow}>
-          <Upload size={18} strokeWidth={1.5} color={colors.primary} /> {t('settings:data.import')}
+          <IconUpload size={18} stroke={1.5} color={colors.primary} /> {t('settings:data.import')}
         </button>
 
         {/* Account */}
@@ -180,21 +180,21 @@ export function SettingsPage({ onBack, onExport, onImport }: SettingsPageProps) 
           <>
             <div style={{ ...rowStyle, borderBottom: 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing.sm }}>
-                <User size={18} strokeWidth={1.5} color={colors.secondary} />
+                <IconUser size={18} stroke={1.5} color={colors.secondary} />
                 <div style={rowLabel}>{email}</div>
               </div>
             </div>
             <button onClick={() => logout()} style={logoutBtn}>
-              <LogOut size={16} strokeWidth={1.5} /> {t('settings:account.logout')}
+              <IconLogout size={16} stroke={1.5} /> {t('settings:account.logout')}
             </button>
           </>
         ) : (
           <>
             <button onClick={() => setShowUpgradeModal(true)} style={linkRow}>
-              <User size={18} strokeWidth={1.5} color={colors.primary} /> {t('settings:account.createAccount')}
+              <IconUser size={18} stroke={1.5} color={colors.primary} /> {t('settings:account.createAccount')}
             </button>
             <button onClick={() => setShowResetConfirm(true)} style={logoutBtn}>
-              <LogOut size={16} strokeWidth={1.5} /> {t('settings:account.resetVault')}
+              <IconLogout size={16} stroke={1.5} /> {t('settings:account.resetVault')}
             </button>
           </>
         )}

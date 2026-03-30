@@ -1,7 +1,7 @@
 // Screen 03: Lock Screen — re-enter master password to unlock vault (offline + online)
 import React, { useState } from 'react';
 import { Button, Input, Modal, tokens, useTheme } from '@vaultic/ui';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { IconLock, IconEye, IconEyeOff } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/auth-store';
 
@@ -97,7 +97,7 @@ export function LockScreen() {
     <form onSubmit={handleSubmit} style={formStyle}>
       <div style={topSection}>
         <div style={lockIcon}>
-          <Lock size={48} strokeWidth={1.5} color={colors.primary} />
+          <IconLock size={48} stroke={1.5} color={colors.primary} />
         </div>
         <div style={emailStyle}>
           {mode === 'online' && email ? email : t('auth:lock.offlineVault')}
@@ -122,7 +122,7 @@ export function LockScreen() {
             style={eyeToggleStyle}
             tabIndex={-1}
           >
-            {showPassword ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
+            {showPassword ? <IconEyeOff size={16} stroke={1.5} /> : <IconEye size={16} stroke={1.5} />}
           </button>
         </div>
       </div>

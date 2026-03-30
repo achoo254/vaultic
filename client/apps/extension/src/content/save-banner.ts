@@ -6,7 +6,7 @@ const BANNER_CSS = `
   .vaultic-save-banner {
     position:fixed; top:12px; right:12px; z-index:2147483647;
     display:flex; align-items:center; gap:12px; height:56px; padding:10px 16px;
-    background:#fff; border-radius:10px; font-family:'Inter',-apple-system,sans-serif;
+    background:#fff; border-radius:10px; font-family:'Nunito Sans',-apple-system,sans-serif;
     box-shadow:0 4px 16px rgba(0,0,0,0.09); animation:vaultic-banner-in 0.25s ease;
   }
   @keyframes vaultic-banner-in { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }

@@ -13,6 +13,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@tabler/icons-react": "^3.41.1",
     "@vaultic/api": "workspace:*",
     "@vaultic/crypto": "workspace:*",
     "@vaultic/storage": "workspace:*",

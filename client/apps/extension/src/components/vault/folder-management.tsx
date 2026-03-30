@@ -1,7 +1,7 @@
 // Screen 22: Folder Management — view, add, delete folders
 import React, { useState } from 'react';
 import { tokens, Modal, Button, useTheme } from '@vaultic/ui';
-import { ArrowLeft, Plus, List, Folder, Trash2 } from 'lucide-react';
+import { IconArrowLeft, IconPlus, IconList, IconFolder, IconTrash } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useVaultStore } from '../../stores/vault-store';
 
@@ -139,14 +139,14 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
     <div style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <button onClick={onBack} style={backBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
+        <button onClick={onBack} style={backBtn}><IconArrowLeft size={18} stroke={1.5} /></button>
         <span style={titleStyle}>{t('vault:folder.title')}</span>
         <button
           onClick={() => setAdding(!adding)}
           style={addBtnStyle}
           title="Add folder"
         >
-          <Plus size={20} strokeWidth={1.5} />
+          <IconPlus size={20} stroke={1.5} />
         </button>
       </div>
 
@@ -157,7 +157,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
           style={rowStyle}
           onClick={() => handleSelectFolder(null)}
         >
-          <List size={16} strokeWidth={1.5} color={colors.secondary} />
+          <IconList size={16} stroke={1.5} color={colors.secondary} />
           <span style={rowNameStyle}>{t('vault:folder.allItems')}</span>
           <span style={rowCountStyle}>{allItemCount}</span>
         </button>
@@ -169,7 +169,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
               style={rowClickArea}
               onClick={() => handleSelectFolder(folder.id)}
             >
-              <Folder size={16} strokeWidth={1.5} color={colors.secondary} />
+              <IconFolder size={16} stroke={1.5} color={colors.secondary} />
               <span style={rowNameStyle}>{folder.name}</span>
               <span style={rowCountStyle}>{folder.itemCount}</span>
             </button>
@@ -178,7 +178,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
               style={deleteBtn}
               title="Delete folder"
             >
-              <Trash2 size={16} strokeWidth={1.5} />
+              <IconTrash size={16} stroke={1.5} />
             </button>
           </div>
         ))}

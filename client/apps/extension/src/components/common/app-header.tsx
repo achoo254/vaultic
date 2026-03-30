@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
-import { ShieldCheck, WifiOff } from 'lucide-react';
+import { IconShieldCheck, IconWifiOff } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
 interface AppHeaderProps {
@@ -58,7 +58,7 @@ export function AppHeader({ children, borderBottom }: AppHeaderProps) {
     <>
       <div style={headerStyle}>
         <div style={leftStyle}>
-          <ShieldCheck size={22} strokeWidth={1.5} color={colors.primary} />
+          <IconShieldCheck size={22} stroke={1.5} color={colors.primary} />
           <span style={titleStyle}>Vaultic</span>
         </div>
         {children && <div style={rightStyle}>{children}</div>}
@@ -70,7 +70,7 @@ export function AppHeader({ children, borderBottom }: AppHeaderProps) {
           backgroundColor: '#FEF3C7', borderBottom: '1px solid #FDE68A',
           flexShrink: 0,
         }}>
-          <WifiOff size={14} strokeWidth={1.5} color="#92400E" style={{ flexShrink: 0 }} />
+          <IconWifiOff size={14} stroke={1.5} color="#92400E" style={{ flexShrink: 0 }} />
           <span style={{ fontSize: tokens.font.size.xs, color: '#92400E', fontFamily: tokens.font.family }}>
             {t('common:offline')}
           </span>

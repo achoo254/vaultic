@@ -1,7 +1,7 @@
 // Bottom navigation bar — 4 tabs matching design: Generator, Vault, Share, Health
 import React from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
-import { Dices, LayoutGrid, Share2, Shield } from 'lucide-react';
+import { IconDice, IconLayoutGrid, IconShare, IconShield } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
 export type NavTab = 'generator' | 'vault' | 'share' | 'health';
@@ -28,11 +28,11 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
   const { colors } = useTheme();
   const { t } = useTranslation('common');
 
-  const tabs: { id: NavTab; label: string; Icon: React.FC<{ size: number; strokeWidth: number; color: string }> }[] = [
-    { id: 'generator', label: t('common:nav.generator'), Icon: Dices },
-    { id: 'vault', label: t('common:nav.vault'), Icon: LayoutGrid },
-    { id: 'share', label: t('common:nav.share'), Icon: Share2 },
-    { id: 'health', label: t('common:nav.health'), Icon: Shield },
+  const tabs: { id: NavTab; label: string; Icon: React.FC<{ size: number; stroke: number; color: string }> }[] = [
+    { id: 'generator', label: t('common:nav.generator'), Icon: IconDice },
+    { id: 'vault', label: t('common:nav.vault'), Icon: IconLayoutGrid },
+    { id: 'share', label: t('common:nav.share'), Icon: IconShare },
+    { id: 'health', label: t('common:nav.health'), Icon: IconShield },
   ];
 
   const navStyle: React.CSSProperties = {
@@ -49,7 +49,7 @@ export function BottomNav({ active, onChange }: BottomNavProps) {
         const color = isActive ? colors.primary : colors.secondary;
         return (
           <button key={tab.id} onClick={() => onChange(tab.id)} style={{ ...tabStyle, color }}>
-            <tab.Icon size={20} strokeWidth={1.5} color={color} />
+            <tab.Icon size={20} stroke={1.5} color={color} />
             <span style={{ fontSize: tokens.font.size.xs, fontWeight: isActive ? 600 : 400 }}>{tab.label}</span>
           </button>
         );

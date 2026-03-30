@@ -1,7 +1,7 @@
 // Screen 13/14: Share Page — unified hybrid share (data in URL, metadata on server)
 import React, { useState } from 'react';
 import { Button, VStack, Checkbox, Textarea, ToggleGroup, tokens, useTheme } from '@vaultic/ui';
-import { ArrowLeft, Globe } from 'lucide-react';
+import { IconArrowLeft, IconWorld } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { estimateFragmentSize, MAX_FRAGMENT_LENGTH } from '@vaultic/crypto';
 import { ShareOptions } from './share-options';
@@ -171,7 +171,7 @@ export function SharePage({ onBack }: SharePageProps) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Header — design screen 13: arrow-left + "Secure Share" */}
       <div style={headerStyle}>
-        <button onClick={onBack} style={backBtn}><ArrowLeft size={20} strokeWidth={1.5} /></button>
+        <button onClick={onBack} style={backBtn}><IconArrowLeft size={20} stroke={1.5} /></button>
         <span style={headerTitle}>{t('share:title')}</span>
       </div>
 
@@ -195,7 +195,7 @@ export function SharePage({ onBack }: SharePageProps) {
                 {/* Source card with avatar — design screen 13 */}
                 <div style={sourceCard}>
                   <div style={sourceAvatar}>
-                    <Globe size={18} strokeWidth={1.5} color="#fff" />
+                    <IconWorld size={18} stroke={1.5} color="#fff" />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
                     <span style={sourceName}>{selectedItem.credential.name}</span>

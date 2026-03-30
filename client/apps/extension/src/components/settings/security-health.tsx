@@ -1,7 +1,7 @@
 // Screen 10: Security Health — password strength analysis with score circle and issue cards
 import React from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
-import { ArrowLeft, ShieldAlert, Copy, Timer, ChevronRight } from 'lucide-react';
+import { IconArrowLeft, IconShieldExclamation, IconCopy, IconClock, IconChevronRight } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useVaultStore } from '../../stores/vault-store';
 
@@ -29,7 +29,7 @@ export function SecurityHealth({ onBack }: SecurityHealthProps) {
         height: 52, padding: `0 ${tokens.spacing.lg}px`, flexShrink: 0,
       }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.text, padding: 4, display: 'flex' }}>
-          <ArrowLeft size={20} strokeWidth={1.5} />
+          <IconArrowLeft size={20} stroke={1.5} />
         </button>
         <span style={{ fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.semibold, color: colors.text, fontFamily: tokens.font.family }}>
           {t('settings:health.title')}

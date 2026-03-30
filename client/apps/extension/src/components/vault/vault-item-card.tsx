@@ -1,7 +1,7 @@
 // Single vault item card — used in VaultList
 import React from 'react';
 import { tokens, useTheme } from '@vaultic/ui';
-import { Globe, ExternalLink } from 'lucide-react';
+import { IconWorld, IconExternalLink } from '@tabler/icons-react';
 import { CopyButton } from '../common/copy-button';
 import type { DecryptedVaultItem } from '../../stores/vault-store';
 
@@ -41,7 +41,7 @@ export function VaultItemCard({ item, onClick }: VaultItemCardProps) {
     <div style={cardStyle} onClick={onClick}>
       {/* Blue rounded-square globe avatar matching design */}
       <div style={avatarStyle}>
-        <Globe size={20} strokeWidth={1.5} color={colors.primary} />
+        <IconWorld size={20} stroke={1.5} color={colors.primary} />
       </div>
       <div style={infoStyle}>
         <div style={nameStyle}>{credential.name}</div>
@@ -55,7 +55,7 @@ export function VaultItemCard({ item, onClick }: VaultItemCardProps) {
             style={iconBtn}
             title="Open URL"
           >
-            <ExternalLink size={16} strokeWidth={1.5} />
+            <IconExternalLink size={16} stroke={1.5} />
           </button>
         )}
       </div>
