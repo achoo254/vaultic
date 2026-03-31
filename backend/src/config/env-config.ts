@@ -1,6 +1,5 @@
-// Load .env file (skips vars already set by --env-file or system env)
-import dotenv from "dotenv";
-dotenv.config();
+// Env vars are injected at build-time by esbuild define (see build.js).
+// In dev, tsx --env-file loads them. No runtime dotenv needed.
 
 export const envConfig = {
   mongodbUri: requireEnv("MONGODB_URI"),
