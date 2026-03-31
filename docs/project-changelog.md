@@ -7,10 +7,47 @@ All notable changes to the Vaultic project are documented here. Format follows [
 ## [Unreleased]
 
 ### In Progress
+- Chrome Web Store publish preparation — v1.0.0 milestone
 - Mobile apps (iOS/Android) — architecture planning
 - SRP (Secure Remote Password) protocol — v0.3 phase
 - WebAuthn/TOTP support — security enhancement
 - Team vault sharing — v1.0.0 collaboration features
+
+---
+
+## [1.0.0] - 2026-03-31
+
+### Chrome Web Store Publish Preparation
+
+#### Legal & Compliance Documents
+- **Privacy Policy** — `docs/privacy-policy.md` — Zero-knowledge architecture disclosure, data handling practices, no tracking policies
+- **Terms of Service** — `docs/terms-of-service.md` — User responsibilities, master password recovery warnings, acceptable use policies
+- Both documents comply with Chrome Web Store store listing requirements
+
+#### Extension Manifest & Config
+- **Extension version:** 1.0.0 — Bumped from 0.3.2
+- **Icons added:** 16×16, 32×32, 48×48, 128×128, 192×192 PNG files — `client/apps/extension/src/assets/icons/`
+- **Homepage URL:** Set to GitHub repository (`https://github.com/achoo254/vaultic`)
+- **WXT config updated** — Version, icons, and homepage_url in manifest
+
+#### Onboarding & Consent
+- **Consent Screen UI** — `client/apps/extension/src/components/onboarding/consent-screen.tsx` — First-run consent gate displaying Privacy Policy and Terms of Service
+- **Popup gate** — Added consent check in `client/apps/extension/src/entrypoints/popup/app.tsx` to prevent vault access until user accepts terms
+- **Consent storage** — Persists acceptance in `chrome.storage.local` with acceptance timestamp
+
+#### Landing Page
+- **Static HTML landing page** — `landing/index.html` — Public-facing website for Chrome Web Store listing
+- **Privacy Policy page** — `landing/privacy-policy.html` — Web version matching in-extension policy
+- **Terms page** — `landing/terms.html` — Web version matching in-extension terms
+- **NGINX config** — `landing/nginx.conf.example` — Example configuration for serving landing page
+- **Assets:** CSS, fonts, responsive design for mobile/desktop
+
+#### Changes Summary
+- ✅ All documents finalized for CWS compliance
+- ✅ Extension ready for v1.0.0 release
+- ✅ Legal requirements met (privacy, terms, consent)
+- ✅ Visual branding aligned with design system
+- ✅ No breaking changes to existing functionality
 
 ---
 

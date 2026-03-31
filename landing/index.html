@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vaultic — Zero-Knowledge Password Manager</title>
+  <meta name="description" content="Open-source, zero-knowledge password manager. Your passwords are encrypted on your device. No tracking, no ads, no analytics.">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/icon-16.png">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #024799;
+      --primary-hover: #023A7A;
+      --text: #0F1E2D;
+      --secondary: #4A6278;
+      --bg: #F4F7FA;
+      --surface: #FFFFFF;
+      --border: #D0DAE6;
+      --success: #0E9F6E;
+      --radius: 12px;
+      --font: 'Nunito Sans', sans-serif;
+    }
+    body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.6; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Header */
+    .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 0; position: sticky; top: 0; z-index: 10; }
+    .header-inner { max-width: 960px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; color: var(--text); }
+    .logo img { width: 32px; height: 32px; }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a { color: var(--secondary); font-size: 14px; font-weight: 600; }
+    .nav-links a:hover { color: var(--primary); text-decoration: none; }
+
+    /* Hero */
+    .hero { text-align: center; padding: 80px 24px 60px; max-width: 720px; margin: 0 auto; }
+    .hero h1 { font-size: 40px; font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
+    .hero h1 span { color: var(--primary); }
+    .hero p { font-size: 18px; color: var(--secondary); margin-bottom: 32px; max-width: 560px; margin-left: auto; margin-right: auto; }
+    .cta-btn { display: inline-block; background: var(--primary); color: #fff; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 700; transition: background 0.2s; }
+    .cta-btn:hover { background: var(--primary-hover); text-decoration: none; }
+    .cta-sub { font-size: 13px; color: var(--secondary); margin-top: 12px; }
+
+    /* Features */
+    .features { max-width: 960px; margin: 0 auto; padding: 60px 24px; }
+    .features h2 { text-align: center; font-size: 28px; margin-bottom: 40px; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+    .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    .feature-icon { width: 40px; height: 40px; background: #EFF6FF; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; color: var(--primary); font-size: 20px; }
+    .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; color: var(--secondary); line-height: 1.5; }
+
+    /* Security */
+    .security { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 60px 24px; }
+    .security-inner { max-width: 720px; margin: 0 auto; text-align: center; }
+    .security h2 { font-size: 28px; margin-bottom: 16px; }
+    .security p { color: var(--secondary); font-size: 16px; margin-bottom: 32px; }
+    .crypto-steps { text-align: left; display: inline-block; }
+    .crypto-steps li { padding: 8px 0; font-size: 15px; color: var(--text); }
+    .crypto-steps code { background: #EFF6FF; padding: 2px 8px; border-radius: 4px; font-size: 13px; color: var(--primary); }
+
+    /* Open source */
+    .opensource { max-width: 720px; margin: 0 auto; padding: 60px 24px; text-align: center; }
+    .opensource h2 { font-size: 28px; margin-bottom: 16px; }
+    .opensource p { color: var(--secondary); font-size: 16px; margin-bottom: 24px; }
+    .gh-btn { display: inline-block; background: var(--text); color: #fff; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 700; transition: opacity 0.2s; }
+    .gh-btn:hover { opacity: 0.85; text-decoration: none; }
+
+    /* Footer */
+    .footer { border-top: 1px solid var(--border); padding: 32px 24px; text-align: center; }
+    .footer-inner { max-width: 960px; margin: 0 auto; }
+    .footer-links { display: flex; justify-content: center; gap: 24px; margin-bottom: 16px; flex-wrap: wrap; }
+    .footer-links a { color: var(--secondary); font-size: 13px; }
+    .footer-copy { color: var(--secondary); font-size: 12px; }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 28px; }
+      .hero p { font-size: 16px; }
+      .hero { padding: 48px 20px 40px; }
+      .features-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <img src="/assets/icon-32.png" alt="Vaultic" width="32" height="32">
+        Vaultic
+      </div>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#security">Security</a>
+        <a href="https://github.com/achoo254/vaultic" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>Your passwords. <span>Your device.</span> Your rules.</h1>
+    <p>Open-source, zero-knowledge password manager. Encrypted on your device before anything goes anywhere. No tracking, no ads, no analytics.</p>
+    <a class="cta-btn" href="#install" id="install-btn">Install for Chrome</a>
+    <div class="cta-sub">Free &amp; open-source &middot; MIT License</div>
+  </section>
+
+  <section class="features" id="features">
+    <h2>Features</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">&#128274;</div>
+        <h3>Secure Vault</h3>
+        <p>Store passwords, credit cards, and secure notes with AES-256-GCM encryption. Each item encrypted individually.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9889;</div>
+        <h3>Smart Autofill</h3>
+        <p>Detect and fill login forms on any website. Secure fill-by-ID pattern — plaintext never leaves the extension.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128273;</div>
+        <h3>Password Generator</h3>
+        <p>Generate strong, unique passwords with customizable length, symbols, and complexity options.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128279;</div>
+        <h3>Encrypted Sharing</h3>
+        <p>Share credentials via encrypted links with expiry and view limits. Decryption key stays in the URL fragment.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9729;</div>
+        <h3>Optional Cloud Sync</h3>
+        <p>Sync encrypted vault across devices. Off by default — enable only when you want it. Disable anytime and purge server data.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128225;</div>
+        <h3>Offline-First</h3>
+        <p>Full functionality without internet. Your vault is always accessible locally, synced when you choose.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="security" id="security">
+    <div class="security-inner">
+      <h2>Zero-Knowledge Security</h2>
+      <p>Your master password never leaves your device. The server stores only encrypted blobs it cannot decrypt.</p>
+      <ol class="crypto-steps">
+        <li>Master password &rarr; <code>Argon2id</code> (64 MB, 3 iterations) &rarr; master key</li>
+        <li><code>HKDF-SHA256</code> derives per-purpose encryption &amp; auth keys</li>
+        <li><code>AES-256-GCM</code> encrypts each vault item (random 12-byte nonce)</li>
+        <li>Server stores only ciphertext &mdash; zero decryption capability</li>
+        <li>All communication over <code>HTTPS (TLS 1.2+)</code></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="opensource" id="opensource">
+    <h2>100% Open Source</h2>
+    <p>Audit our code. Verify our claims. Contribute improvements. Licensed under MIT.</p>
+    <a class="gh-btn" href="https://github.com/achoo254/vaultic" target="_blank" rel="noopener">View on GitHub</a>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/privacy-policy">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
+        <a href="https://github.com/achoo254/vaultic" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:vaultic@inetdev.io.vn">Contact</a>
+      </div>
+      <div class="footer-copy">&copy; 2025 Vaultic. Open-source password manager.</div>
+    </div>
+  </footer>
+
+</body>
+</html>

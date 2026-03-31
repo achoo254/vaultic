@@ -7,7 +7,16 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
     name: 'Vaultic Password Manager',
-    description: 'Open-source, zero-knowledge password manager',
+    description:
+      'Open-source, zero-knowledge password manager with autofill',
+    version: '1.0.0',
+    icons: {
+      '16': 'assets/icons/icon-16.png',
+      '32': 'assets/icons/icon-32.png',
+      '48': 'assets/icons/icon-48.png',
+      '128': 'assets/icons/icon-128.png',
+    },
+    homepage_url: 'https://vaultic.inetdev.io.vn',
     permissions: ['storage', 'activeTab', 'scripting', 'alarms', 'idle'],
     host_permissions: ['<all_urls>'],
     content_security_policy: {

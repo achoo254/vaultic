@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Vaultic</title>
+  <meta name="description" content="Vaultic Privacy Policy — zero-knowledge password manager privacy practices.">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icon-32.png">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --primary: #024799; --text: #0F1E2D; --secondary: #4A6278; --bg: #F4F7FA; --surface: #FFFFFF; --border: #D0DAE6; --font: 'Nunito Sans', sans-serif; }
+    body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; }
+    a { color: var(--primary); }
+    .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 0; }
+    .header-inner { max-width: 720px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; gap: 10px; }
+    .header-inner a { font-size: 20px; font-weight: 700; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+    .header-inner img { width: 28px; height: 28px; }
+    .content { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+    h1 { font-size: 32px; margin-bottom: 8px; }
+    .meta { color: var(--secondary); font-size: 14px; margin-bottom: 32px; }
+    h2 { font-size: 20px; margin-top: 40px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 16px; margin-top: 24px; margin-bottom: 8px; }
+    p, li { font-size: 15px; margin-bottom: 12px; }
+    ul, ol { padding-left: 24px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th, td { text-align: left; padding: 10px 12px; border: 1px solid var(--border); }
+    th { background: var(--bg); font-weight: 600; }
+    strong { font-weight: 700; }
+    .warning { background: #FFFBEB; border: 1px solid #F59E0B; border-radius: 8px; padding: 16px; margin: 16px 0; font-size: 14px; }
+    .footer { border-top: 1px solid var(--border); padding: 24px; text-align: center; color: var(--secondary); font-size: 12px; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="/"><img src="/assets/icon-32.png" alt="Vaultic" width="28" height="28"> Vaultic</a>
+    </div>
+  </header>
+
+  <main class="content">
+    <h1>Privacy Policy</h1>
+    <p class="meta">Effective Date: April 2025 &middot; Last Updated: April 2025</p>
+
+    <h2>1. Introduction</h2>
+    <p>Vaultic is an open-source, zero-knowledge password manager. Your vault data is encrypted on your device before it ever leaves your browser. We cannot read, access, or decrypt your passwords.</p>
+    <p>Source code: <a href="https://github.com/achoo254/vaultic" target="_blank" rel="noopener">github.com/achoo254/vaultic</a></p>
+
+    <h2>2. Data We Collect</h2>
+    <h3>Data You Provide (Optional)</h3>
+    <table>
+      <tr><th>Data</th><th>When</th><th>Purpose</th></tr>
+      <tr><td>Email address</td><td>When you create an account (optional)</td><td>Authentication for Cloud Sync and Secure Share</td></tr>
+      <tr><td>Encrypted vault data</td><td>When you enable Cloud Sync (opt-in)</td><td>Sync encrypted data across devices</td></tr>
+    </table>
+    <h3>Data We Never Collect</h3>
+    <ul>
+      <li>Your master password (never stored or transmitted)</li>
+      <li>Plaintext vault data (passwords, notes, card numbers)</li>
+      <li>Browsing history or website visits</li>
+      <li>Analytics, telemetry, or usage data</li>
+      <li>Third-party cookies or tracking pixels</li>
+      <li>Device fingerprints or advertising identifiers</li>
+    </ul>
+
+    <h2>3. How Your Data Is Protected</h2>
+    <h3>Zero-Knowledge Architecture</h3>
+    <ol>
+      <li>Your master password is processed <strong>only on your device</strong> using Argon2id key derivation (64 MB memory, 3 iterations)</li>
+      <li>HKDF-SHA256 derives per-purpose encryption and authentication keys</li>
+      <li>Each vault item is individually encrypted with <strong>AES-256-GCM</strong> (random 12-byte nonce per operation)</li>
+      <li>Only encrypted ciphertext is transmitted to our server (when Cloud Sync is enabled)</li>
+      <li>The server has <strong>no decryption keys</strong> — it stores and relays encrypted blobs only</li>
+    </ol>
+    <h3>Local Storage</h3>
+    <p>Vault data is stored locally in IndexedDB within your browser, encrypted at rest. No plaintext passwords are stored on disk.</p>
+    <h3>Transport Security</h3>
+    <p>All network communication uses <strong>HTTPS (TLS 1.2+)</strong> exclusively.</p>
+
+    <h2>4. How Your Data Is Used</h2>
+    <table>
+      <tr><th>Purpose</th><th>Data Used</th></tr>
+      <tr><td>Authentication</td><td>Email + hashed password (bcrypt)</td></tr>
+      <tr><td>Cloud Sync (opt-in)</td><td>Encrypted vault blobs</td></tr>
+      <tr><td>Secure Share</td><td>Encrypted share data with configurable expiry and view limits</td></tr>
+    </table>
+    <p>We do <strong>not</strong> use your data for advertising, profiling, analytics, or any purpose other than providing the password management service.</p>
+
+    <h2>5. Data Sharing</h2>
+    <p><strong>We do not share your data with any third parties.</strong> No advertising partners, analytics providers, data brokers, or government agencies (unless compelled by valid legal process — and even then, we can only provide encrypted blobs we cannot decrypt).</p>
+
+    <h2>6. Cloud Sync (Opt-In)</h2>
+    <p>Cloud Sync is <strong>disabled by default</strong>. Your vault data stays entirely on your device unless you explicitly enable sync in Settings.</p>
+    <p>When disabled, you can choose to <strong>delete all server data</strong> (default) or keep a frozen encrypted copy.</p>
+
+    <h2>7. Secure Share</h2>
+    <p>Secure Share allows you to create encrypted links to share credentials. The decryption key is in the URL fragment (<code>#key</code>) — never sent to the server. Shares auto-expire after the configured time period.</p>
+
+    <h2>8. User Rights</h2>
+    <ul>
+      <li><strong>Export your data</strong> — Export your vault as decrypted JSON or CSV (requires unlocked vault)</li>
+      <li><strong>Delete server data</strong> — Purge all encrypted data from our server via Settings</li>
+      <li><strong>Delete your account</strong> — Remove your account and all associated server data permanently</li>
+      <li><strong>Access your data</strong> — Your vault is always accessible locally, even offline</li>
+    </ul>
+    <div class="warning">
+      <strong>Master Password Non-Recovery:</strong> Your master password cannot be recovered or reset. Due to our zero-knowledge architecture, we have no way to decrypt your vault without your master password. If you lose your master password, your vault data is permanently inaccessible.
+    </div>
+
+    <h2>9. Data Retention</h2>
+    <table>
+      <tr><th>Data</th><th>Retention</th></tr>
+      <tr><td>Local vault (IndexedDB)</td><td>Until you delete it or uninstall the extension</td></tr>
+      <tr><td>Server vault data (sync)</td><td>Until you disable sync (with purge) or delete your account</td></tr>
+      <tr><td>Shared links</td><td>Auto-deleted after expiry</td></tr>
+      <tr><td>Account data</td><td>Until you request account deletion</td></tr>
+    </table>
+
+    <h2>10. Server Infrastructure</h2>
+    <p>Backend: Node.js/Express on dedicated server. Database: MongoDB (stores encrypted blobs only). All API communication over HTTPS.</p>
+
+    <h2>11. Children's Privacy</h2>
+    <p>Vaultic is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13.</p>
+
+    <h2>12. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. Changes will be reflected by updating the "Last Updated" date at the top.</p>
+
+    <h2>13. Open Source</h2>
+    <p>Vaultic is open-source under the MIT License. Audit our code at <a href="https://github.com/achoo254/vaultic" target="_blank" rel="noopener">github.com/achoo254/vaultic</a>.</p>
+
+    <h2>14. Contact</h2>
+    <p>GitHub Issues: <a href="https://github.com/achoo254/vaultic/issues" target="_blank" rel="noopener">github.com/achoo254/vaultic/issues</a><br>
+    Email: <a href="mailto:vaultic@inetdev.io.vn">vaultic@inetdev.io.vn</a></p>
+  </main>
+
+  <footer class="footer">
+    <a href="/">Home</a> &middot; <a href="/terms">Terms of Service</a> &middot; &copy; 2025 Vaultic
+  </footer>
+
+</body>
+</html>

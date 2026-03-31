@@ -1,0 +1,48 @@
+# Nginx config for vaultic.inetdev.io.vn landing page
+# Place landing/ files at /var/www/vaultic-landing/ on server
+
+server {
+    listen 80;
+    server_name vaultic.inetdev.io.vn;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name vaultic.inetdev.io.vn;
+
+    # SSL certs (adjust paths)
+    ssl_certificate /etc/letsencrypt/live/vaultic.inetdev.io.vn/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/vaultic.inetdev.io.vn/privkey.pem;
+
+    root /var/www/vaultic-landing;
+    index index.html;
+
+    # Landing page routes
+    location = /privacy-policy {
+        try_files /privacy-policy.html =404;
+    }
+
+    location = /terms {
+        try_files /terms.html =404;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # API proxy (existing backend)
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Cache static assets
+    location /assets/ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+}
