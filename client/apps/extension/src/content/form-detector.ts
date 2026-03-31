@@ -109,11 +109,20 @@ function isVisible(el: HTMLElement): boolean {
   );
 }
 
-/** Watch for dynamic DOM changes (SPA) and re-detect forms. */
-export function observeDOMChanges(callback: (forms: DetectedForm[]) => void) {
+/** Watch for dynamic DOM changes (SPA) — re-detect new forms + cleanup removed icons. */
+export function observeDOMChanges(
+  callback: (forms: DetectedForm[]) => void,
+  onCleanup?: () => void,
+) {
   let timeout: ReturnType<typeof setTimeout>;
 
-  const observer = new MutationObserver(() => {
+  const observer = new MutationObserver((mutations) => {
+    // Cleanup orphaned icons when nodes are removed from DOM
+    if (mutations.some((m) => m.removedNodes.length > 0)) {
+      onCleanup?.();
+    }
+
+    // Debounced: detect new forms
     clearTimeout(timeout);
     timeout = setTimeout(() => {
       const forms = detectLoginForms();

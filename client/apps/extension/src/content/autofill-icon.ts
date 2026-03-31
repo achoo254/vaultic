@@ -9,6 +9,31 @@ import {
 } from './autofill-dropdown-styles';
 import { escapeHtml } from './utils/escape-html';
 
+// Track input → shadow host and input → listener refs for cleanup
+const iconMap = new Map<HTMLInputElement, HTMLDivElement>();
+const listenerMap = new Map<HTMLInputElement, { scroll: () => void; resize: () => void }>();
+
+/** Remove icon host, window listeners, and tracking entries for a given input. */
+export function cleanupIcon(input: HTMLInputElement): void {
+  const host = iconMap.get(input);
+  if (host) host.remove();
+
+  const listeners = listenerMap.get(input);
+  if (listeners) {
+    window.removeEventListener('scroll', listeners.scroll);
+    window.removeEventListener('resize', listeners.resize);
+  }
+
+  iconMap.delete(input);
+  listenerMap.delete(input);
+  delete input.dataset.vaulticInjected;
+}
+
+/** Get the icon tracking map — used by MutationObserver cleanup in form-detector. */
+export function getIconMap(): Map<HTMLInputElement, HTMLDivElement> {
+  return iconMap;
+}
+
 /** Inject the Vaultic autofill icon near a form's input. */
 export function injectAutofillIcon(form: DetectedForm): void {
   const target = form.usernameInput || form.passwordInput;
@@ -44,6 +69,10 @@ export function injectAutofillIcon(form: DetectedForm): void {
 
   document.body.appendChild(host);
   target.dataset.vaulticInjected = 'true';
+
+  // Track icon and listeners for cleanup when input is removed from DOM
+  iconMap.set(target, host);
+  listenerMap.set(target, { scroll: positionIcon, resize: positionIcon });
 
   window.addEventListener('scroll', positionIcon, { passive: true });
   window.addEventListener('resize', positionIcon, { passive: true });
