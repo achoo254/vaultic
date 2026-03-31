@@ -4,6 +4,7 @@ import { SyncEngine } from '../sync-engine';
 import type { SyncApiAdapter } from '../sync-engine';
 import { LWWResolver } from '../conflict-resolver';
 import type { VaultItem, Folder, SyncQueueEntry } from '@vaultic/types';
+import { ItemType } from '@vaultic/types';
 import type { VaultStore, SyncQueue } from '@vaultic/storage';
 
 // Mock getDeviceId
@@ -15,7 +16,7 @@ vi.stubGlobal('navigator', { onLine: true });
 type StoreWithMeta = VaultStore & { getMetadata(key: string): Promise<string | null>; setMetadata(key: string, value: string): Promise<void> };
 
 function makeItem(id: string, updatedAt = '2026-01-01T00:00:00Z'): VaultItem {
-  return { id, user_id: 'user1', item_type: 1 as VaultItem['item_type'], encrypted_data: 'enc', device_id: 'dev', version: 1, created_at: updatedAt, updated_at: updatedAt };
+  return { id, user_id: 'user1', item_type: ItemType.Login, encrypted_data: 'enc', device_id: 'dev', version: 1, created_at: updatedAt, updated_at: updatedAt };
 }
 
 function createMocks() {
