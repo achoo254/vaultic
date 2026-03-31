@@ -1,6 +1,6 @@
 # Phase 4: Visual Assets (Screenshots + Promotional)
 
-## Status: `pending`
+## Status: `partial`
 ## Priority: High (screenshots blocker, promotional nice-to-have)
 ## Effort: 1-2 days
 
