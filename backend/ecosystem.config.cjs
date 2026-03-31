@@ -1,7 +1,14 @@
 // PM2 ecosystem config for Vaultic backend
-// Usage: pm2 start ecosystem.config.cjs
-require('dotenv').config();
-const mode = process.env.NODE_ENV || 'production';
+// Reads NODE_ENV from .env file to select the correct build
+const fs = require('fs');
+const path = require('path');
+
+let mode = process.env.NODE_ENV || 'production';
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  const match = fs.readFileSync(envPath, 'utf8').match(/^NODE_ENV=(.+)$/m);
+  if (match) mode = match[1].trim();
+}
 
 module.exports = {
   apps: [{
