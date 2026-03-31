@@ -39,7 +39,7 @@ await build({
   platform: "node",
   target: "node22",
   format: "esm",
-  outfile: "dist/server.js",
+  outfile: `dist/server-${mode}.js`,
   sourcemap: true,
   minify: true,
   keepNames: true,
@@ -50,4 +50,4 @@ await build({
 });
 
 const injected = Object.keys(define).length;
-console.log(`Build complete → dist/server.js (${injected} env vars injected, mode: ${mode})`);
+console.log(`Build complete → dist/server-${mode}.js (${injected} env vars injected)`);
