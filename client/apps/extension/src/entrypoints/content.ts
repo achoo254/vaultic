@@ -1,7 +1,7 @@
 // WXT content script — detect login forms, inject autofill UI, capture credentials
 
 import { detectLoginForms, observeDOMChanges } from '../content/form-detector';
-import { injectAutofillIcon } from '../content/autofill-icon';
+import { injectAutofillIcon, getIconMap, cleanupIcon } from '../content/autofill-icon';
 import { captureCredentials } from '../content/credential-capture';
 import { showSaveBanner } from '../content/save-banner';
 
@@ -17,13 +17,20 @@ export default defineContentScript({
       captureCredentials(form);
     }
 
-    // Watch for SPA DOM changes
+    // Cleanup orphaned icons when inputs are removed from DOM
+    const cleanupRemovedIcons = () => {
+      for (const [input] of getIconMap()) {
+        if (!document.contains(input)) cleanupIcon(input);
+      }
+    };
+
+    // Watch for SPA DOM changes + cleanup
     observeDOMChanges((newForms) => {
       for (const form of newForms) {
         injectAutofillIcon(form);
         captureCredentials(form);
       }
-    });
+    }, cleanupRemovedIcons);
 
     // Listen for messages from background
     browser.runtime.onMessage.addListener((msg) => {
