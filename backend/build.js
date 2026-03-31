@@ -12,6 +12,8 @@ await build({
   format: "esm",
   outfile: "dist/server.js",
   sourcemap: true,
+  minify: true,
+  keepNames: true,
   banner: {
     js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
   },
