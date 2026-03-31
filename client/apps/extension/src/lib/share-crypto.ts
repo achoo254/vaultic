@@ -7,7 +7,7 @@ import {
   toBase64Url,
   fromBase64Url,
 } from '@vaultic/crypto';
-import { uint8ToBase64, base64ToUint8 } from './encoding-utils';
+import { uint8ToBase64, base64ToUint8 } from '@vaultic/crypto';
 
 const NONCE_SIZE = 12;
 

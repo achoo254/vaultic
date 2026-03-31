@@ -21,8 +21,11 @@ dist/
 !.env.example
 
 # Claude Code session data
-.claude/session-state/archive/
+.claude/session-state/
 .claude/agent-memory/
+
+# Extension release zips
+backend/static/releases/*.zip
 
 # OS
 .DS_Store

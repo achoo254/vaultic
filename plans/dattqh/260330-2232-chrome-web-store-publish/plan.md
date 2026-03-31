@@ -1,7 +1,7 @@
 # Chrome Web Store Publish — Vaultic Extension
 
 ```yaml
-status: in-progress
+status: in-progress  # Phase 4 (partial) + Phase 6 (pending) remaining
 priority: high
 effort: 5-7 days
 branch: feat/chrome-web-store-publish

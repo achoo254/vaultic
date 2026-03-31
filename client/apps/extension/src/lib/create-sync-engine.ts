@@ -4,8 +4,8 @@
 import { IndexedDBStore, IndexedDBSyncQueue } from '@vaultic/storage';
 import { SyncEngine, LWWResolver } from '@vaultic/sync';
 import type { SyncApiAdapter } from '@vaultic/sync';
-import { fetchWithAuth } from './fetch-with-auth';
-import { toApiItem, toApiFolder, fromApiItem, fromApiFolder } from './sync-api-transforms';
+import { fetchWithAuth } from './create-auth-fetch';
+import { toApiItem, toApiFolder, fromApiItem, fromApiFolder } from '@vaultic/api';
 
 let cachedEngine: { userId: string; engine: SyncEngine } | null = null;
 

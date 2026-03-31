@@ -21,7 +21,7 @@ import {
   getVaultConfig,
   clearVaultConfig,
 } from '../lib/session-storage';
-import { uint8ToBase64, base64ToUint8, computeVerifier } from '../lib/encoding-utils';
+import { uint8ToBase64, base64ToUint8, computeVerifier } from '@vaultic/crypto';
 
 type VaultState = 'no_vault' | 'locked' | 'unlocked';
 

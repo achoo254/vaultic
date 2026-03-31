@@ -1,7 +1,7 @@
 // Push language/theme preferences to server when cloud sync is enabled
 // Accepts optional overrides to avoid race condition with chrome.storage writes
 
-import { fetchWithAuth } from './fetch-with-auth';
+import { fetchWithAuth } from './create-auth-fetch';
 
 interface PreferenceOverrides {
   language?: string;

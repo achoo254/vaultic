@@ -3,26 +3,26 @@
 ## High-Level Overview
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│              USER DEVICES (Client-Side)                 │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  Browser Extension (Chrome/Firefox)                    │
-│  ┌───────────────────────────────────────────────────┐ │
-│  │  Popup UI (380×520px)                             │ │
-│  │  ├─ Vault search & item management               │ │
-│  │  ├─ Settings (sync toggle, export/import)        │ │
-│  │  └─ Auto-fill credentials (content script)       │ │
-│  └───────────────────────────────────────────────────┘ │
-│                                                         │
-│  Local Storage & Crypto                                │
-│  ├─ IndexedDB vault (encrypted items + sync queue)    │
-│  ├─ WebCrypto API (AES-256-GCM, Argon2id)            │
-│  └─ Key derivation (no plaintext storage)             │
-│                                                         │
-│  HTTPS ↔ Vaultic API (Optional Cloud Sync)           │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│              USER DEVICES (Client-Side)                      │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Browser Extension (Chrome/Firefox)        Web App (SPA)    │
+│  ┌───────────────────────────────────┐   ┌────────────────┐ │
+│  │  Popup UI (380×520px)             │   │ Web SPA (React)│ │
+│  │  ├─ Vault search & management    │   │ ├─ Responsive  │ │
+│  │  ├─ Settings (sync, export)      │   │ ├─ Full CRUD   │ │
+│  │  └─ Auto-fill (content script)   │   │ └─ Sync mgmt   │ │
+│  └───────────────────────────────────┘   └────────────────┘ │
+│                                                              │
+│  Local Storage & Crypto (Both)                              │
+│  ├─ IndexedDB vault (encrypted items + sync queue)         │
+│  ├─ WebCrypto API (AES-256-GCM, Argon2id)                 │
+│  └─ Key derivation (no plaintext storage)                  │
+│                                                              │
+│  HTTPS ↔ Vaultic API (Optional Cloud Sync)                │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
                          │
                          ↓ (Cloud Sync Optional)
         ┌────────────────────────────────────┐
@@ -104,6 +104,7 @@ type VaultState = 'no_vault' | 'locked' | 'unlocked'
 - Manage encryption/decryption
 - Cache vault in memory
 - Trigger auto-sync via chrome.alarms (3-min periodic, exponential backoff on failure)
+- Poll for extension updates via chrome.alarms (sideload installs only, 6h interval via UPDATE_ALARM_NAME)
 - Handle token refresh
 - No plaintext on disk
 
@@ -253,6 +254,8 @@ GET  /api/v1/sync/status
 POST /api/v1/shares/create
 GET  /api/v1/shares/:id
 DELETE /api/v1/shares/:id
+
+GET  /api/v1/extension/latest
 ```
 
 **Files:**
@@ -260,6 +263,89 @@ DELETE /api/v1/shares/:id
 - `client/packages/api/src/auth-api.ts` — Auth endpoints
 - `client/packages/api/src/sync-api.ts` — Sync endpoints
 - `client/packages/api/src/share-api.ts` — Share endpoints
+
+### Layer 1B: Web App (React SPA)
+
+#### 1.8 Web App Architecture (`@vaultic/web`)
+**Technology:** React 19 + Vite + react-router, 84% code reuse from shared packages + extension components.
+
+**Key Differences from Extension:**
+- **Responsive layout** — 480px max-width centered container (vs 380×520px fixed extension)
+- **httpOnly cookie auth** — Refresh token in httpOnly cookie (XSS-proof), access token in sessionStorage
+- **Web-native schedulers** — `setInterval` + `visibilitychange` for sync (vs chrome.alarms)
+- **Web storage adapters** — sessionStorage/localStorage (vs chrome.storage.local)
+- **Clipboard API** — `navigator.clipboard` with auto-clear (vs content script inject)
+
+**Routes:**
+```
+GET  /                    → /vault (authenticated)
+GET  /login               → Login form
+GET  /register            → Register form
+GET  /vault               → Main vault (CRUD, search)
+GET  /settings            → Settings (sync toggle, theme, language, export/import)
+GET  /share               → Secure share management
+GET  /onboarding          → First-run consent gate (Terms + Privacy Policy)
+```
+
+**File Structure:**
+```
+client/apps/web/
+├── package.json          # @vaultic/web
+├── vite.config.ts        # Vite config + proxy
+├── index.html            # CSP meta tag
+├── src/
+│   ├── main.tsx          # React root + ThemeProvider/I18nProvider
+│   ├── app.tsx           # Router outlet + responsive container
+│   ├── router.tsx        # Route definitions
+│   ├── pages/            # 6 page components (login, register, vault, settings, share, onboarding)
+│   ├── stores/           # Zustand stores
+│   │   ├── auth-store.ts          # Web-specific auth (httpOnly cookie)
+│   │   ├── vault-store.ts         # CRUD + sync
+│   │   └── auth-server-actions.ts # /web/login, /web/logout endpoints
+│   └── lib/              # Web-specific utilities
+│       ├── web-storage.ts        # sessionStorage/localStorage adapter
+│       ├── web-auth-fetch.ts     # httpOnly cookie fetch wrapper
+│       ├── web-auto-lock.ts      # Inactivity timeout + visibilitychange
+│       ├── web-sync-scheduler.ts # setInterval + tab focus sync
+│       ├── web-clipboard.ts      # Auto-clear after copy
+│       └── create-sync-engine.ts # Sync factory for web
+```
+
+**Auth Flow (httpOnly Cookies):**
+```
+User Login
+  ↓
+POST /api/v1/auth/web/login { email, auth_hash }
+  ↓ (Browser auto-sends httpOnly cookie on future requests)
+Backend sets: Set-Cookie: refresh_token=xxx; httpOnly; Secure; SameSite=Strict
+  ↓
+Response body: { access_token, user_id }
+  ↓
+Web app stores access_token in sessionStorage
+  ↓
+All API calls send Authorization: Bearer {accessToken}
+  ↓
+Token expires (401)
+  ↓
+POST /api/v1/auth/web/refresh (cookie auto-sent)
+  ↓
+Response: { access_token } (new refresh_token in Set-Cookie)
+  ↓
+Update sessionStorage + retry original request
+```
+
+**Auto-Lock & Sync Scheduling:**
+- **Auto-lock:** setTimeout + mousedown/keydown/touchstart events reset timer. visibilitychange lowers timeout (15min active, 5min hidden).
+- **Sync scheduler:** setInterval 5min + tab focus trigger + beforeunload quick push.
+- **Clipboard:** Auto-clear after 30s; only clears if text unchanged (permission safe).
+
+**Files Shared with Extension (84% code reuse):**
+- `@vaultic/crypto` — Key derivation, encryption/decryption
+- `@vaultic/storage` — IndexedDB vault store
+- `@vaultic/sync` — Delta sync engine, conflict resolution
+- `@vaultic/api` — HTTP client
+- `@vaultic/ui` — Shared React components (with StorageAdapter prop)
+- Extension component logic ported to pages (login form, vault list, settings, etc.)
 
 ### Layer 2: Backend (Node.js/Express)
 
@@ -290,8 +376,8 @@ POST /api/v1/auth/register
   Output: { user: User, token: JWT }
 
 POST /api/v1/auth/login
-  Input: { email, password }
-  Output: { user: User, token: JWT }
+  Input: { email, auth_hash }
+  Output: { access_token, user_id }
 
 POST /api/v1/auth/refresh
   Input: { refreshToken }
@@ -299,6 +385,21 @@ POST /api/v1/auth/refresh
 
 GET /api/v1/auth/me (protected)
   Output: { user: User }
+
+-- Web-specific endpoints (httpOnly cookies) --
+POST /api/v1/auth/web/login
+  Input: { email, auth_hash }
+  Response: Set-Cookie: refresh_token=xxx; httpOnly; Secure; SameSite=Strict
+  Output: { access_token, user_id }
+
+POST /api/v1/auth/web/refresh
+  Input: (refresh_token in cookie, auto-sent)
+  Response: Set-Cookie: refresh_token=xxx (rotated)
+  Output: { access_token }
+
+POST /api/v1/auth/web/logout
+  Output: { message: "logged out" }
+  Response: Clear-Cookie: refresh_token
 ```
 
 **Sync Routes** (`backend/src/routes/sync-route.ts`)
@@ -330,6 +431,13 @@ GET /api/v1/shares/:linkId/metadata (authOptional)
 
 DELETE /api/v1/shares/:linkId (protected)
   Output: { success: boolean }
+```
+
+**Extension Routes** (`backend/src/routes/extension-update-route.ts`)
+```typescript
+GET /api/v1/extension/latest (public, no auth)
+  Output: { version, downloadUrl, releaseNotes, releasedAt }
+  Note: Sideload-only feature — Chrome Web Store uses built-in auto-update
 ```
 
 **Health Routes** (`backend/src/routes/health-route.ts`)
@@ -704,4 +812,4 @@ Result: Both devices have latest version
 
 ---
 
-**Last updated: 2026-03-29 | User-ID-Based Profile Isolation | Backend: Node.js/Express | Database: MongoDB | IndexedDB v3**
+**Last updated: 2026-03-31 | Extension Auto-Update (Sideload) + Web App (React SPA) | Backend: Node.js/Express | Database: MongoDB | IndexedDB v3**

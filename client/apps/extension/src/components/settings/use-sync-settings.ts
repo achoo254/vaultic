@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { IndexedDBStore } from '@vaultic/storage';
 import { useAuthStore } from '../../stores/auth-store';
-import { fetchWithAuth } from '../../lib/fetch-with-auth';
+import { fetchWithAuth } from '../../lib/create-auth-fetch';
 import { createSyncEngine } from '../../lib/create-sync-engine';
 import { pullPreferencesFromServer, pushPreferencesToServer } from '../../lib/sync-preferences';
 

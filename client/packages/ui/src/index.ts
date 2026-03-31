@@ -2,7 +2,7 @@
 export { tokens, lightColors, darkColors } from './styles/design-tokens';
 export type { ThemeColors } from './styles/design-tokens';
 export { ThemeProvider, useTheme } from './styles/theme-provider';
-export type { ThemeMode } from './styles/theme-provider';
+export type { ThemeMode, StorageAdapter } from './styles/theme-provider';
 export { I18nProvider, useI18n } from './styles/i18n-provider';
 export type { Language } from './styles/i18n-provider';
 

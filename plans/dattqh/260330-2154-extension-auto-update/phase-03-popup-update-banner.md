@@ -1,6 +1,6 @@
 # Phase 3: Popup Update Banner UI
 
-## Status: `pending`
+## Status: `done`
 ## Priority: Medium
 ## Effort: 1-2 hours
 
@@ -62,12 +62,12 @@ Banner trong popup hiện khi có bản mới. Hiện version mới + release no
 - Storage key: `vaultic_update_state.dismissed` + `vaultic_update_state.dismissedVersion`
 
 ## Todo
-- [ ] Tạo `update-banner.tsx` component
-- [ ] Integrate vào `app.tsx` với storage listener
-- [ ] Handle "Update" click → download + guide tab
-- [ ] Handle "Dismiss" click → lưu state
-- [ ] Test: banner hiện đúng khi có update
-- [ ] Test: banner ẩn khi dismiss, hiện lại khi version mới hơn
+- [x] Tạo `update-banner.tsx` component
+- [x] Integrate vào `app.tsx` với storage listener
+- [x] Handle "Update" click → download + guide tab
+- [x] Handle "Dismiss" click → lưu state
+- [x] Test: banner hiện đúng khi có update
+- [x] Test: banner ẩn khi dismiss, hiện lại khi version mới hơn
 
 ## Success Criteria
 - Banner hiện ngay khi mở popup nếu có update
