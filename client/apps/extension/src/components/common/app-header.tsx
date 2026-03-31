@@ -67,11 +67,11 @@ export function AppHeader({ children, borderBottom }: AppHeaderProps) {
         <div style={{
           display: 'flex', alignItems: 'center', gap: tokens.spacing.sm,
           padding: `${tokens.spacing.xs}px ${tokens.spacing.lg}px`,
-          backgroundColor: '#FEF3C7', borderBottom: '1px solid #FDE68A',
+          backgroundColor: colors.warningBg, borderBottom: `1px solid ${colors.border}`,
           flexShrink: 0,
         }}>
-          <IconWifiOff size={14} stroke={1.5} color="#92400E" style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: tokens.font.size.xs, color: '#92400E', fontFamily: tokens.font.family }}>
+          <IconWifiOff size={14} stroke={1.5} color={colors.warningText} style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: tokens.font.size.xs, color: colors.warningText, fontFamily: tokens.font.family }}>
             {t('common:offline')}
           </span>
         </div>

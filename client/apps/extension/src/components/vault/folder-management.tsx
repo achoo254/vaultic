@@ -186,7 +186,7 @@ export function FolderManagement({ onBack }: FolderManagementProps) {
         {/* Add folder input */}
         {adding && (
           <div style={addRowStyle}>
-            <Folder size={16} strokeWidth={1.5} color={colors.secondary} />
+            <IconFolder size={16} stroke={1.5} color={colors.secondary} />
             <input
               style={inputStyle}
               value={newName}

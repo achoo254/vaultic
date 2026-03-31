@@ -1,6 +1,6 @@
 # Phase 4: Hardcoded Colors Cleanup
 
-## Status: `pending`
+## Status: `done`
 ## Priority: High
 ## Effort: 0.5 day
 
@@ -96,13 +96,13 @@ Should return 0 results.
 
 ## Todo List
 
-- [ ] Update autofill-dropdown-styles.ts (light + dark)
-- [ ] Update autofill-icon.ts
-- [ ] Update save-banner.ts
-- [ ] Update styles.css
-- [ ] Update inline SVGs
-- [ ] Grep verify: zero old hex codes
-- [ ] Visual test content scripts
+- [x] Update autofill-dropdown-styles.ts (light + dark)
+- [x] Update autofill-icon.ts
+- [x] Update save-banner.ts
+- [x] Update styles.css
+- [x] Update inline SVGs
+- [x] Grep verify: zero old hex codes
+- [x] Visual test content scripts
 
 ## Success Criteria
 

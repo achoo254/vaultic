@@ -59,25 +59,25 @@ export function SecurityHealth({ onBack }: SecurityHealthProps) {
         {/* Issue cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <IssueCard
-            icon={<ShieldAlert size={20} strokeWidth={1.5} color={colors.error} />}
+            icon={<IconShieldExclamation size={20} stroke={1.5} color={colors.error} />}
             label={t('settings:health.weakPasswords')}
             desc={t('settings:health.weakDesc', { count: weak })}
             count={weak} countColor={colors.error}
-            bg="#FEF2F2" borderColor="#FECACA" darkBg="#450A0A" darkBorder="#7F1D1D"
+            variant="error"
           />
           <IssueCard
-            icon={<Copy size={20} strokeWidth={1.5} color={colors.warning} />}
+            icon={<IconCopy size={20} stroke={1.5} color={colors.warning} />}
             label={t('settings:health.reusedPasswords')}
             desc={t('settings:health.reusedDesc', { count: reused })}
             count={reused} countColor={colors.warning}
-            bg="#FFFBEB" borderColor="#FDE68A" darkBg="#422006" darkBorder="#78350F"
+            variant="warning"
           />
           <IssueCard
-            icon={<Timer size={20} strokeWidth={1.5} color="#0EA5E9" />}
+            icon={<IconClock size={20} stroke={1.5} color={colors.badgeInfoText} />}
             label={t('settings:health.oldPasswords')}
             desc={t('settings:health.oldDesc')}
-            count={0} countColor="#0EA5E9"
-            bg="#F0F9FF" borderColor="#BAE6FD" darkBg="#0C4A6E" darkBorder="#075985"
+            count={0} countColor={colors.badgeInfoText}
+            variant="info"
           />
         </div>
 
@@ -96,18 +96,19 @@ export function SecurityHealth({ onBack }: SecurityHealthProps) {
   );
 }
 
-function IssueCard({ icon, label, desc, count, countColor, bg, borderColor, darkBg, darkBorder }: {
+function IssueCard({ icon, label, desc, count, countColor, variant }: {
   icon: React.ReactNode; label: string; desc: string; count: number; countColor: string;
-  bg: string; borderColor: string; darkBg: string; darkBorder: string;
+  variant: 'error' | 'warning' | 'info';
 }) {
-  const { colors, resolved } = useTheme();
-  const isDark = resolved === 'dark';
+  const { colors } = useTheme();
+  const bgKey = `badge${variant.charAt(0).toUpperCase() + variant.slice(1)}Bg` as keyof typeof colors;
+  const textKey = `badge${variant.charAt(0).toUpperCase() + variant.slice(1)}Text` as keyof typeof colors;
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 12, height: 52,
       padding: `0 14px`, borderRadius: 10,
-      backgroundColor: isDark ? darkBg : bg,
-      border: `1px solid ${isDark ? darkBorder : borderColor}`,
+      backgroundColor: colors[bgKey],
+      border: `1px solid ${colors[textKey]}30`,
     }}>
       {icon}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -115,7 +116,7 @@ function IssueCard({ icon, label, desc, count, countColor, bg, borderColor, dark
         <span style={{ fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family }}>{desc}</span>
       </div>
       <span style={{ fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.bold, color: countColor, fontFamily: tokens.font.family }}>{count}</span>
-      <ChevronRight size={16} strokeWidth={1.5} color={colors.secondary} />
+      <IconChevronRight size={16} stroke={1.5} color={colors.secondary} />
     </div>
   );
 }

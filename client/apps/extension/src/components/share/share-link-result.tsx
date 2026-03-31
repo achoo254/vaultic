@@ -50,10 +50,10 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '32px 24px', flex: 1, overflowY: 'auto', alignItems: 'center' }}>
         {/* Success icon — 64px circle with green background */}
         <div style={{
-          width: 64, height: 64, borderRadius: 32, backgroundColor: '#F0FDF4',
+          width: 64, height: 64, borderRadius: 32, backgroundColor: colors.successBg,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <IconCircleCheck size={32} stroke={1.5} color="#22C55E" />
+          <IconCircleCheck size={32} stroke={1.5} color={colors.success} />
         </div>
 
         <div style={{
@@ -63,10 +63,10 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
           {t('share:link.success')}
         </div>
 
-        {/* Link box — design: fill #F4F4F5, height 48, copy icon blue */}
+        {/* Link box — design: fill surface, height 48, copy icon blue */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 14px', backgroundColor: '#F4F4F5', borderRadius: 8, height: 48, width: '100%',
+          padding: '0 14px', backgroundColor: colors.surface, borderRadius: 8, height: 48, width: '100%',
         }}>
           <span style={{
             fontSize: 13, fontWeight: tokens.font.weight.medium, color: colors.text,
@@ -76,7 +76,7 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
           </span>
           <button onClick={handleCopy} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0, display: 'flex' }}>
             {copied
-              ? <IconCheck size={18} stroke={1.5} color="#22C55E" />
+              ? <IconCheck size={18} stroke={1.5} color={colors.success} />
               : <IconCopy size={18} stroke={1.5} color={colors.primary} />
             }
           </button>
@@ -89,16 +89,16 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
 
         {warning && (
           <div style={{
-            backgroundColor: '#fef3c7', borderRadius: 8, padding: '8px 12px', width: '100%',
-            fontSize: tokens.font.size.xs, color: '#92400e', fontFamily: tokens.font.family, lineHeight: 1.4,
+            backgroundColor: colors.warningBg, borderRadius: 8, padding: '8px 12px', width: '100%',
+            fontSize: tokens.font.size.xs, color: colors.warningText, fontFamily: tokens.font.family, lineHeight: 1.4,
           }}>
             {warning}
           </div>
         )}
 
-        {/* Expiry info card — design: fill #FAFAFA, padding 16, cornerRadius 8 */}
+        {/* Expiry info card — design: fill surface light, padding 16, cornerRadius 8 */}
         <div style={{
-          backgroundColor: '#FAFAFA', borderRadius: 8, padding: 16, width: '100%',
+          backgroundColor: colors.surface, borderRadius: 8, padding: 16, width: '100%',
           display: 'flex', flexDirection: 'column', gap: 8,
         }}>
           <div style={{ fontSize: 12, fontWeight: tokens.font.weight.semibold, color: colors.secondary, fontFamily: tokens.font.family }}>
@@ -112,7 +112,7 @@ export function ShareLinkResult({ shareUrl, ttlHours, maxViews, warning, onDone 
             <IconEye size={14} stroke={1.5} color={colors.secondary} />
             {t('share:link.afterViews', { views: viewsText })}
           </div>
-          <div style={{ fontSize: 11, fontWeight: tokens.font.weight.medium, color: '#A1A1AA', fontFamily: tokens.font.family }}>
+          <div style={{ fontSize: 11, fontWeight: tokens.font.weight.medium, color: colors.secondary, fontFamily: tokens.font.family }}>
             {t('share:link.whicheverFirst')}
           </div>
         </div>
