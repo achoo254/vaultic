@@ -83,8 +83,10 @@
 
   <script>
     const NONCE_SIZE = 12;
-    const shareId = window.location.pathname.split('/').pop();
-    const fragment = window.location.hash.slice(1);
+    // Extract shareId from path (handle trailing slash)
+    const shareId = window.location.pathname.replace(/\/+$/, '').split('/').pop();
+    // Encrypted data passed via query param ?d= (reliable across messaging apps, email clients)
+    const fragment = new URLSearchParams(window.location.search).get('d') || '';
     const isHybrid = fragment.startsWith('v1.');
 
     async function init() {

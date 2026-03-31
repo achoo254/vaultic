@@ -1,7 +1,8 @@
 import pinoHttp from "pino-http";
 import pino from "pino";
+import { envConfig } from "../config/env-config.js";
 
-export const logger = pino({ level: process.env["LOG_LEVEL"] ?? "info" });
+export const logger = pino({ level: envConfig.logLevel });
 
 export const requestLogger = pinoHttp({
   logger,

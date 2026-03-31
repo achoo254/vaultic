@@ -44,6 +44,7 @@ await build({
   minify: true,
   keepNames: true,
   define,
+  loader: { ".html": "text" },
   banner: {
     js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
   },

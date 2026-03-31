@@ -1,6 +1,4 @@
 import { Router, type Router as RouterType } from "express";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import * as shareService from "../services/share-service.js";
 import { authRequired, authOptional } from "../middleware/auth-middleware.js";
@@ -75,10 +73,11 @@ shareRouter.delete("/:id", authRequired, async (req, res) => {
   res.json(result);
 });
 
-// GET /s/:id — static share page
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const sharePage = path.join(__dirname, "../static/share-page.html");
+// GET /s/:id — static share page (imported as text by esbuild, no file dependency at runtime)
+// @ts-expect-error — esbuild loads .html as text via loader config
+import sharePageHtml from "../static/share-page.html";
 
 sharePageRouter.get("/:id", (_req, res) => {
-  res.sendFile(sharePage);
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(sharePageHtml);
 });
