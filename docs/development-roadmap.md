@@ -4,14 +4,33 @@ Strategic roadmap for post-MVP feature development. Prioritized by user value an
 
 ---
 
-## Current Status: v0.3.1 (Security Audit Fixes Complete)
+## Current Status: v1.0.0 (Chrome Web Store Publish Ready)
 
-**Release Date:** 2026-03-30
-**Completion:** MVP (v0.1.0) + Backend migration (v0.2.0) + Security audit fixes (v0.3.1)
-**User Base:** Beta — ready for individual users with enhanced security
-**Stability:** Production-ready (18 security items fixed, all tests passing)
+**Release Date:** 2026-03-31
+**Completion:** MVP (v0.1.0) + Backend migration (v0.2.0) + Security audit (v0.3.1) + i18n bilingual (v0.3.2) + CWS preparation (v1.0.0)
+**User Base:** Public — ready for Chrome Web Store distribution
+**Stability:** Production-ready (compliance documents, consent flows, legal review complete)
 **Server:** Node.js 22 + Express 4 (migrated from Rust/Axum)
-**Key improvements:** Token revocation, non-extractable keys, multi-account isolation, improved sync reliability
+**Key improvements:** Privacy Policy + Terms of Service, first-run consent UI, landing page, extension icons, v1.0.0 versioning
+
+---
+
+## v1.0.1: Post-Launch Monitoring (Q2 2026)
+
+**Goal:** Monitor user feedback, CWS reviews, and handle immediate post-publish issues.
+
+### User Feedback & QA
+- [ ] Track CWS user reviews and ratings
+- [ ] Fix critical bugs reported in first month
+- [ ] Monitor crash reports and error logs
+- [ ] Responsive support for publish issues
+- **Effort:** 1-2 weeks | **Owner:** TBD
+
+### Store Optimization
+- [ ] Refine screenshots and listing based on analytics
+- [ ] A/B test icon variations if needed
+- [ ] Optimize store listing SEO (keywords, description)
+- **Effort:** 1 week | **Owner:** TBD
 
 ---
 
@@ -250,14 +269,15 @@ Strategic roadmap for post-MVP feature development. Prioritized by user value an
 
 ## Prioritization Matrix
 
-| Feature | User Value | Effort | Timeline | Priority |
-|---------|------------|--------|----------|----------|
-| **Mobile Apps** | Very High | 6 weeks | Q2-Q3 | P0 |
-| **SRP Auth** | High | 2 weeks | Q3 | P1 |
-| **Team Vaults** | Very High | 8 weeks | Q4 | P0 |
-| **SSO** | High | 3 weeks | Q1 2027 | P1 |
-| **Self-Hosting** | Medium | 6 weeks | Q2 2027 | P2 |
-| **Passwordless** | Medium | 4 weeks | Post-2027 | P3 |
+| Feature | User Value | Effort | Timeline | Priority | Status |
+|---------|------------|--------|----------|----------|--------|
+| **CWS Publish** | Critical | 3 weeks | 2026-03-31 | P0 | ✅ DONE |
+| **Mobile Apps** | Very High | 6 weeks | Q2-Q3 2026 | P0 | Pending |
+| **SRP Auth** | High | 2 weeks | Q3 2026 | P1 | Pending |
+| **Team Vaults** | Very High | 8 weeks | Q4 2026 | P0 | Pending |
+| **SSO** | High | 3 weeks | Q1 2027 | P1 | Pending |
+| **Self-Hosting** | Medium | 6 weeks | Q2 2027 | P2 | Pending |
+| **Passwordless** | Medium | 4 weeks | Post-2027 | P3 | Pending |
 
 ---
 
@@ -322,6 +342,6 @@ Strategic roadmap for post-MVP feature development. Prioritized by user value an
 
 ---
 
-*Roadmap updated: 2026-03-26*
-*MVP Status: ✅ Complete*
-*Next milestone: v0.2.0 Mobile Apps (Q2-Q3 2026)*
+*Roadmap updated: 2026-03-31*
+*Current version: v1.0.0 (Chrome Web Store Ready)*
+*Next milestone: v1.0.1 Post-Launch Monitoring (Q2 2026) → Mobile Apps (Q2-Q3 2026)*

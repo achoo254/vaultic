@@ -6,6 +6,7 @@ import i18n from '../../i18n/i18n-config';
 import '../../i18n/i18n-types';
 import { pushPreferencesToServer } from '../../lib/sync-preferences';
 import { useAuthStore } from '../../stores/auth-store';
+import { ConsentScreen } from '../../components/onboarding/consent-screen';
 import { SetupPasswordForm } from '../../components/auth/setup-password-form';
 import { LoginForm } from '../../components/auth/login-form';
 import { RegisterForm } from '../../components/auth/register-form';
@@ -42,17 +43,39 @@ type View =
   | { type: 'health' }
   | { type: 'folders' };
 
+const CONSENT_KEY = 'vaultic_consent_accepted';
+
 export function App() {
   const { vaultState, hydrate } = useAuthStore();
   const deleteItem = useVaultStore((s) => s.deleteItem);
   const [view, setView] = useState<View>({ type: 'loading' });
   const [activeTab, setActiveTab] = useState<NavTab>('vault' as NavTab);
+  const [consentAccepted, setConsentAccepted] = useState<boolean | null>(null);
+
+  // Check consent status on mount
+  useEffect(() => {
+    chrome.storage.local.get(CONSENT_KEY, (result) => {
+      if (chrome.runtime.lastError) {
+        setConsentAccepted(false);
+        return;
+      }
+      setConsentAccepted(result[CONSENT_KEY] === true);
+    });
+  }, []);
+
+  const handleConsentAccept = () => {
+    chrome.storage.local.set({ [CONSENT_KEY]: true }, () => {
+      if (chrome.runtime.lastError) return;
+      setConsentAccepted(true);
+    });
+  };
 
   // Hydrate auth state + record activity for auto-lock timer
   useEffect(() => {
+    if (consentAccepted !== true) return;
     hydrate();
     chrome.runtime?.sendMessage?.({ type: 'record-activity' }).catch(() => {});
-  }, [hydrate]);
+  }, [hydrate, consentAccepted]);
 
   // Route based on vaultState (replaces old isLoggedIn + isLocked logic)
   useEffect(() => {
@@ -85,11 +108,18 @@ export function App() {
 
   const showBottomNav = !['loading', 'setup', 'register', 'login', 'locked'].includes(view.type);
 
+  // Show nothing while checking consent status
+  if (consentAccepted === null) return null;
+
   return (
     <ThemeProvider>
       <I18nProvider onLanguageChange={(lang) => { i18n.changeLanguage(lang); pushPreferencesToServer({ language: lang }); }}>
-        <AppShell view={view} setView={setView} activeTab={activeTab} setActiveTab={setActiveTab}
-          showBottomNav={showBottomNav} handleTabChange={handleTabChange} deleteItem={deleteItem} />
+        {!consentAccepted ? (
+          <ConsentScreen onAccept={handleConsentAccept} />
+        ) : (
+          <AppShell view={view} setView={setView} activeTab={activeTab} setActiveTab={setActiveTab}
+            showBottomNav={showBottomNav} handleTabChange={handleTabChange} deleteItem={deleteItem} />
+        )}
       </I18nProvider>
     </ThemeProvider>
   );
