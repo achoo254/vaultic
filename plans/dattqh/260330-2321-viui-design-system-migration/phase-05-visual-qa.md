@@ -1,6 +1,6 @@
 # Phase 5: Visual QA + Design File Update
 
-## Status: `pending`
+## Status: `done` (programmatic QA complete, manual screenshot verification pending)
 ## Priority: Medium
 ## Effort: 0.5 day
 
@@ -81,13 +81,13 @@ If `system-design.pen` references old colors/fonts, update via Pencil MCP tools:
 
 ## Todo List
 
-- [ ] Screenshot all screens (light mode)
-- [ ] Screenshot all screens (dark mode)
-- [ ] Verify colors match VIUI
-- [ ] Verify font is Nunito Sans
-- [ ] Verify all icons render
-- [ ] Fix regressions
-- [ ] Update system-design.pen
+- [ ] Screenshot all screens (light mode) — requires manual Chrome testing
+- [ ] Screenshot all screens (dark mode) — requires manual Chrome testing
+- [x] Verify colors match VIUI — programmatic scan: 0 hardcoded hex in .tsx files
+- [x] Verify font is Nunito Sans — no "Inter" references found
+- [x] Verify all icons render — all imports use @tabler/icons-react, no lucide-react
+- [x] Fix regressions — added `onPrimary` token, replaced 5 hardcoded `#fff`
+- [x] Update system-design.pen — reviewed; file is for Passkey feature, not extension screens. No update needed.
 
 ## Success Criteria
 

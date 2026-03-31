@@ -195,7 +195,7 @@ export function SharePage({ onBack }: SharePageProps) {
                 {/* Source card with avatar — design screen 13 */}
                 <div style={sourceCard}>
                   <div style={sourceAvatar}>
-                    <IconWorld size={18} stroke={1.5} color="#fff" />
+                    <IconWorld size={18} stroke={1.5} color={colors.onPrimary} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
                     <span style={sourceName}>{selectedItem.credential.name}</span>

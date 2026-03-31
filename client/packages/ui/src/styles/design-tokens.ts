@@ -25,6 +25,7 @@ export const lightColors = {
   warningBg: '#FFFBEB', warningText: '#92400E',
   successBg: '#ECFDF5', successText: '#065F46',
   primaryBg: '#EFF6FF',
+  onPrimary: '#FFFFFF', // text/icons on primary/accent backgrounds
 } as const;
 
 export const darkColors = {
@@ -50,6 +51,7 @@ export const darkColors = {
   warningBg: '#2A1F06', warningText: '#FBBF24',
   successBg: '#0A2A1F', successText: '#34D399',
   primaryBg: '#0A1628',
+  onPrimary: '#FFFFFF', // text/icons on primary/accent backgrounds
 } as const;
 
 export type ThemeColors = typeof lightColors | typeof darkColors;
