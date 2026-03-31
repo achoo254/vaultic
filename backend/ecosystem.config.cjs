@@ -2,7 +2,7 @@
 module.exports = {
   apps: [{
     name: 'vaultic',
-    script: 'server.js',
+    script: 'dist/server-production.js',
     cwd: __dirname,
     instances: 1,
     exec_mode: 'fork',
