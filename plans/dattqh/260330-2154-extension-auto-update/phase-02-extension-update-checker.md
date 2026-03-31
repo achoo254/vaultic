@@ -1,11 +1,11 @@
-# Phase 2: Extension Update Checker Service
+# Phase 2: Extension Update Checker Service (Sideload Only)
 
-## Status: `pending`
+## Status: `done`
 ## Priority: High
 ## Effort: 2-3 hours
 
 ## Overview
-Background service worker alarm poll server mỗi 6h, so sánh version, lưu update state vào chrome.storage.local, set badge.
+Background service worker alarm poll server mỗi 6h, so sánh version, lưu update state vào chrome.storage.local, set badge. **Chỉ chạy cho sideload installs** — CWS users skip entirely.
 
 ## Context
 - Existing alarm pattern: `client/apps/extension/src/entrypoints/background/sync-alarm-handler.ts`
@@ -25,10 +25,28 @@ Background service worker alarm poll server mỗi 6h, so sánh version, lưu upd
 
 ## Implementation Steps
 
-### 1. Thêm `downloads` permission
+### 0. Install type detection (GATE — chạy trước mọi thứ)
+```typescript
+// Trong setupUpdateAlarm() hoặc background.ts init:
+async function isSideloadInstall(): Promise<boolean> {
+  const self = await chrome.management.getSelf();
+  // "normal" = CWS, "development" = unpacked/sideload
+  return self.installType !== 'normal';
+}
+
+// Trong init:
+const sideload = await isSideloadInstall();
+if (!sideload) {
+  // CWS install → Chrome handles auto-update → skip entirely
+  return;
+}
+// Proceed with alarm setup...
+```
+
+### 1. Thêm `downloads` + `management` permissions
 ```typescript
 // wxt.config.ts
-permissions: ['storage', 'activeTab', 'scripting', 'alarms', 'idle', 'downloads'],
+permissions: ['storage', 'activeTab', 'scripting', 'alarms', 'idle', 'downloads', 'management'],
 ```
 
 ### 2. Tạo update state types (`lib/update-checker.ts`)
@@ -91,12 +109,13 @@ function isNewerVersion(current: string, latest: string): boolean {
 ```
 
 ## Todo
-- [ ] Thêm `downloads` permission vào wxt.config.ts
-- [ ] Tạo `lib/update-checker.ts` — types + helpers
-- [ ] Tạo `background/update-checker-handler.ts` — alarm handler
-- [ ] Register alarm + message handlers trong background.ts
-- [ ] Test: alarm fires → fetch → compare → badge set
-- [ ] Test: graceful failure khi server unreachable
+- [x] Thêm `downloads` + `management` permissions vào wxt.config.ts
+- [x] Tạo `lib/update-checker.ts` — types + helpers + `isSideloadInstall()`
+- [x] Tạo `background/update-checker-handler.ts` — alarm handler (gated by install type)
+- [x] Register alarm + message handlers trong background.ts
+- [x] Test: CWS install → update checker NOT initialized
+- [x] Test: sideload install → alarm fires → fetch → compare → badge set
+- [x] Test: graceful failure khi server unreachable
 
 ## Success Criteria
 - Alarm `check-extension-update` chạy mỗi 6h

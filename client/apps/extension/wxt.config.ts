@@ -9,7 +9,7 @@ export default defineConfig({
     name: 'Vaultic Password Manager',
     description:
       'Open-source, zero-knowledge password manager with autofill',
-    version: '1.0.0',
+    version: '0.1.0',
     icons: {
       '16': 'assets/icons/icon-16.png',
       '32': 'assets/icons/icon-32.png',
@@ -17,7 +17,7 @@ export default defineConfig({
       '128': 'assets/icons/icon-128.png',
     },
     homepage_url: 'https://vaultic.inetdev.io.vn',
-    permissions: ['storage', 'activeTab', 'scripting', 'alarms', 'idle'],
+    permissions: ['storage', 'activeTab', 'scripting', 'alarms', 'idle', 'downloads', 'management'],
     host_permissions: ['<all_urls>'],
     content_security_policy: {
       extension_pages:

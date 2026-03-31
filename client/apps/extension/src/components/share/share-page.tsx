@@ -10,7 +10,7 @@ import { encryptShareToUrl } from '../../lib/share-crypto';
 import { useVaultStore } from '../../stores/vault-store';
 import { useAuthStore } from '../../stores/auth-store';
 import type { DecryptedVaultItem } from '../../stores/vault-store';
-import { fetchWithAuth } from '../../lib/fetch-with-auth';
+import { fetchWithAuth } from '../../lib/create-auth-fetch';
 
 const SHARE_BASE_URL = import.meta.env.VITE_SHARE_URL || 'http://localhost:8080/s';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';

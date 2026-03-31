@@ -1,6 +1,6 @@
 # Phase 4: Update Guide Page + Download Flow
 
-## Status: `pending`
+## Status: `done`
 ## Priority: Medium
 ## Effort: 1-2 hours
 
@@ -60,13 +60,13 @@ Step 3: Reload
 - Responsive cho các kích thước tab khác nhau
 
 ## Todo
-- [ ] Tạo WXT tab entrypoint (html + main.tsx + app.tsx)
-- [ ] Implement 3-step guide layout
-- [ ] Đọc dynamic version info từ storage
-- [ ] Fallback download button
-- [ ] Style với design tokens
-- [ ] Test: page mở đúng từ popup click
-- [ ] Test: hiện đúng version info
+- [x] Tạo WXT tab entrypoint (html + main.tsx + app.tsx)
+- [x] Implement 3-step guide layout
+- [x] Đọc dynamic version info từ storage
+- [x] Fallback download button
+- [x] Style với design tokens
+- [x] Test: page mở đúng từ popup click
+- [x] Test: hiện đúng version info
 
 ## Success Criteria
 - Page mở đúng URL `chrome-extension://id/update-guide.html`

@@ -1,7 +1,8 @@
 // I18n context — provides language switching to all UI components
-// Persists preference to chrome.storage.local, follows ThemeProvider pattern
+// Supports pluggable storage: chrome.storage, localStorage, or custom adapter
 
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
+import type { StorageAdapter } from './theme-provider';
 
 export type Language = 'en' | 'vi';
 
@@ -17,34 +18,62 @@ const I18nContext = createContext<I18nContextValue>({
 
 const STORAGE_KEY = 'vaultic_language';
 
+/** Check if chrome.storage.local is available (extension environment) */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getChromeStorage(): { get: (key: string) => Promise<Record<string, any>>; set: (obj: Record<string, any>) => Promise<void> } | null {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const g = globalThis as any;
+  if (typeof g.chrome !== 'undefined' && g.chrome.storage?.local) return g.chrome.storage.local;
+  return null;
+}
+
+/** Default storage adapter — uses chrome.storage.local if available, else localStorage */
+const defaultAdapter: StorageAdapter = {
+  async get(key) {
+    const cs = getChromeStorage();
+    if (cs) {
+      const r = await cs.get(key);
+      return r[key] ?? null;
+    }
+    return localStorage.getItem(key);
+  },
+  async set(key, value) {
+    const cs = getChromeStorage();
+    if (cs) {
+      await cs.set({ [key]: value });
+    } else {
+      localStorage.setItem(key, value);
+    }
+  },
+};
+
 interface I18nProviderProps {
   children: React.ReactNode;
   /** Called when language changes — parent should call i18n.changeLanguage() */
   onLanguageChange?: (lang: Language) => void;
+  /** Optional storage adapter — defaults to chrome.storage.local or localStorage */
+  storageAdapter?: StorageAdapter;
 }
 
-export function I18nProvider({ children, onLanguageChange }: I18nProviderProps) {
+export function I18nProvider({ children, onLanguageChange, storageAdapter }: I18nProviderProps) {
+  const adapter = storageAdapter || defaultAdapter;
   const [language, setLanguageState] = useState<Language>('en');
 
   // Load saved preference on mount
   useEffect(() => {
-    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-      chrome.storage.local.get(STORAGE_KEY).then((r) => {
-        if (r[STORAGE_KEY] && (r[STORAGE_KEY] === 'en' || r[STORAGE_KEY] === 'vi')) {
-          setLanguageState(r[STORAGE_KEY] as Language);
-          onLanguageChange?.(r[STORAGE_KEY] as Language);
-        }
-      });
-    }
+    adapter.get(STORAGE_KEY).then((val) => {
+      if (val && (val === 'en' || val === 'vi')) {
+        setLanguageState(val as Language);
+        onLanguageChange?.(val as Language);
+      }
+    });
   }, []);
 
   const setLanguage = useCallback((newLang: Language) => {
     setLanguageState(newLang);
     onLanguageChange?.(newLang);
-    if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-      chrome.storage.local.set({ [STORAGE_KEY]: newLang });
-    }
-  }, [onLanguageChange]);
+    adapter.set(STORAGE_KEY, newLang);
+  }, [onLanguageChange, adapter]);
 
   const value = useMemo(
     () => ({ language, setLanguage }),

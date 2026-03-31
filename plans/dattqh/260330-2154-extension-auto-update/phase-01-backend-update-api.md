@@ -1,6 +1,6 @@
 # Phase 1: Backend Update API + Static Hosting
 
-## Status: `pending`
+## Status: `done`
 ## Priority: High
 ## Effort: 2-3 hours
 
@@ -61,11 +61,11 @@ mkdir -p /var/www/vaultic/releases
 ```
 
 ## Todo
-- [ ] Tạo `backend/static/extension-release.json`
-- [ ] Tạo `backend/src/routes/extension-update-route.ts`
-- [ ] Mount route trong `server.ts`
-- [ ] Cấu hình nginx cho static releases
-- [ ] Test endpoint trả đúng JSON
+- [x] Tạo `backend/static/extension-release.json`
+- [x] Tạo `backend/src/routes/extension-update-route.ts`
+- [x] Mount route trong `server.ts`
+- [x] Cấu hình nginx cho static releases
+- [x] Test endpoint trả đúng JSON
 
 ## Success Criteria
 - `GET /api/v1/extension/latest` trả `{ version, downloadUrl, releaseNotes, releasedAt }`

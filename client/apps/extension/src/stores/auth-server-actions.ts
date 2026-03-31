@@ -8,7 +8,7 @@ import {
   storeUserInfo,
   storeVaultConfig,
 } from '../lib/session-storage';
-import { computeVerifier } from '../lib/encoding-utils';
+import { computeVerifier } from '@vaultic/crypto';
 
 export interface ServerAuthResult {
   isLocked: false;

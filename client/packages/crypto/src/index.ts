@@ -7,3 +7,9 @@ export {
   encodeShareFragment, decodeShareFragment,
   estimateFragmentSize, isWithinUrlLimit, MAX_FRAGMENT_LENGTH,
 } from './url-share-codec';
+
+// Vault helpers — encrypt/decrypt vault items and folder names
+export { encryptVaultItem, decryptVaultItem, encryptFolderName, decryptFolderName } from './vault-helpers';
+
+// Encoding utilities — Base64 conversion + key verifier
+export { uint8ToBase64, base64ToUint8, computeVerifier } from './encoding-utils';

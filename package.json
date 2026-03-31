@@ -14,7 +14,8 @@
     "build:be:staging": "pnpm --filter @vaultic/backend build:staging",
     "build:be:production": "pnpm --filter @vaultic/backend build:production",
     "lint": "turbo lint",
-    "test": "turbo test"
+    "test": "turbo test",
+    "release:ext": "bash scripts/build-extension-release.sh"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.1",

@@ -1,6 +1,6 @@
 # Phase 5: Build Script Auto-Zip + Versioning
 
-## Status: `pending`
+## Status: `done`
 ## Priority: Medium
 ## Effort: 1 hour
 
@@ -85,13 +85,13 @@ scp backend/static/extension-release.json user@vps:/path/to/backend/static/
 ```
 
 ## Todo
-- [ ] Tạo `scripts/build-extension-release.sh`
-- [ ] Tạo `backend/static/releases/` directory (gitignore .zip files)
-- [ ] Thêm `release:ext` script vào root package.json
-- [ ] Thêm `.gitignore` entry cho `backend/static/releases/*.zip`
-- [ ] Test: script build + zip đúng
-- [ ] Test: metadata file update đúng version
-- [ ] Document deployment flow
+- [x] Tạo `scripts/build-extension-release.sh`
+- [x] Tạo `backend/static/releases/` directory (gitignore .zip files)
+- [x] Thêm `release:ext` script vào root package.json
+- [x] Thêm `.gitignore` entry cho `backend/static/releases/*.zip`
+- [x] Test: script build + zip đúng
+- [x] Test: metadata file update đúng version
+- [x] Document deployment flow
 
 ## Success Criteria
 - `pnpm release:ext` → build production + tạo .zip + update metadata

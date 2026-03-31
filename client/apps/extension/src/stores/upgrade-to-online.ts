@@ -12,7 +12,7 @@ import {
   getVaultConfig,
   getEncryptionKey,
 } from '../lib/session-storage';
-import { base64ToUint8, computeVerifier } from '../lib/encoding-utils';
+import { base64ToUint8, computeVerifier } from '@vaultic/crypto';
 
 export interface UpgradeResult {
   mode: 'online';

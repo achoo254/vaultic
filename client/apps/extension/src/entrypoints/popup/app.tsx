@@ -23,7 +23,10 @@ import { SecurityHealth } from '../../components/settings/security-health';
 import { FolderManagement } from '../../components/vault/folder-management';
 import { ToastContainer } from '../../components/common/toast';
 import { BottomNav, type NavTab } from '../../components/common/bottom-nav';
+import { UpdateBanner } from '../../components/common/update-banner';
 import { useVaultStore } from '../../stores/vault-store';
+import type { UpdateState } from '../../lib/update-checker';
+import { UPDATE_STORAGE_KEY, resolveDownloadUrl } from '../../lib/update-checker';
 
 type View =
   | { type: 'loading' }
@@ -131,6 +134,40 @@ function AppShell({ view, setView, activeTab, setActiveTab, showBottomNav, handl
 }) {
   const { colors } = useTheme();
   const { t } = useTranslation(['common']);
+  const [updateState, setUpdateState] = useState<UpdateState | null>(null);
+
+  // Load update state on mount + listen for storage changes
+  useEffect(() => {
+    chrome.storage.local.get(UPDATE_STORAGE_KEY, (result) => {
+      if (result[UPDATE_STORAGE_KEY]) setUpdateState(result[UPDATE_STORAGE_KEY]);
+    });
+    const listener = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+      if (UPDATE_STORAGE_KEY in changes) {
+        setUpdateState(changes[UPDATE_STORAGE_KEY].newValue || null);
+      }
+    };
+    chrome.storage.local.onChanged.addListener(listener);
+    return () => chrome.storage.local.onChanged.removeListener(listener);
+  }, []);
+
+  const handleUpdate = () => {
+    if (!updateState?.info) return;
+    const url = resolveDownloadUrl(updateState.info.downloadUrl);
+    if (url) {
+      chrome.downloads.download({ url }, () => {
+        if (chrome.runtime.lastError) console.error('Download failed:', chrome.runtime.lastError);
+      });
+    }
+    chrome.tabs.create({ url: chrome.runtime.getURL('/update-guide.html') });
+    window.close();
+  };
+
+  const handleDismissUpdate = () => {
+    if (!updateState?.info) return;
+    chrome.runtime.sendMessage({ type: 'DISMISS_UPDATE', version: updateState.info.version });
+  };
+
+  const showBanner = updateState?.available && !updateState.dismissed && updateState.info;
 
   const containerStyle: React.CSSProperties = {
     width: tokens.extension.width,
@@ -144,6 +181,13 @@ function AppShell({ view, setView, activeTab, setActiveTab, showBottomNav, handl
 
   return (
     <div style={containerStyle}>
+      {showBanner && (
+        <UpdateBanner
+          version={updateState.info!.version}
+          onUpdate={handleUpdate}
+          onDismiss={handleDismissUpdate}
+        />
+      )}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {view.type === 'loading' && <CenterMessage text={t('common:loading')} />}
         {view.type === 'setup' && (

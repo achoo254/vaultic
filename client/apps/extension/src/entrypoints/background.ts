@@ -4,18 +4,22 @@ import { initAutoLock, checkAutoLock, recordActivity, listenAutoLockChanges } fr
 import { clearClipboardViaTab, scheduleClipboardClear } from './background/clipboard-handler';
 import { getMatchingCredentials, handleCapturedCredential, saveCredential, fillCredentialById } from './background/credential-handler';
 import { initSyncAlarm, handleSyncAlarm, listenSyncSettingsChanges } from './background/sync-alarm-handler';
+import { initUpdateAlarm, handleUpdateAlarm, dismissUpdate } from './background/update-checker-handler';
+import { UPDATE_ALARM_NAME, getUpdateState } from '../lib/update-checker';
 
 export default defineBackground(() => {
   initAutoLock();
   listenAutoLockChanges();
   initSyncAlarm();
   listenSyncSettingsChanges();
+  initUpdateAlarm();
 
   // Alarm handler for auto-lock check + clipboard clear + sync
   browser.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name === 'auto-lock-check') await checkAutoLock();
     if (alarm.name === 'clear-clipboard') await clearClipboardViaTab();
     if (alarm.name === 'vaultic-sync') await handleSyncAlarm();
+    if (alarm.name === UPDATE_ALARM_NAME) await handleUpdateAlarm();
   });
 
   // Message router for popup and content scripts
@@ -54,6 +58,17 @@ async function handleMessage(
     }
     case 'SYNC_NOW': {
       await handleSyncAlarm();
+      return { ok: true };
+    }
+    case 'CHECK_UPDATE': {
+      await handleUpdateAlarm();
+      return { ok: true };
+    }
+    case 'GET_UPDATE_STATE': {
+      return await getUpdateState();
+    }
+    case 'DISMISS_UPDATE': {
+      await dismissUpdate(msg.version as string);
       return { ok: true };
     }
     default:

@@ -7,11 +7,123 @@ All notable changes to the Vaultic project are documented here. Format follows [
 ## [Unreleased]
 
 ### In Progress
-- Chrome Web Store publish preparation — v1.0.0 milestone
 - Mobile apps (iOS/Android) — architecture planning
 - SRP (Secure Remote Password) protocol — v0.3 phase
 - WebAuthn/TOTP support — security enhancement
 - Team vault sharing — v1.0.0 collaboration features
+
+### Web App (React SPA) — 2026-03-31
+**Status:** ✅ Implemented (6 phases complete, code review in progress)
+
+#### Project Structure
+- **Repository:** `client/apps/web/` — New Vite + React SPA application
+- **Package:** `@vaultic/web` — Monorepo workspace integration
+- **Code reuse:** 84% shared from `@vaultic/crypto`, `@vaultic/storage`, `@vaultic/sync`, `@vaultic/api`, `@vaultic/ui`
+
+#### Architecture
+- **Framework:** React 19 + Vite + react-router-7
+- **Layout:** Responsive 480px centered container (vs 380×520px fixed extension)
+- **State management:** Zustand stores (auth, vault)
+- **Build:** ~103KB gzipped, production-optimized with code splitting
+
+#### Authentication
+- **httpOnly Cookie Refresh Token** — XSS-proof refresh token in secure httpOnly cookie
+- **sessionStorage Access Token** — Cleared on tab close
+- **New Backend Endpoints:**
+  - `POST /api/v1/auth/web/login` — Returns access token + sets httpOnly refresh cookie
+  - `POST /api/v1/auth/web/refresh` — Reads cookie, returns new access token
+  - `POST /api/v1/auth/web/logout` — Clears refresh cookie
+- **CORS with credentials** — Configured for web app origin
+
+#### Core Features
+- **Vault CRUD** — Create, read, update, delete vault items with AES-256-GCM encryption
+- **Cloud Sync** — Optional multi-device sync via delta push/pull with LWW conflict resolution
+- **Password Generator** — Secure random password generation modal
+- **Secure Share** — Create encrypted share links independent of sync toggle
+- **Export/Import** — Backup vault as JSON (plaintext) or encrypted format
+- **Settings** — Theme toggle (light/dark), language selector (EN/VI), sync management
+
+#### Web-Specific Features
+- **Auto-lock** — setTimeout + activity event tracking + visibilitychange (15min active, 5min hidden)
+- **Sync Scheduler** — setInterval (5min) + tab focus trigger + beforeunload push
+- **Clipboard Auto-clear** — Auto-clear password after 30s copy
+- **Design Tokens** — Uses @vaultic/ui design system (no hardcoded colors)
+- **i18n Support** — Full bilingual (EN + VI) via i18next + localStorage persistence
+
+#### Pages & Routes
+```
+/              → Redirects to /vault
+/login         → Email + password login (httpOnly auth)
+/register      → Email + password registration
+/vault         → Main vault (list, search, CRUD, generator modal)
+/settings      → Sync toggle, theme, language, export/import, security health
+/share         → Secure share link creation
+/onboarding    → First-run consent gate (Privacy Policy + Terms of Service)
+```
+
+#### Security
+- **Master password security:** Argon2id KDF (64MB RAM, 3 iterations) never sent to server
+- **Encryption:** AES-256-GCM per item, random nonce per encryption
+- **Storage:** IndexedDB stores ciphertext only
+- **Token rotation:** Refresh tokens rotated on each refresh
+- **CORS:** Restricted to configured web origin
+- **CSP:** Content-Security-Policy meta tag (script-src 'self')
+
+#### Testing & QA
+- **All packages build:** tsc passes for types, crypto, api, storage, sync, ui
+- **Web app builds:** vite build produces ~103KB gzipped production bundle
+- **Backend type-checks:** tsc --noEmit passes
+- **Code review:** In progress (extensibility, patterns, quality)
+
+#### Shared Code Migration (Phase 0)
+- Moved `vault-crypto.ts`, `encoding-utils.ts` → `@vaultic/crypto`
+- Moved `sync-api-transforms.ts` → `@vaultic/api`
+- Refactored `fetch-with-auth.ts` → `@vaultic/api` with dependency injection (TokenProvider interface)
+- Created `create-auth-fetch.ts` wrapper in extension
+- Added `exports` field to all 6 packages (crypto, api, storage, sync, ui, types)
+
+#### Implementation Details
+- **auth-store.ts** — Adapted from extension, uses httpOnly cookie + sessionStorage
+- **vault-store.ts** — Identical to extension, reuses IndexedDB + sync engine
+- **web-storage.ts** — Storage adapter (sessionStorage for session, localStorage for persistent)
+- **web-auth-fetch.ts** — Authenticated fetch with httpOnly cookie refresh flow
+- **create-sync-engine.ts** — Sync factory, configurable for web
+- **web-auto-lock.ts** — Auto-lock timer with visibilitychange + activity tracking
+- **web-sync-scheduler.ts** — Periodic sync via setInterval + tab focus
+- **web-clipboard.ts** — Clipboard auto-clear after 30s
+
+#### Phase Breakdown
+| # | Phase | Status | Details |
+|-|-------|--------|---------|
+| 0 | Refactor shared packages | ✅ Done | Moved libs to packages, added TokenProvider interface |
+| 1 | Web app shell (Vite + router) | ✅ Done | Created @vaultic/web with 6 routes, responsive layout |
+| 2 | httpOnly auth + web storage | ✅ Done | Backend /web/login/refresh/logout, sessionStorage adapter |
+| 3 | Core features (vault, sync, share) | ✅ Done | All 6 pages, CRUD, sync integration, password generator |
+| 4 | Web-specific features | ✅ Done | Auto-lock, sync scheduler, clipboard auto-clear |
+| 5 | Test + Polish | ⏳ In Progress | Code review, final QA, responsive testing |
+
+#### Build & Deployment
+- **Dev server:** `pnpm --filter @vaultic/web dev` on port 5180
+- **Production build:** `pnpm --filter @vaultic/web build` → dist/ folder
+- **Preview:** `pnpm --filter @vaultic/web preview` to test production build
+- **Nginx config:** Ready for deployment (SPA routing, gzip, CSP headers)
+
+#### Known Limitations & Future Work
+- Unit tests & integration tests not yet complete (Phase 5)
+- Responsive QA on all viewports (320px–1024px+) in progress
+- CSP headers finalization pending
+- Backend CORS whitelist to be updated for production domain
+
+---
+
+### Extension Auto-Update Feature (Sideload Only)
+- **New Backend Endpoint:** `GET /api/v1/extension/latest` — public metadata endpoint for version checking
+- **Update Checker:** `@vaultic/extension` polls server every 6 hours (chrome.alarms)
+- **Visual Indicator:** Red "!" badge on extension icon when update available
+- **Sideload-Only:** Gated via `chrome.management.getSelf()` — Chrome Web Store installs skipped
+- **UI:** Compact update banner (36px) with download + dismiss actions
+- **Storage:** Update state persisted in `chrome.storage.local` with version-specific dismissal
+- **Status:** ✅ Implemented (4 phases complete)
 
 ---
 
@@ -525,5 +637,5 @@ See `development-roadmap.md` for v0.2+ planning.
 
 ---
 
-*Changelog generated: 2026-03-26*
-*MVP Status: Complete (All 8 phases shipped)*
+*Changelog generated: 2026-03-31*
+*MVP Status: Complete | Extension Auto-Update: Implemented*
