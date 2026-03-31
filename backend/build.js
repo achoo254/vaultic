@@ -1,17 +1,7 @@
 import { build } from "esbuild";
-import { readFileSync } from "fs";
 
-const pkg = JSON.parse(readFileSync("./package.json", "utf-8"));
-
-// Mark all dependencies as external — they stay in node_modules at runtime
-// Exception: pure-JS packages that must be bundled (no node_modules on prod)
-const bundleInline = new Set(["express-async-errors"]);
-
-const external = [
-  ...Object.keys(pkg.dependencies ?? {}),
-  ...Object.keys(pkg.devDependencies ?? {}),
-].filter((dep) => !bundleInline.has(dep));
-
+// Bundle ALL dependencies into dist/server.js — prod has no node_modules.
+// All backend deps are pure JS (no native .node bindings), safe to bundle.
 await build({
   entryPoints: ["src/server.ts"],
   bundle: true,
@@ -20,7 +10,6 @@ await build({
   format: "esm",
   outfile: "dist/server.js",
   sourcemap: true,
-  external,
 });
 
 console.log("Build complete → dist/server.js");
