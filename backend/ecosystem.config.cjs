@@ -1,14 +1,7 @@
 // PM2 ecosystem config for Vaultic backend
-// Reads NODE_ENV from .env file to select the correct build
-const fs = require('fs');
-const path = require('path');
-
-let mode = process.env.NODE_ENV || 'production';
-const envPath = path.join(__dirname, '.env');
-if (fs.existsSync(envPath)) {
-  const match = fs.readFileSync(envPath, 'utf8').match(/^NODE_ENV=(.+)$/m);
-  if (match) mode = match[1].trim();
-}
+// Usage: pm2 start ecosystem.config.cjs
+// Override: NODE_ENV=staging pm2 start ecosystem.config.cjs
+const mode = process.env.NODE_ENV || 'production';
 
 module.exports = {
   apps: [{
