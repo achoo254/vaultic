@@ -1,7 +1,7 @@
 // Screen 23: Export Vault — encrypted (.vaultic) or CSV format
 import React, { useState } from 'react';
 import { Button, VStack, HStack, tokens, useTheme } from '@vaultic/ui';
-import { ArrowLeft, Download, AlertTriangle } from 'lucide-react';
+import { IconArrowLeft, IconDownload, IconAlertTriangle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useVaultStore } from '../../stores/vault-store';
 
@@ -63,11 +63,11 @@ export function ExportVault({ onBack }: ExportVaultProps) {
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <button onClick={onBack} style={backBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
+        <button onClick={onBack} style={backBtn}><IconArrowLeft size={18} stroke={1.5} /></button>
         <span style={titleStyle}>{t('settings:export.title')}</span>
       </div>
       <VStack gap="lg" style={{ padding: tokens.spacing.xxl, flex: 1, justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}><Download size={36} strokeWidth={1.5} color={colors.primary} /></div>
+        <div style={{ textAlign: 'center' }}><IconDownload size={36} stroke={1.5} color={colors.primary} /></div>
         <div style={descStyle}>{t('settings:export.description')}</div>
 
         <HStack gap="sm">
@@ -85,13 +85,13 @@ export function ExportVault({ onBack }: ExportVaultProps) {
 
         {format === 'json' && (
           <div style={warningStyle}>
-            <AlertTriangle size={14} strokeWidth={1.5} style={{ flexShrink: 0 }} /> {t('settings:export.jsonWarning')}
+            <IconAlertTriangle size={14} stroke={1.5} style={{ flexShrink: 0 }} /> {t('settings:export.jsonWarning')}
           </div>
         )}
 
         {format === 'csv' && (
           <div style={warningStyle}>
-            <AlertTriangle size={14} strokeWidth={1.5} style={{ flexShrink: 0 }} /> {t('settings:export.csvWarning')}
+            <IconAlertTriangle size={14} stroke={1.5} style={{ flexShrink: 0 }} /> {t('settings:export.csvWarning')}
           </div>
         )}
 

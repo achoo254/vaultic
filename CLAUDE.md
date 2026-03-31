@@ -27,7 +27,7 @@ Vaultic — open-source, extension-first password manager with zero-knowledge en
 2. NEVER create new files if existing file serves same purpose — edit existing
 3. NEVER hardcode secrets, URLs, credentials — use environment variables
 4. ALL UI must use design tokens from `@vaultic/ui` — never hardcode colors/fonts/spacing
-5. ALL icons must use `lucide-react` with `strokeWidth={1.5}` — never emoji
+5. ALL icons must use `@tabler/icons-react` with `stroke={1.5}` — never emoji
 6. File size limit: 200 lines — modularize if exceeding
 7. Cross-package imports: `@vaultic/*` — never relative paths
 8. Run `tsc --noEmit` after modifying TypeScript files
@@ -141,9 +141,9 @@ Client-side encryption flow (Argon2id: 64MB RAM, 3 iterations):
 
 ## Design Style
 
-Swiss Clean Minimal — stroke-based, single blue accent.
-- Primary: `#2563EB`, Text: `#18181B`, Secondary: `#71717A`, Borders: `#E4E4E7`
-- Font: Inter 400-700, Icons: Lucide (outlined, strokeWidth 1.5)
+Swiss Clean Minimal — stroke-based, single blue accent (VIUI Design System).
+- Colors: Use `tokens.colors.*` from design system (no hardcoded hex values)
+- Font: Inter 400-700, Icons: Tabler (outlined, stroke 1.5)
 - Extension size: 380x520px (fixed)
 - Design file: `system-design.pen` (use Pencil MCP tools to read)
 - Design tokens: `client/packages/ui/src/styles/design-tokens.ts` — ALL UI must use these, never hardcode

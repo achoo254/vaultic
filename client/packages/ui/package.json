@@ -10,10 +10,9 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
+    "clsx": "^2",
     "react": "^19",
-    "react-dom": "^19",
-    "lucide-react": "^0.468",
-    "clsx": "^2"
+    "react-dom": "^19"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.268",

@@ -12,28 +12,28 @@ const BANNER_CSS = `
   @keyframes vaultic-banner-in { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
   .vaultic-sb-icon { width:20px; height:20px; flex-shrink:0; }
   .vaultic-sb-text { display:flex; flex-direction:column; gap:1px; flex:1; min-width:0; }
-  .vaultic-sb-title { font-size:13px; font-weight:600; color:#18181B; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .vaultic-sb-sub { font-size:11px; color:#71717A; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .vaultic-sb-title { font-size:13px; font-weight:600; color:#0F1E2D; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .vaultic-sb-sub { font-size:11px; color:#4A6278; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .vaultic-sb-save { display:flex; align-items:center; justify-content:center; height:32px; padding:0 14px;
-    background:#2563EB; color:#fff; font-size:12px; font-weight:600; border-radius:6px; cursor:pointer; flex-shrink:0; }
-  .vaultic-sb-save:hover { background:#1D4ED8; }
-  .vaultic-sb-never { font-size:12px; font-weight:500; color:#71717A; cursor:pointer; flex-shrink:0; }
-  .vaultic-sb-never:hover { color:#18181B; }
+    background:#024799; color:#fff; font-size:12px; font-weight:600; border-radius:6px; cursor:pointer; flex-shrink:0; }
+  .vaultic-sb-save:hover { background:#023A7A; }
+  .vaultic-sb-never { font-size:12px; font-weight:500; color:#4A6278; cursor:pointer; flex-shrink:0; }
+  .vaultic-sb-never:hover { color:#0F1E2D; }
   .vaultic-sb-close { width:16px; height:16px; cursor:pointer; flex-shrink:0; opacity:0.5; }
   .vaultic-sb-close:hover { opacity:1; }
   @media (prefers-color-scheme: dark) {
-    .vaultic-save-banner { background:#18181B; box-shadow:0 4px 16px rgba(0,0,0,0.3); }
-    .vaultic-sb-title { color:#FAFAFA; }
-    .vaultic-sb-sub { color:#A1A1AA; }
-    .vaultic-sb-save { background:#3B82F6; }
-    .vaultic-sb-save:hover { background:#2563EB; }
-    .vaultic-sb-never { color:#A1A1AA; }
-    .vaultic-sb-never:hover { color:#FAFAFA; }
+    .vaultic-save-banner { background:#0D1117; box-shadow:0 4px 16px rgba(0,0,0,0.3); }
+    .vaultic-sb-title { color:#E6EDF3; }
+    .vaultic-sb-sub { color:#8B949E; }
+    .vaultic-sb-save { background:#619EE9; }
+    .vaultic-sb-save:hover { background:#024799; }
+    .vaultic-sb-never { color:#8B949E; }
+    .vaultic-sb-never:hover { color:#E6EDF3; }
   }
 `;
 
-const SHIELD_SVG = `<svg class="vaultic-sb-icon" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>`;
-const CLOSE_SVG = `<svg class="vaultic-sb-close" viewBox="0 0 24 24" fill="none" stroke="#A1A1AA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
+const SHIELD_SVG = `<svg class="vaultic-sb-icon" viewBox="0 0 24 24" fill="none" stroke="#024799" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>`;
+const CLOSE_SVG = `<svg class="vaultic-sb-close" viewBox="0 0 24 24" fill="none" stroke="#8B949E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
 
 import { escapeHtml } from './utils/escape-html';
 
@@ -94,4 +94,3 @@ export function showSaveBanner(
   // Auto-dismiss after 15 seconds
   setTimeout(remove, 15000);
 }
-

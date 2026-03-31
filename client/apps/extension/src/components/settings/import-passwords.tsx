@@ -1,7 +1,7 @@
 // Screen 24: Import Passwords — support Chrome CSV, 1Password, Bitwarden
 import React, { useState, useRef } from 'react';
 import { Button, VStack, tokens, useTheme } from '@vaultic/ui';
-import { ArrowLeft, Upload } from 'lucide-react';
+import { IconArrowLeft, IconUpload } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useVaultStore } from '../../stores/vault-store';
 import type { LoginCredential } from '@vaultic/types';
@@ -57,11 +57,11 @@ export function ImportPasswords({ onBack }: ImportPasswordsProps) {
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <button onClick={onBack} style={backBtn}><ArrowLeft size={18} strokeWidth={1.5} /></button>
+        <button onClick={onBack} style={backBtn}><IconArrowLeft size={18} stroke={1.5} /></button>
         <span style={titleStyle}>{t('settings:import.title')}</span>
       </div>
       <VStack gap="lg" style={{ padding: tokens.spacing.xxl, flex: 1 }}>
-        <div style={{ textAlign: 'center' }}><Upload size={36} strokeWidth={1.5} color={colors.primary} /></div>
+        <div style={{ textAlign: 'center' }}><IconUpload size={36} stroke={1.5} color={colors.primary} /></div>
         <div style={descStyle}>{t('settings:import.description')}</div>
 
         <div style={sourceGrid}>

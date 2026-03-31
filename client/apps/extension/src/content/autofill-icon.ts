@@ -85,8 +85,8 @@ async function showDropdown(shadow: ShadowRoot, wrapper: HTMLElement, form: Dete
         const item = document.createElement('div');
         item.className = `vaultic-item${isFirst ? ' vaultic-item-active' : ''}`;
         item.innerHTML = `
-          <div class="vaultic-avatar" style="background:${isFirst ? '#2563EB' : '#F4F4F5'}; border-radius:6px">
-            ${GLOBE_SVG(isFirst ? '#fff' : '#71717A')}
+          <div class="vaultic-avatar" style="background:${isFirst ? '#024799' : '#F4F7FA'}; border-radius:6px">
+            ${GLOBE_SVG(isFirst ? '#fff' : '#4A6278')}
           </div>
           <div class="vaultic-info">
             <div class="vaultic-name">${escapeHtml(match.username || match.name)}</div>

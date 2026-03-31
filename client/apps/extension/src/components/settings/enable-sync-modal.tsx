@@ -1,7 +1,7 @@
 // Modal confirming Cloud Sync activation — design spec "19a. Enable Sync Warning"
 import React from 'react';
 import { tokens, Modal, Button, useTheme } from '@vaultic/ui';
-import { Cloud, ShieldCheck } from 'lucide-react';
+import { IconCloud, IconShieldCheck } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
 interface EnableSyncModalProps {
@@ -20,10 +20,10 @@ export function EnableSyncModal({ open, onClose, onConfirm }: EnableSyncModalPro
         {/* Icon */}
         <div style={{
           width: 48, height: 48, borderRadius: tokens.radius.full,
-          backgroundColor: '#EFF6FF',
+          backgroundColor: colors.primaryBg,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <Cloud size={24} strokeWidth={1.5} color={colors.primary} />
+          <IconCloud size={24} stroke={1.5} color={colors.primary} />
         </div>
 
         {/* Title */}
@@ -50,7 +50,7 @@ export function EnableSyncModal({ open, onClose, onConfirm }: EnableSyncModalPro
           padding: `${tokens.spacing.sm + 2}px ${tokens.spacing.md + 2}px`,
           width: '100%',
         }}>
-          <ShieldCheck size={16} strokeWidth={1.5} color={colors.badgeWarningText} style={{ flexShrink: 0 }} />
+          <IconShieldCheck size={16} stroke={1.5} color={colors.badgeWarningText} style={{ flexShrink: 0 }} />
           <span style={{
             fontSize: tokens.font.size.xs, fontWeight: tokens.font.weight.medium,
             color: colors.badgeWarningText, fontFamily: tokens.font.family,

@@ -1,6 +1,6 @@
 # Phase 3: Icon Migration (lucide-react → @tabler/icons-react)
 
-## Status: `pending`
+## Status: `done`
 ## Priority: High (largest effort phase)
 ## Effort: 1-1.5 days
 
@@ -115,16 +115,16 @@ Replace all `lucide-react` imports with `@tabler/icons-react` across 26 componen
 
 ## Todo List
 
-- [ ] Install @tabler/icons-react
-- [ ] Migrate auth/ components (5 files)
-- [ ] Migrate vault/ components (7 files)
-- [ ] Migrate common/ components (4 files)
-- [ ] Migrate share/ components (3 files)
-- [ ] Migrate settings/ components (6 files)
-- [ ] Update inline SVGs in content scripts (2 files)
-- [ ] Remove lucide-react dependency
-- [ ] Type check passes
-- [ ] Visual verify all icons render
+- [x] Install @tabler/icons-react
+- [x] Migrate auth/ components (5 files)
+- [x] Migrate vault/ components (7 files)
+- [x] Migrate common/ components (4 files)
+- [x] Migrate share/ components (3 files)
+- [x] Migrate settings/ components (6 files)
+- [x] Update inline SVGs in content scripts (2 files)
+- [x] Remove lucide-react dependency
+- [x] Type check passes
+- [x] Visual verify all icons render
 
 ## Success Criteria
 

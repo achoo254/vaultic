@@ -70,12 +70,12 @@ const schema = new mongoose.Schema({ field: { type: String, required: true } }, 
 ```typescript
 import React from 'react';
 import { tokens, Button } from '@vaultic/ui';
-import { SomeIcon } from 'lucide-react';
+import { IconArrowLeft } from '@tabler/icons-react';
 
 export function MyComponent({ onAction }: Props) {
   return (
     <div style={{ padding: tokens.spacing.lg, color: tokens.colors.text }}>
-      <SomeIcon size={20} strokeWidth={1.5} color={tokens.colors.primary} />
+      <IconArrowLeft size={20} stroke={1.5} color={tokens.colors.primary} />
       <Button variant="primary" size="md" onClick={onAction}>Action</Button>
     </div>
   );
@@ -86,7 +86,7 @@ export function MyComponent({ onAction }: Props) {
 - Cross-package: `import { X } from '@vaultic/crypto'` — NEVER relative paths
 - Within package: relative imports OK (`import { X } from './utils'`)
 - UI components: always from `@vaultic/ui`
-- Icons: ONLY from `lucide-react`
+- Icons: ONLY from `@tabler/icons-react` (prefix naming: `IconArrowLeft`, etc.)
 
 ### Extension Routing
 - Single-page app in `src/entrypoints/popup/app.tsx`
@@ -166,8 +166,8 @@ All UI MUST use design tokens. Never hardcode visual properties.
 | Extension size | `tokens.extension.*` | 380x520px fixed |
 
 ### Icons
-- Library: `lucide-react` — ONLY source for icons
-- Stroke width: `1.5` (consistent across all icons)
+- Library: `@tabler/icons-react` — ONLY source for icons (import with `Icon` prefix: `IconArrowLeft`)
+- Stroke width: `stroke={1.5}` (Tabler convention, consistent across all icons)
 - Sizes: 14, 16, 18, 20, 24px depending on context
 - Pass `color` prop using `tokens.colors.*`
 

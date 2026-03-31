@@ -1,7 +1,7 @@
 // Modal shown when user disables Cloud Sync — choose to delete or keep server data
 import React from 'react';
 import { tokens, Modal, useTheme } from '@vaultic/ui';
-import { CloudOff, Trash2, Pause } from 'lucide-react';
+import { IconCloudOff, IconTrash, IconPlayerPause } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
 interface DisableSyncModalProps {
@@ -22,7 +22,7 @@ export function DisableSyncModal({ open, onClose, onConfirm }: DisableSyncModalP
           width: 48, height: 48, borderRadius: '50%',
           backgroundColor: `${colors.error}14`, display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <CloudOff size={24} strokeWidth={1.5} color={colors.error} />
+          <IconCloudOff size={24} stroke={1.5} color={colors.error} />
         </div>
 
         {/* Title */}
@@ -43,7 +43,7 @@ export function DisableSyncModal({ open, onClose, onConfirm }: DisableSyncModalP
           color: colors.error, fontSize: tokens.font.size.base, fontWeight: tokens.font.weight.medium,
           fontFamily: tokens.font.family, cursor: 'pointer',
         }}>
-          <Trash2 size={16} strokeWidth={1.5} /> {t('settings:sync.disableModal.deleteServer')}
+          <IconTrash size={16} stroke={1.5} /> {t('settings:sync.disableModal.deleteServer')}
         </button>
         <p style={{ fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family, margin: `-${tokens.spacing.xs}px 0 0 0`, lineHeight: 1.4 }}>
           {t('settings:sync.disableModal.deleteHint')}
@@ -57,7 +57,7 @@ export function DisableSyncModal({ open, onClose, onConfirm }: DisableSyncModalP
           color: colors.text, fontSize: tokens.font.size.base, fontWeight: tokens.font.weight.medium,
           fontFamily: tokens.font.family, cursor: 'pointer',
         }}>
-          <Pause size={16} strokeWidth={1.5} /> {t('settings:sync.disableModal.keepServer')}
+          <IconPlayerPause size={16} stroke={1.5} /> {t('settings:sync.disableModal.keepServer')}
         </button>
         <p style={{ fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family, margin: `-${tokens.spacing.xs}px 0 0 0`, lineHeight: 1.4 }}>
           {t('settings:sync.disableModal.keepHint')}
