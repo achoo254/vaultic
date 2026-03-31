@@ -45,7 +45,7 @@ export const syncToggleTrack: React.CSSProperties = {
   display: 'flex', alignItems: 'center',
 };
 export const syncToggleThumb: React.CSSProperties = {
-  width: 20, height: 20, borderRadius: '50%', backgroundColor: '#fff',
+  width: 20, height: 20, borderRadius: '50%', backgroundColor: tokens.colors.onPrimary,
   transition: 'transform 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
 };
 

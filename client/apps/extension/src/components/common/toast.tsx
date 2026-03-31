@@ -48,7 +48,7 @@ const containerStyle: React.CSSProperties = {
 };
 const toastStyle: React.CSSProperties = {
   padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`, borderRadius: tokens.radius.md,
-  color: '#fff', display: 'flex', alignItems: 'center', gap: tokens.spacing.sm,
+  color: tokens.colors.onPrimary, display: 'flex', alignItems: 'center', gap: tokens.spacing.sm,
   fontSize: tokens.font.size.sm, fontFamily: tokens.font.family,
   animation: 'fadeIn 0.2s ease',
 };

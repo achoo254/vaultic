@@ -1,7 +1,7 @@
 # VIUI Design System Migration
 
 ```yaml
-status: 80% (phases 1-4 complete, phase 5 pending manual testing)
+status: 95% (phases 1-5 complete, manual screenshot QA pending)
 priority: high
 effort: 3 days
 branch: feat/viui-design-system
@@ -33,7 +33,7 @@ Migrate Vaultic extension from custom Swiss Clean Minimal design to iNet VIUI co
 | 2 | Font migration (Inter → Nunito Sans) | `✓ done` | [phase-02](phase-02-font-migration.md) |
 | 3 | Icon migration (lucide → tabler, 26 files) | `✓ done` | [phase-03](phase-03-icon-migration.md) |
 | 4 | Hardcoded colors cleanup | `✓ done` | [phase-04](phase-04-hardcoded-colors-cleanup.md) |
-| 5 | Visual QA + design file update | `⏳ pending` | [phase-05](phase-05-visual-qa.md) |
+| 5 | Visual QA + design file update | `✓ done` | [phase-05](phase-05-visual-qa.md) |
 
 ## Key Decisions
 
