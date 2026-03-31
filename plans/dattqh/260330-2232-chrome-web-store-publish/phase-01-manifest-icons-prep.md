@@ -1,6 +1,6 @@
 # Phase 1: Manifest & Icons Prep
 
-## Status: `pending`
+## Status: `done`
 ## Priority: High
 ## Effort: 0.5 day
 

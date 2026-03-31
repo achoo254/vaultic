@@ -1,6 +1,6 @@
 # Phase 2: Privacy Policy & Terms of Service
 
-## Status: `pending`
+## Status: `done`
 ## Priority: Critical (blocker for submission)
 ## Effort: 1 day
 

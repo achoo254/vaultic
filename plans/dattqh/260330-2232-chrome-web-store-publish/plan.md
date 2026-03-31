@@ -1,11 +1,11 @@
 # Chrome Web Store Publish — Vaultic Extension
 
 ```yaml
-status: pending
+status: in-progress
 priority: high
 effort: 5-7 days
 branch: feat/chrome-web-store-publish
-blockedBy: [260330-2321-viui-design-system-migration]
+blockedBy: []
 blocks: [260330-2154-extension-auto-update]
 ```
 
@@ -33,13 +33,13 @@ Publish Vaultic Password Manager extension lên Chrome Web Store (public). Bao g
 
 | # | Phase | Status | File |
 |---|-------|--------|------|
-| 1 | Manifest & icons prep | `pending` | [phase-01](phase-01-manifest-icons-prep.md) |
-| 1B | First-run privacy consent UI | `pending` | [phase-01b](phase-01b-first-run-consent-ui.md) |
-| 1C | Resolve unresolved questions | `pending` | [phase-01c](phase-01c-resolve-unresolved-questions.md) |
-| 2 | Privacy Policy & Terms of Service | `pending` | [phase-02](phase-02-privacy-policy-tos.md) |
-| 3 | Store listing content | `pending` | [phase-03](phase-03-store-listing-content.md) |
-| 4 | Visual assets (screenshots + promotional) | `pending` | [phase-04](phase-04-visual-assets.md) |
-| 5 | Landing page | `pending` | [phase-05](phase-05-landing-page.md) |
+| 1 | Manifest & icons prep | `done` | [phase-01](phase-01-manifest-icons-prep.md) |
+| 1B | First-run privacy consent UI | `done` | [phase-01b](phase-01b-first-run-consent-ui.md) |
+| 1C | Resolve unresolved questions | `done` | [phase-01c](phase-01c-resolve-unresolved-questions.md) |
+| 2 | Privacy Policy & Terms of Service | `done` | [phase-02](phase-02-privacy-policy-tos.md) |
+| 3 | Store listing content | `done` | [phase-03](phase-03-store-listing-content.md) |
+| 4 | Visual assets (screenshots + promotional) | `partial` | [phase-04](phase-04-visual-assets.md) |
+| 5 | Landing page | `done` | [phase-05](phase-05-landing-page.md) |
 | 6 | Production build & submission | `pending` | [phase-06](phase-06-production-build-submit.md) |
 
 ## Key Decisions

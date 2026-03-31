@@ -1,6 +1,6 @@
 # Phase 1B: First-Run Privacy Consent UI
 
-## Status: `pending`
+## Status: `done`
 ## Priority: Critical (Google requires prominent disclosure before user starts using extension)
 ## Effort: 0.5 day
 

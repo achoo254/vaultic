@@ -1,6 +1,6 @@
 # Phase 5: Landing Page
 
-## Status: `pending`
+## Status: `done`
 ## Priority: Medium (not blocking submission, but needed for `homepage_url`)
 ## Effort: 1-2 days
 

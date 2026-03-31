@@ -1,6 +1,6 @@
 # Phase 3: Store Listing Content
 
-## Status: `pending`
+## Status: `done`
 ## Priority: High (blocker for submission)
 ## Effort: 0.5 day
 
