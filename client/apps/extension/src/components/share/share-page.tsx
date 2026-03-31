@@ -109,7 +109,8 @@ export function SharePage({ onBack }: SharePageProps) {
         metadataFailed = true;
       }
 
-      const shareUrl = `${SHARE_BASE_URL}/${shareId}#${fragment}`;
+      // Use query param ?d= instead of #fragment — fragments get stripped by messaging apps, email clients, URL shorteners
+      const shareUrl = `${SHARE_BASE_URL}/${shareId}?d=${encodeURIComponent(fragment)}`;
       setResult({
         url: shareUrl, ttl: ttlHours, views: maxViews,
         warning: metadataFailed ? t('share:error.metadataWarning') : undefined,

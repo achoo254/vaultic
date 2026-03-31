@@ -20,7 +20,7 @@ app.use(requestLogger);
 
 // 2. CORS
 const corsOptions = {
-  origin: process.env["CORS_ORIGIN"]?.split(",") ?? false,
+  origin: envConfig.corsOrigin,
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
   maxAge: 86400,
