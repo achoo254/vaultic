@@ -10,7 +10,8 @@
     "build:staging": "node build.js staging",
     "build:dattqh": "node build.js dattqh",
     "typecheck": "tsc --noEmit",
-    "start": "node dist/server.js"
+    "start": "node dist/server-production.js",
+    "start:staging": "node dist/server-staging.js"
   },
   "dependencies": {
     "@vaultic/types": "workspace:*",
