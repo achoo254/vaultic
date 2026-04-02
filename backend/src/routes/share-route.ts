@@ -1,5 +1,8 @@
 import { Router, type Router as RouterType } from "express";
 import { z } from "zod";
+import { readFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import * as shareService from "../services/share-service.js";
 import { authRequired, authOptional } from "../middleware/auth-middleware.js";
 import { AppError } from "../utils/app-error.js";
@@ -73,9 +76,12 @@ shareRouter.delete("/:id", authRequired, async (req, res) => {
   res.json(result);
 });
 
-// GET /s/:id — static share page (imported as text by esbuild, no file dependency at runtime)
-// @ts-expect-error — esbuild loads .html as text via loader config
-import sharePageHtml from "../static/share-page.html";
+// GET /s/:id — static share page (read from disk, works in both dev/tsx and prod/compiled)
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const sharePageHtml = readFileSync(
+  resolve(__dirname, "../static/share-page.html"),
+  "utf-8",
+);
 
 sharePageRouter.get("/:id", (_req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");

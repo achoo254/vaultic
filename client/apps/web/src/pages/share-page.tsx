@@ -1,12 +1,10 @@
 // Share page — create encrypted share links
 import React, { useState } from 'react';
 import { Button, Input, Card, tokens, useTheme } from '@vaultic/ui';
-import { IconArrowLeft, IconLink, IconCopy } from '@tabler/icons-react';
-import { useNavigate } from 'react-router';
+import { IconLink, IconCopy } from '@tabler/icons-react';
 
 export function SharePage() {
   const { colors } = useTheme();
-  const navigate = useNavigate();
   const [shareText, setShareText] = useState('');
   const [shareUrl, setShareUrl] = useState('');
   const [copied, setCopied] = useState(false);
@@ -34,18 +32,10 @@ export function SharePage() {
     }
   };
 
-  const headerStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: tokens.spacing.md,
-    padding: `${tokens.spacing.lg}px 0`,
-  };
-
   return (
     <div>
-      <div style={headerStyle}>
-        <button onClick={() => navigate('/vault')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-          <IconArrowLeft size={20} stroke={1.5} color={colors.text} />
-        </button>
-        <div style={{ fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.bold, color: colors.text, fontFamily: tokens.font.family }}>
+      <div style={{ paddingBottom: tokens.spacing.lg }}>
+        <div style={{ fontSize: tokens.font.size.xl, fontWeight: tokens.font.weight.bold, color: colors.text, fontFamily: tokens.font.family }}>
           Secure Share
         </div>
       </div>
