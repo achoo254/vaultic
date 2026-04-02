@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1774942188479" clover="3.2.0">
+  <project timestamp="1774942188479" name="All files">
+    <metrics statements="55" coveredstatements="44" conditionals="12" coveredconditionals="12" methods="16" coveredmethods="12" elements="83" coveredelements="68" complexity="0" loc="55" ncloc="55" packages="1" files="2" classes="2"/>
+    <file name="cipher.ts" path="D:\CONG VIEC\vaultic\client\packages\crypto\src\cipher.ts">
+      <metrics statements="35" coveredstatements="24" conditionals="2" coveredconditionals="2" methods="12" coveredmethods="8"/>
+      <line num="5" count="2" type="stmt"/>
+      <line num="13" count="14" type="stmt"/>
+      <line num="14" count="14" type="stmt"/>
+      <line num="16" count="14" type="stmt"/>
+      <line num="23" count="14" type="stmt"/>
+      <line num="24" count="14" type="stmt"/>
+      <line num="25" count="14" type="stmt"/>
+      <line num="27" count="14" type="stmt"/>
+      <line num="35" count="10" type="stmt"/>
+      <line num="37" count="10" type="cond" truecount="2" falsecount="0"/>
+      <line num="38" count="2" type="stmt"/>
+      <line num="41" count="8" type="stmt"/>
+      <line num="42" count="8" type="stmt"/>
+      <line num="44" count="8" type="stmt"/>
+      <line num="50" count="6" type="stmt"/>
+      <line num="58" count="0" type="stmt"/>
+      <line num="59" count="0" type="stmt"/>
+      <line num="64" count="0" type="stmt"/>
+      <line num="65" count="0" type="stmt"/>
+      <line num="66" count="0" type="stmt"/>
+      <line num="67" count="0" type="stmt"/>
+      <line num="75" count="0" type="stmt"/>
+      <line num="76" count="0" type="stmt"/>
+      <line num="77" count="0" type="stmt"/>
+      <line num="78" count="0" type="stmt"/>
+      <line num="83" count="0" type="stmt"/>
+      <line num="87" count="14" type="stmt"/>
+      <line num="88" count="14" type="stmt"/>
+      <line num="89" count="528" type="stmt"/>
+      <line num="91" count="14" type="stmt"/>
+      <line num="95" count="10" type="stmt"/>
+      <line num="96" count="10" type="stmt"/>
+      <line num="97" count="10" type="stmt"/>
+      <line num="98" count="352" type="stmt"/>
+      <line num="100" count="10" type="stmt"/>
+    </file>
+    <file name="password-gen.ts" path="D:\CONG VIEC\vaultic\client\packages\crypto\src\password-gen.ts">
+      <metrics statements="20" coveredstatements="20" conditionals="10" coveredconditionals="10" methods="4" coveredmethods="4"/>
+      <line num="5" count="2" type="stmt"/>
+      <line num="6" count="2" type="stmt"/>
+      <line num="7" count="2" type="stmt"/>
+      <line num="8" count="2" type="stmt"/>
+      <line num="13" count="580" type="stmt"/>
+      <line num="14" count="580" type="stmt"/>
+      <line num="17" count="580" type="stmt"/>
+      <line num="18" count="580" type="stmt"/>
+      <line num="19" count="580" type="stmt"/>
+      <line num="21" count="580" type="stmt"/>
+      <line num="26" count="16" type="stmt"/>
+      <line num="27" count="16" type="cond" truecount="2" falsecount="0"/>
+      <line num="28" count="16" type="cond" truecount="2" falsecount="0"/>
+      <line num="29" count="16" type="cond" truecount="2" falsecount="0"/>
+      <line num="30" count="16" type="cond" truecount="2" falsecount="0"/>
+      <line num="32" count="16" type="cond" truecount="2" falsecount="0"/>
+      <line num="34" count="16" type="stmt"/>
+      <line num="35" count="16" type="stmt"/>
+      <line num="36" count="580" type="stmt"/>
+      <line num="38" count="16" type="stmt"/>
+    </file>
+  </project>
+</coverage>

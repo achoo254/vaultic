@@ -2,5 +2,3 @@
 > @vaultic/sync@0.1.0 build D:\CONG VIEC\vaultic\client\packages\sync
 > tsc
 
-src/__tests__/sync-engine.test.ts(18,45): error TS2352: Conversion of type 'number' to type 'ItemType' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
- ELIFECYCLE  Command failed with exit code 2.

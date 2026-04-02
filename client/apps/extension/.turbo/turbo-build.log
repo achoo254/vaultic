@@ -6,12 +6,22 @@
 [90mWXT[39m [90m[1m0.19.29[22m[39m
 [36mℹ[39m Building [36mchrome-mv3[39m for [36mproduction[39m with [32mVite 6.4.1[39m
 - Preparing...
-[32m✔[39m Built extension in 6.755 s
-[90m  ├─[39m [2m.output\chrome-mv3\[22m[34mmanifest.json[39m               [2m576 B[22m    
+[33m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[32m✔[39m Built extension in 14.3 s
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[34mmanifest.json[39m               [2m777 B[22m    
 [90m  ├─[39m [2m.output\chrome-mv3\[22m[32mpopup.html[39m                  [2m403 B[22m    
-[90m  ├─[39m [2m.output\chrome-mv3\[22m[36mbackground.js[39m               [2m26.48 kB[22m 
-[90m  ├─[39m [2m.output\chrome-mv3\[22m[36mchunks\popup-CjRMRnKy.js[39m    [2m479.99 kB[22m
-[90m  ├─[39m [2m.output\chrome-mv3\[22m[36mcontent-scripts\content.js[39m  [2m30.9 kB[22m  
-[90m  └─[39m [2m.output\chrome-mv3\[22m[35massets\popup-BijxO8B3.css[39m   [2m859 B[22m    
-[36mΣ Total size:[39m 539.2 kB                                               
-[32m✔[39m Finished in 6.918 s
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[36mbackground.js[39m               [2m26.95 kB[22m 
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[36mchunks\popup-CqsCJyQ2.js[39m    [2m578.41 kB[22m
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[36mcontent-scripts\content.js[39m  [2m31.17 kB[22m 
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[35massets\popup-DANU9OEj.css[39m   [2m871 B[22m    
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[34massets\icons\icon-128.png[39m   [2m7.4 kB[22m   
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[34massets\icons\icon-16.png[39m    [2m1.89 kB[22m  
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[34massets\icons\icon-192.png[39m   [2m37.94 kB[22m 
+[90m  ├─[39m [2m.output\chrome-mv3\[22m[34massets\icons\icon-32.png[39m    [2m4.23 kB[22m  
+[90m  └─[39m [2m.output\chrome-mv3\[22m[34massets\icons\icon-48.png[39m    [2m6.73 kB[22m  
+[36mΣ Total size:[39m 696.77 kB                                              
+[32m✔[39m Finished in 14.5 s
