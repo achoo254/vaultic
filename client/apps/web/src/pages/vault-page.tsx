@@ -1,8 +1,7 @@
 // Vault page — main vault list with search, folders, CRUD, and password generator
 import React, { useEffect, useState } from 'react';
 import { Button, Input, Card, tokens, useTheme, Modal } from '@vaultic/ui';
-import { IconPlus, IconSettings, IconLock, IconCopy, IconTrash, IconEdit, IconKey } from '@tabler/icons-react';
-import { useNavigate } from 'react-router';
+import { IconPlus, IconCopy, IconTrash, IconEdit, IconKey } from '@tabler/icons-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useVaultStore, useFilteredItems, type DecryptedVaultItem } from '../stores/vault-store';
 import { generatePassword } from '@vaultic/crypto';
@@ -10,12 +9,9 @@ import { copyAndAutoClear } from '../lib/web-clipboard';
 
 export function VaultPage() {
   const { colors } = useTheme();
-  const navigate = useNavigate();
   const { vaultState, email, mode } = useAuthStore();
   const { loading, searchQuery, setSearchQuery, loadVault, addItem, updateItem, deleteItem } = useVaultStore();
   const filteredItems = useFilteredItems();
-  const lock = useAuthStore((s) => s.lock);
-
   const [showAddModal, setShowAddModal] = useState(false);
   const [editItem, setEditItem] = useState<DecryptedVaultItem | null>(null);
   const [showGenModal, setShowGenModal] = useState(false);
@@ -25,29 +21,19 @@ export function VaultPage() {
     loadVault();
   }, []);
 
-  const headerStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: `${tokens.spacing.lg}px 0`, gap: tokens.spacing.sm,
-  };
-
   return (
     <div>
-      <div style={headerStyle}>
-        <div>
-          <div style={{ fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.bold, color: colors.text, fontFamily: tokens.font.family }}>Vault</div>
-          {email && <div style={{ fontSize: tokens.font.size.xs, color: colors.secondary, fontFamily: tokens.font.family }}>{email}</div>}
+      {/* Page header — nav moved to AppLayout sidebar/bottom-nav */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        paddingBottom: tokens.spacing.lg, gap: tokens.spacing.sm,
+      }}>
+        <div style={{ fontSize: tokens.font.size.xl, fontWeight: tokens.font.weight.bold, color: colors.text, fontFamily: tokens.font.family }}>
+          Vault
         </div>
-        <div style={{ display: 'flex', gap: tokens.spacing.xs }}>
-          <button onClick={() => setShowGenModal(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <IconKey size={20} stroke={1.5} color={colors.secondary} />
-          </button>
-          <button onClick={() => navigate('/settings')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <IconSettings size={20} stroke={1.5} color={colors.secondary} />
-          </button>
-          <button onClick={() => lock()} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <IconLock size={20} stroke={1.5} color={colors.secondary} />
-          </button>
-        </div>
+        <button onClick={() => setShowGenModal(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }} title="Password Generator">
+          <IconKey size={20} stroke={1.5} color={colors.secondary} />
+        </button>
       </div>
 
       {/* Search bar */}
@@ -82,7 +68,7 @@ export function VaultPage() {
         <button
           onClick={() => setShowAddModal(true)}
           style={{
-            position: 'fixed', bottom: 24, right: 24,
+            position: 'fixed', bottom: 80, right: 24,
             width: 48, height: 48, borderRadius: tokens.radius.full,
             background: colors.primary, color: colors.onPrimary,
             border: 'none', cursor: 'pointer', display: 'flex',

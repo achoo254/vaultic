@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button, Card, tokens, useTheme, Select } from '@vaultic/ui';
 import type { ThemeMode } from '@vaultic/ui';
-import { IconArrowLeft, IconCloud, IconCloudOff, IconDownload, IconUpload } from '@tabler/icons-react';
+import { IconCloud } from '@tabler/icons-react';
 import { useNavigate } from 'react-router';
 import { useAuthStore } from '../stores/auth-store';
 import { useVaultStore } from '../stores/vault-store';
@@ -30,11 +30,6 @@ export function SettingsPage() {
     navigate('/login');
   };
 
-  const headerStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: tokens.spacing.md,
-    padding: `${tokens.spacing.lg}px 0`,
-  };
-
   const sectionTitle: React.CSSProperties = {
     fontSize: tokens.font.size.sm, fontWeight: tokens.font.weight.semibold,
     color: colors.secondary, fontFamily: tokens.font.family,
@@ -49,11 +44,8 @@ export function SettingsPage() {
 
   return (
     <div>
-      <div style={headerStyle}>
-        <button onClick={() => navigate('/vault')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-          <IconArrowLeft size={20} stroke={1.5} color={colors.text} />
-        </button>
-        <div style={{ fontSize: tokens.font.size.lg, fontWeight: tokens.font.weight.bold, color: colors.text, fontFamily: tokens.font.family }}>
+      <div style={{ paddingBottom: tokens.spacing.lg }}>
+        <div style={{ fontSize: tokens.font.size.xl, fontWeight: tokens.font.weight.bold, color: colors.text, fontFamily: tokens.font.family }}>
           Settings
         </div>
       </div>

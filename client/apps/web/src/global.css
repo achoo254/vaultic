@@ -47,3 +47,22 @@ body {
   outline: 2px solid #024799;
   outline-offset: 2px;
 }
+
+/* Responsive layout — sidebar desktop, bottom nav mobile */
+/* Mobile: hide sidebar, show bottom nav, add bottom padding for nav */
+@media (max-width: 767px) {
+  .app-sidebar {
+    display: none !important;
+  }
+  .app-content {
+    padding: 16px !important;
+    padding-bottom: 72px !important;
+  }
+}
+
+/* Desktop: show sidebar, hide bottom nav */
+@media (min-width: 768px) {
+  .app-bottom-nav {
+    display: none !important;
+  }
+}
