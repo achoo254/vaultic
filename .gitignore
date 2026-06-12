@@ -30,3 +30,5 @@ backend/static/releases/*.zip
 # OS
 .DS_Store
 Thumbs.db
+
+# ctxsync-secrets: env & Claude transient — NEVER commit
